@@ -31,6 +31,7 @@
 <a href="scripting.html">Lua scripting</a>
 <a href="rendering.html">Rendering</a>
 <a href="building.html">Build</a>
+<a href="modding.html">Mods</a>
 <h4>Reference</h4>
 <a href="components.html">Component reference</a>
 <a href="dragonfall.html">Dragonfall module</a>
@@ -51,8 +52,8 @@
 <table>
 <tr><th>Command</th><th>Function</th></tr>
 <tr><td><code>ascdii new &lt;dir&gt; [-name N] [-template dragonfall]</code></td><td>Creates a project. Without a template, the project contains a manifest and a start scene with a camera.</td></tr>
-<tr><td><code>ascdii run &lt;dir&gt; [--blocks]</code></td><td>Plays a project folder in the terminal; <code>--blocks</code> draws half blocks instead of Braille, see <a href="rendering.html#output-modes">Output modes</a>.</td></tr>
-<tr><td><code>ascdii preview &lt;dir&gt; [-size 160x50] [-time 2] [-hour 22] [-plain] [-blocks]</code></td><td>Prints one frame after simulating <code>-time</code> seconds, at an optional time of day; <code>-plain</code> omits colors, <code>-blocks</code> uses half blocks.</td></tr>
+<tr><td><code>ascdii run &lt;dir&gt; [--blocks]</code></td><td>Plays a project folder in the terminal; <code>--blocks</code> draws half blocks instead of Braille, see <a href="rendering.html#output-modes">Output modes</a>. With mods enabled, the mods in the project's <code>mods/</code> folder load and write their messages to <code>mods/log.txt</code>.</td></tr>
+<tr><td><code>ascdii preview &lt;dir&gt; [-size 160x50] [-time 2] [-hour 22] [-plain] [-blocks]</code></td><td>Prints one frame after simulating <code>-time</code> seconds, at an optional time of day; <code>-plain</code> omits colors, <code>-blocks</code> uses half blocks. Mod messages go to standard error.</td></tr>
 <tr><td><code>ascdii build &lt;dir&gt; [-out path] [-player path] [-single]</code></td><td>Builds a game folder with the player, <code>data/game.pak</code> and <code>SHA256SUMS</code>; <code>-single</code> builds one executable. The player defaults to the <code>ascdii-player</code> next to <code>ascdii</code>. See <a href="building.html">Build</a>.</td></tr>
 <tr><td><code>ascdii pack list &lt;dir&gt;</code></td><td>Lists installed packages and the built in packages that are not installed.</td></tr>
 <tr><td><code>ascdii pack install &lt;dir&gt; &lt;file | name&gt;</code></td><td>Installs a <code>.ascdiipack</code> file or a built in package such as <code>dragonfall</code>.</td></tr>
@@ -62,6 +63,9 @@
 <tr><td><code>ascdii help</code></td><td>Prints the list of commands.</td></tr>
 </table>
 <p>A built game accepts <code>--blocks</code>, and <code>--preview [-size 160x50] [-time 2]</code> to print one frame instead of starting. The environment variable <code>ASCDII_BLOCKS=1</code> selects block mode for every game.</p>
+
+<h2>ascdii-player</h2>
+<p><code>ascdii-player</code> runs games. A build is a copy of it, renamed to the game, with the game data appended or in <code>data/</code> beside it; started this way it plays the game without arguments. Started on its own, it plays a project folder: <code>ascdii-player &lt;dir&gt; [--blocks]</code>, or prints one frame with <code>ascdii-player &lt;dir&gt; --preview</code> and the options of <code>ascdii preview</code>.</p>
 
 <h2>Make targets</h2>
 <p>For working on the engine from source; see <a href="install.html#building-from-source">Building from source</a>.</p>

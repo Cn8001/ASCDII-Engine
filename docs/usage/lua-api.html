@@ -31,6 +31,7 @@
 <a href="scripting.html">Lua scripting</a>
 <a href="rendering.html">Rendering</a>
 <a href="building.html">Build</a>
+<a href="modding.html">Mods</a>
 <h4>Reference</h4>
 <a href="components.html">Component reference</a>
 <a href="dragonfall.html">Dragonfall module</a>
@@ -198,6 +199,13 @@ env.auto = <span class="k">false</span>
 pipeline.pass(<span class="s">"fog"</span>).density = 0.8  <span class="c">-- any pass setting, see Rendering</span>
 pipeline.enable(<span class="s">"outline"</span>, <span class="k">false</span>)
 log(pipeline.enabled(<span class="s">"grade"</span>))</code></pre>
+
+<h2 id="mods">Mods</h2>
+<p><code>mods.emit(name, ...)</code> sends an event declared by the mod API to every mod; it does nothing when mods are disabled. The API script additionally has the <code>api</code> global. See <a href="modding.html">Mods</a>.</p>
+<pre><code>api.func(<span class="s">"spawn"</span>, <span class="k">function</span>(prefab, x, y) spawn(prefab, x, y) <span class="k">end</span>)  <span class="c">-- game.spawn(...) in mods</span>
+api.value(<span class="s">"score"</span>, <span class="k">function</span>() <span class="k">return</span> score <span class="k">end</span>)                <span class="c">-- game.score() in mods</span>
+api.event(<span class="s">"key"</span>)                                                   <span class="c">-- on_key(...) in mods</span>
+mods.emit(<span class="s">"key"</span>, k)</code></pre>
 
 <h2 id="draw">Drawing from Lua</h2>
 <p>A script with a <code>draw(self, d)</code> hook draws additional shapes every frame. Positions and sizes are in the object's local space, so the shapes move, rotate and scale with the object.</p>
