@@ -9,26 +9,32 @@ import (
 
 type Tri struct {
 	V    [3]int // indices into Mesh.Pos, counter clockwise seen from outside
+	T    [3]int // indices into Mesh.UV, -1 where the file gave none
 	Part int
 }
+
+// HasUV reports whether every corner of t has texture coordinates.
+func (t Tri) HasUV() bool { return t.T[0] >= 0 && t.T[1] >= 0 && t.T[2] >= 0 }
 
 // Part is a run of triangles sharing one material, an OBJ "usemtl".
 type Part struct {
 	Material string      `json:"material"`
-	Color    color.Color `json:"color"`
+	Color    color.Color `json:"color"`             // Kd, times the texture's average when textured
+	Kd       color.Color `json:"kd"`                // the diffuse color alone, the tint of a sampled texture
 	Texture  string      `json:"texture,omitempty"` // map_Kd, relative to the model
 }
 
 type Mesh struct {
 	Pos    []geom.Vec3
+	UV     []geom.Vec2
 	Tris   []Tri
 	Parts  []Part
 	Bounds geom.AABB
 }
 
 type Options struct {
-	UpZ   bool    // the file is already Z up, as some CAD exports are
-	Scale float64 // world units per file unit, 0 means 1
+	UpZ   bool    `json:"upZ"`   // the file is already Z up, as some CAD exports are
+	Scale float64 `json:"scale"` // world units per file unit, 0 means 1
 }
 
 // engine turns a file position into engine space, where Z is up and the

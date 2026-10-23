@@ -17,14 +17,20 @@
 <a href="first-game.html">Your first game</a>
 <h4>Guides</h4>
 <a href="editor.html">The editor</a>
+<a href="gameobjects.html">GameObjects and components</a>
 <a href="scenes.html">Scenes and prefabs</a>
+<a href="assets.html">Assets and import</a>
+<a href="textures.html">Textures and materials</a>
+<a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
 <a href="scripting.html">Lua scripting</a>
 <a href="rendering.html">Rendering</a>
 <a href="building.html">Build and release</a>
 <h4>Reference</h4>
+<a href="lua-api.html">Lua API</a>
 <a href="cli.html">CLI reference</a>
 <a href="go-api.html" class="on">Go API</a>
+<a href="architecture.html">Architecture</a>
 </aside>
 <main>
 <div class="kicker">Reference</div>
@@ -52,8 +58,8 @@
 <p>Load a project folder instead of building the scene in code:</p>
 <pre><code>e, err := ascdii.OpenDir(ctx, <span class="s">"~/games/quest"</span>, ascdii.Options{})</code></pre>
 
-<h2>Your own node kind</h2>
-<p>A node exposes its properties through a binder, draws in world units and reports its bounds. Register it and it appears in the editor's Add menu and Inspector.</p>
+<h2>Your own component</h2>
+<p>A component exposes its properties through a binder; to be seen it draws in world units and reports its bounds. Register it with a menu entry and it appears in the GameObject menu, Add Component and the Inspector. Other optional methods make it tick, update, take keys or block players.</p>
 <pre><code><span class="k">type</span> Totem <span class="k">struct</span> {
   Height <span class="k">float64</span>
   Tint   ascdii.Color
@@ -66,27 +72,28 @@
 <span class="k">func</span> (t *Totem) Props() []ascdii.Prop            { <span class="k">return</span> t.bind().Props() }
 <span class="k">func</span> (t *Totem) Set(n <span class="k">string</span>, v <span class="k">any</span>) <span class="k">error</span>     { <span class="k">return</span> t.bind().Set(n, v) }
 <span class="k">func</span> (t *Totem) Bounds(tr ascdii.Transform) ascdii.AABB {
-  <span class="k">return</span> ascdii.Footprint(tr.Pos, ascdii.V3(1, 1, t.Height))
+  <span class="k">return</span> ascdii.Footprint(tr.Pos, tr.Size(ascdii.V3(1, 1, t.Height)))
 }
 <span class="k">func</span> (t *Totem) Draw(c *ascdii.Context, tr ascdii.Transform) {
   c.Box(t.Bounds(tr), ascdii.M(t.Tint))
   c.Shadow(tr.Pos, 1, .7, .6)
 }
 
-e.Registry().Node(<span class="s">"totem"</span>, <span class="k">func</span>() ascdii.Node { <span class="k">return</span> &amp;Totem{Height: 4, Tint: ascdii.Hex(<span class="s">"#9a8a70"</span>)} })</code></pre>
-<p>The drawing context has boxes, prisms, cylinders, cones, gables, pyramids, blobs, terrain, sprites with bone transforms, particles, shadows and point lights. Depth and normals are always derived for you.</p>
+e.Registry().Register(<span class="s">"totem"</span>, <span class="k">func</span>() ascdii.Component { <span class="k">return</span> &amp;Totem{Height: 4, Tint: ascdii.Hex(<span class="s">"#9a8a70"</span>)} },
+  ascdii.ComponentMeta{Category: <span class="s">"3d"</span>, Label: <span class="s">"Totem"</span>, Object: <span class="k">true</span>})</code></pre>
+<p><code>Object: true</code> puts the kind in the GameObject menu as a ready made object; leave it false for logic that belongs in Add Component only. The drawing context has textured faces, boxes, prisms, cylinders, cones, gables, pyramids, blobs, terrain, sprites with bone transforms, particles, shadows and point lights. Depth and normals are always derived for you.</p>
 
 <h2>Content packs</h2>
-<p>To use your node kinds in the editor and in built games, ship them as a pack and add it where the editor and the <code>ascdii</code> player list their packs, next to the Dragonfall pack. Projects that need it name it in their manifest.</p>
+<p>To use your components in the editor and in built games, ship them as a pack and add it where the editor and the <code>ascdii</code> player list their packs, next to the Dragonfall pack. Projects that need it name it in their manifest.</p>
 <pre><code>ascdii.Pack{Name: <span class="s">"mygame"</span>, Install: <span class="k">func</span>(r *ascdii.Registry, lib *ascdii.Library) {
-  r.Node(<span class="s">"totem"</span>, <span class="k">func</span>() ascdii.Node { <span class="k">return</span> &amp;Totem{Height: 4} })
+  r.Register(<span class="s">"totem"</span>, <span class="k">func</span>() ascdii.Component { <span class="k">return</span> &amp;Totem{Height: 4} }, ascdii.ComponentMeta{Category: <span class="s">"mygame"</span>})
 }}</code></pre>
 
 <h2>Your own render pass</h2>
 <pre><code>e.Pipeline().Add(ascdii.Func(<span class="s">"scanlines"</span>, ascdii.Post, <span class="k">func</span>(f *ascdii.Frame) {
   <span class="c">// darken every other dot row in f.Buf</span>
 }))</code></pre>
-<nav class="pager"><a class="prev" href="cli.html"><small>Previous</small>CLI reference</a><span></span></nav>
+<nav class="pager"><a class="prev" href="cli.html"><small>Previous</small>CLI reference</a><a class="next" href="architecture.html"><small>Next</small>Architecture</a></nav>
 </main>
 </div>
 </body>

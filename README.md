@@ -31,9 +31,14 @@ A game is a folder you can keep in git:
 ```
 MyGame/
   MyGame.ascdiiproj      manifest: name, version, engine, start scene, packs
-  scenes/*.scene.json    entity trees, camera, environment, animation clips
-  prefabs/*.prefab.json  reusable entity trees, instanced by reference
+  scenes/*.scene.json    GameObject trees, camera, environment, animation clips
+  prefabs/*.prefab.json  reusable GameObject trees, instanced by reference
+  models/*.obj           models with their .mtl files
+  textures/*.png         pictures for materials
+  materials/*.material.json
   art/*.json | *.xp      glyph art (JSON palette art or REXPaint)
+  scripts/*.lua          Lua scripts with Inspector fields
+  **/*.meta              UUIDv7 per asset, plus import settings
   build/                 output, ignored by the generated .gitignore
 ```
 
@@ -54,11 +59,16 @@ finds a bundle it plays it, so a release is a single file per platform.
 ## Editor
 
 `make editor-linux` and `make editor-windows` write `cmd/editor/build/bin/`.
-Panels: scene tree (drag to reparent, right click to add, duplicate, save as
-prefab), live 2.5D viewport (drag pan, right drag orbit, wheel zoom, click to
-pick, drag the handle to move), inspector (scrub labels, key any property),
-pipeline (toggle, reorder, timings, pass settings), assets, timeline, build and
-release.
+Unity like: a GameObject menu, Hierarchy (drag to reparent, right click to
+create, duplicate, save as prefab), live 2.5D viewport (drag pan, right drag
+orbit, wheel zoom, click to pick, drag the handle to move, drop files, prefabs,
+models and materials), Inspector with component cards and reference slots that
+take drags, Project window with real folders and file import, pipeline,
+timeline, console, build and release.
+
+GameObjects carry any number of components. Lua scripts are components too:
+they declare `fields` the Inspector edits and reach objects, components, the
+camera, the environment and the render pipeline (see `docs/usage/lua-api.html`).
 
 Keys: Space play, Esc stop, Ctrl+S save, Ctrl+Z / Ctrl+Y undo and redo,
 Ctrl+D duplicate, Del delete, F focus, Ctrl+B build.
@@ -81,5 +91,8 @@ rendering, building and the Go API.
 ## Layout
 
 `pkg/ascdii` is the only public package. The engine lives in
-`internal/engine/*`, the sample content in `internal/dragonfall`, the editor
-backend in `internal/editor`, the UI in `frontend/`. See `CLAUDE.md` for rules.
+`internal/engine/{core,render,world,assets,script,platform,runtime}`, the
+sample content in `internal/dragonfall`, the editor backend in
+`internal/editor`, the UI in `frontend/`, programs in `cmd/` (the terminal
+menu is `cmd/launcher`). `docs/usage/architecture.html` explains the modules
+and the display backend contract. See `CLAUDE.md` for rules.

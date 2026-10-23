@@ -100,6 +100,7 @@ func New(d Deps) *Session {
 	s := &Session{d: d, reg: reg, lib: lib, edit: scene.New("untitled"), mode: Edit, live: false, dirty: true, viewMode: SceneView, appCtx: context.Background()}
 	s.cam = s.edit.Camera
 	s.pipe = app.NewPipeline(s.current, d.Now)
+	s.pipe.Add(pipeline.Func("grid", pipeline.Geometry, s.grid))
 	s.frame = pipeline.NewFrame(120, 40)
 	s.resetCtx()
 	return s

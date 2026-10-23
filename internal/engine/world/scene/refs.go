@@ -1,6 +1,8 @@
 package scene
 
 import (
+	"crypto/rand"
+	"encoding/binary"
 	"fmt"
 	"strconv"
 	"strings"
@@ -173,10 +175,33 @@ func (s *Scene) number(o *GameObject, taken map[uint64]bool) {
 
 func (s *Scene) newFID(taken map[uint64]bool) uint64 {
 	for {
-		s.fid++
-		if !taken[s.fid] {
-			return s.fid
+		if f := s.newFIDs(); f != 0 && !taken[f] {
+			return f
 		}
+	}
+}
+
+// FIDSource picks ids for new objects.
+type FIDSource func() uint64
+
+// RandomFIDs are what scenes use: two branches that both add objects then
+// merge without clashing ids, which is why Unity's fileIDs are random too.
+// They stay below 2^53 so JavaScript reads them exactly.
+func RandomFIDs() FIDSource {
+	return func() uint64 {
+		var b [8]byte
+		_, _ = rand.Read(b[:]) // crypto/rand does not fail on supported systems
+		return binary.LittleEndian.Uint64(b[:]) & (1<<53 - 1)
+	}
+}
+
+// CountingFIDs number objects 1, 2, 3, for generated files that must come
+// out the same on every run.
+func CountingFIDs() FIDSource {
+	n := uint64(0)
+	return func() uint64 {
+		n++
+		return n
 	}
 }
 
@@ -189,7 +214,6 @@ func (s *Scene) fids(skip *GameObject) map[uint64]bool {
 		}
 		if o != s.Root {
 			out[o.FID] = true
-			s.fid = max(s.fid, o.FID)
 		}
 		return true
 	})

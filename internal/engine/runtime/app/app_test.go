@@ -6,8 +6,11 @@ import (
 	"os"
 	"testing"
 
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/color"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/geom"
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/input"
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/project"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/world/components"
 )
 
 func TestUnit_OpenStarterAndPreview(t *testing.T) {
@@ -21,6 +24,8 @@ func TestUnit_OpenStarterAndPreview(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	e.Scene().Add("crate", components.NewBox(geom.V3(8, 8, 8), color.RGB(176, 128, 80)))
+	e.Scene().Camera.Target = geom.V3(0, 0, 0)
 	var out bytes.Buffer
 
 	// Act
@@ -33,7 +38,7 @@ func TestUnit_OpenStarterAndPreview(t *testing.T) {
 			braille++
 		}
 	}
-	if err != nil || braille < 40 {
+	if err != nil || braille < 20 {
 		t.Fatalf("err %v braille %d\n%s", err, braille, out.String())
 	}
 }

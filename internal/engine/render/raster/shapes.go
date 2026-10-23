@@ -19,6 +19,8 @@ type Vertex struct {
 	R     float64
 	G     float64
 	B     float64
+	U     float64 // texture coordinates, read when the frag has a texture
+	V     float64
 }
 
 func (b *Buffer) Rect(x, y, w, h int, f Frag) {
@@ -201,11 +203,17 @@ func (b *Buffer) triangle(v0, v1, v2 Vertex, f Frag, shaded bool) {
 	wx := newPlane(v0, v1, v2, v0.WX, v1.WX, v2.WX, inv)
 	wy := newPlane(v0, v1, v2, v0.WY, v1.WY, v2.WY, inv)
 	wz := newPlane(v0, v1, v2, v0.WZ, v1.WZ, v2.WZ, inv)
-	var cr, cg, cb plane
+	var cr, cg, cb, pu, pv plane
 	if shaded {
 		cr = newPlane(v0, v1, v2, v0.R, v1.R, v2.R, inv)
 		cg = newPlane(v0, v1, v2, v0.G, v1.G, v2.G, inv)
 		cb = newPlane(v0, v1, v2, v0.B, v1.B, v2.B, inv)
+	}
+	tex, tint, lod := f.Tex, f.Albedo, 0.0
+	if tex != nil {
+		pu = newPlane(v0, v1, v2, v0.U, v1.U, v2.U, inv)
+		pv = newPlane(v0, v1, v2, v0.V, v1.V, v2.V, inv)
+		lod = level(tex, pu, pv)
 	}
 	// Edge functions grow linearly in x; their per dot steps are constant.
 	s0, s1 := -(v2.Y-v1.Y)*inv, -(v0.Y-v2.Y)*inv
@@ -214,9 +222,12 @@ func (b *Buffer) triangle(v0, v1, v2 Vertex, f Frag, shaded bool) {
 		w0 := edge(v1, v2, px, py) * inv
 		w1 := edge(v2, v0, px, py) * inv
 		d, ex, ey, ez := depth.row(v0, px, py), wx.row(v0, px, py), wy.row(v0, px, py), wz.row(v0, px, py)
-		var r, g, bl float64
+		var r, g, bl, u, v float64
 		if shaded {
 			r, g, bl = cr.row(v0, px, py), cg.row(v0, px, py), cb.row(v0, px, py)
+		}
+		if tex != nil {
+			u, v = pu.row(v0, px, py), pv.row(v0, px, py)
 		}
 		for x := x0; x <= x1; x++ {
 			if w0 >= -1e-6 && w1 >= -1e-6 && 1-w0-w1 >= -1e-6 {
@@ -224,15 +235,49 @@ func (b *Buffer) triangle(v0, v1, v2 Vertex, f Frag, shaded bool) {
 				if shaded {
 					f.Albedo = color.Color{R: channel(r), G: channel(g), B: channel(bl)}
 				}
-				b.Plot(x, y, f)
+				if tex == nil {
+					b.Plot(x, y, f)
+				} else if c, solid := tex.Sample(lod, u, v); solid {
+					base := tint
+					if shaded {
+						base = f.Albedo
+					}
+					f.Albedo = color.Mul(c, base)
+					b.Plot(x, y, f)
+				}
 			}
 			w0, w1 = w0+s0, w1+s1
 			d, ex, ey, ez = d+depth.dx, ex+wx.dx, ey+wy.dx, ez+wz.dx
 			if shaded {
 				r, g, bl = r+cr.dx, g+cg.dx, bl+cb.dx
 			}
+			if tex != nil {
+				u, v = u+pu.dx, v+pv.dx
+			}
 		}
 	}
+}
+
+// Sampler is a texture as the rasterizer needs it.
+type Sampler interface {
+	Sample(lod, u, v float64) (color.Color, bool)
+	Size() (int, int)
+}
+
+// lodBias picks a blurrier mip than the exact footprint; a Braille dot is
+// coarse, and sharper mips shimmer as the camera moves.
+const lodBias = .5
+
+// level is the mip level matching how many texels one dot spans. UVs are
+// linear across a triangle, so it is the same for every dot of it.
+func level(t Sampler, u, v plane) float64 {
+	w, h := t.Size()
+	fw, fh := float64(w), float64(h)
+	rho := math.Max(math.Hypot(u.dx*fw, v.dx*fh), math.Hypot(u.dy*fw, v.dy*fh))
+	if rho <= 1 {
+		return 0
+	}
+	return math.Log2(rho) + lodBias
 }
 
 func edge(a, b Vertex, x, y float64) float64 { return (b.X-a.X)*(y-a.Y) - (b.Y-a.Y)*(x-a.X) }

@@ -156,7 +156,7 @@ func Decode(r io.Reader, reg *Registry, prefabs Prefabs) (*Scene, error) {
 
 func (s *Scene) build(d entityDoc, reg *Registry) (*GameObject, error) {
 	e := s.newObject(d.Name)
-	e.FID, s.fid = d.FID, max(s.fid, d.FID)
+	e.FID = d.FID
 	e.Tag, e.Visible, e.Solid, e.Prefab, e.Overrides = d.Tag, !d.Hidden, d.Solid, d.Prefab, d.Overrides
 	scale, err := decodeScale(d.Scale)
 	if err != nil {
@@ -237,6 +237,7 @@ func DecodePrefab(r io.Reader, reg *Registry) (*GameObject, error) {
 		return nil, fmt.Errorf("decode prefab: %w", err)
 	}
 	tmp := New("prefab")
+	tmp.UseFIDs(CountingFIDs()) // files from before FIDs get the same ones on every load
 	root, err := tmp.build(doc.Root, reg)
 	if err != nil {
 		return nil, err

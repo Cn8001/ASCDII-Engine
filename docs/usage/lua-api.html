@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lua API | ASCDII Engine</title>
+<link rel="icon" href="img/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="layout">
+<aside class="side">
+<a class="brand" href="index.html"><img src="img/logo.svg" alt=""><span>ASCDII Engine<small>0.0.1 docs</small></span></a>
+<h4>Start</h4>
+<a href="index.html">Welcome</a>
+<a href="install.html">Install</a>
+<a href="first-game.html">Your first game</a>
+<h4>Guides</h4>
+<a href="editor.html">The editor</a>
+<a href="gameobjects.html">GameObjects and components</a>
+<a href="scenes.html">Scenes and prefabs</a>
+<a href="assets.html">Assets and import</a>
+<a href="textures.html">Textures and materials</a>
+<a href="models.html">Models</a>
+<a href="animation.html">Animation</a>
+<a href="scripting.html">Lua scripting</a>
+<a href="rendering.html">Rendering</a>
+<a href="building.html">Build and release</a>
+<h4>Reference</h4>
+<a href="lua-api.html" class="on">Lua API</a>
+<a href="cli.html">CLI reference</a>
+<a href="go-api.html">Go API</a>
+<a href="architecture.html">Architecture</a>
+</aside>
+<main>
+<div class="kicker">Reference</div>
+<h1>Lua API</h1>
+<p class="lead">Everything a script can call. Names are lower case with underscores. Positions, rotations and sizes are <code>vec3</code> values in world units; colors are hex strings such as <code>"#ff8800"</code>.</p>
+
+<h2>Finding objects</h2>
+<table>
+<tr><th>Function</th><th>Returns</th></tr>
+<tr><td><code>find(name)</code></td><td>The first object with that name, or nil.</td></tr>
+<tr><td><code>find_all(name)</code></td><td>Every object with that name, as a list.</td></tr>
+<tr><td><code>find_by_tag(tag)</code></td><td>Every object with that tag.</td></tr>
+<tr><td><code>find_by_component(kind)</code></td><td>Every object that has a component of that kind, such as <code>"light"</code>.</td></tr>
+<tr><td><code>find_by_prefab(prefab)</code></td><td>Every instance of a prefab, given as a path such as <code>"prefabs/lantern.prefab.json"</code> or a <code>prefab()</code> field.</td></tr>
+</table>
+
+<h2>Creating and removing</h2>
+<table>
+<tr><th>Function</th><th>Does</th></tr>
+<tr><td><code>create(name, parent)</code></td><td>A new empty object; <code>parent</code> is optional.</td></tr>
+<tr><td><code>spawn(prefab, pos)</code></td><td>An instance of a prefab at <code>pos</code> (a vec3, or x, y, z).</td></tr>
+<tr><td><code>destroy(obj)</code></td><td>Removes an object and its children, after their <code>on_destroy</code> hooks.</td></tr>
+</table>
+
+<h2>GameObject</h2>
+<p>Handles from <code>find</code>, fields and <code>self</code> share these fields and methods.</p>
+<table>
+<tr><th>Field</th><th>Read / write</th><th>Meaning</th></tr>
+<tr><td><code>name</code>, <code>tag</code></td><td>both</td><td>Name and tag.</td></tr>
+<tr><td><code>active</code></td><td>both</td><td>Visible; hidden objects are not drawn.</td></tr>
+<tr><td><code>solid</code></td><td>both</td><td>Blocks players.</td></tr>
+<tr><td><code>position</code>, <code>rotation</code>, <code>scale</code></td><td>both</td><td>Local transform as vec3; rotation in degrees.</td></tr>
+<tr><td><code>world_position</code></td><td>read</td><td>Position after all parents.</td></tr>
+<tr><td><code>parent</code></td><td>both</td><td>Parent object or nil; setting it reparents.</td></tr>
+<tr><td><code>children</code></td><td>read</td><td>List of child objects.</td></tr>
+<tr><td><code>prefab</code></td><td>read</td><td>The prefab's path for an instance, else nil.</td></tr>
+<tr><td><code>id</code></td><td>read</td><td>Runtime id, unique while the game runs.</td></tr>
+</table>
+<table>
+<tr><th>Method</th><th>Does</th></tr>
+<tr><td><code>o:component(name)</code></td><td>A component by kind (<code>"light"</code>), by key (<code>"light#2"</code>) or a script by file name (<code>"door"</code>). Scripts return their <code>self</code>.</td></tr>
+<tr><td><code>o:components(kind)</code></td><td>All components, or all of one kind.</td></tr>
+<tr><td><code>o:add_component(kind)</code></td><td>Adds and returns a new component.</td></tr>
+<tr><td><code>o:remove_component(c)</code></td><td>Removes a component handle or script.</td></tr>
+<tr><td><code>o:child(path)</code></td><td>A descendant by name path, such as <code>"cage/flame"</code>.</td></tr>
+<tr><td><code>o:get(prop)</code>, <code>o:set(prop, value)</code></td><td>Any Inspector property by name: <code>"pos"</code>, <code>"light.radius"</code>, or a short name such as <code>"glow"</code>.</td></tr>
+<tr><td><code>o:move(delta)</code>, <code>o:move_to(pos)</code></td><td>Nudge or place; a vec3 or x, y, z.</td></tr>
+<tr><td><code>o:distance(other)</code></td><td>World distance between two objects.</td></tr>
+<tr><td><code>o:tween(prop, to, seconds, ease)</code></td><td>Animate a property from its current value. Eases: <code>linear</code>, <code>in</code>, <code>out</code>, <code>inout</code>, <code>step</code>, <code>back</code>, <code>elastic</code>.</td></tr>
+<tr><td><code>o:say(text, seconds)</code></td><td>A floating label over the object; repeating the same text keeps it up.</td></tr>
+<tr><td><code>o:play(clip)</code>, <code>o:stop(clip)</code></td><td>Start or stop an animation clip of the scene by name.</td></tr>
+<tr><td><code>o:destroy()</code></td><td>Same as <code>destroy(o)</code>.</td></tr>
+</table>
+
+<h2>Components</h2>
+<p>A component handle's fields are its Inspector properties: <code>light.radius</code> reads, <code>light.radius = 12</code> writes. Reference properties come back as objects or components. Every handle also has:</p>
+<table>
+<tr><th>Field</th><th>Meaning</th></tr>
+<tr><td><code>enabled</code></td><td>The card's checkbox; read and write.</td></tr>
+<tr><td><code>kind</code></td><td>The component kind.</td></tr>
+<tr><td><code>object</code></td><td>The object it belongs to.</td></tr>
+</table>
+
+<h2>Fields</h2>
+<table>
+<tr><th>In <code>fields</code></th><th>Inspector</th><th>On <code>self</code></th></tr>
+<tr><td><code>5</code>, <code>true</code>, <code>"text"</code></td><td>Number, checkbox, text</td><td>The value.</td></tr>
+<tr><td><code>range(v, min, max)</code>, <code>int(v)</code></td><td>Slider, whole number</td><td>A number.</td></tr>
+<tr><td><code>enum("a", "b")</code></td><td>Drop down</td><td>The chosen string.</td></tr>
+<tr><td><code>color("#rrggbb")</code></td><td>Color picker</td><td>A hex string.</td></tr>
+<tr><td><code>vec3(x, y, z)</code></td><td>Three numbers</td><td>A vec3.</td></tr>
+<tr><td><code>object()</code></td><td>Object slot</td><td>An object or nil.</td></tr>
+<tr><td><code>component(kind)</code></td><td>Component slot</td><td>A component, a script's <code>self</code>, or nil.</td></tr>
+<tr><td><code>prefab()</code></td><td>Prefab slot</td><td>A reference to pass to <code>spawn</code>.</td></tr>
+</table>
+
+<h2>vec3</h2>
+<pre><code><span class="k">local</span> a = vec3(1, 2, 0)
+<span class="k">local</span> b = a * 2 + vec3(0, 0, 1)   <span class="c">-- +, -, *, / with vectors or numbers</span>
+<span class="k">local</span> n = (b - a):norm()
+log(a:len(), a:dist(b), a:dot(b), a:cross(b), a:lerp(b, 0.5))</code></pre>
+
+<h2>Input and time</h2>
+<table>
+<tr><th>Function</th><th>Returns</th></tr>
+<tr><td><code>key_down(k)</code></td><td>Whether a key is held: <code>"w"</code>, <code>"space"</code>, <code>"up"</code>, <code>"enter"</code>.</td></tr>
+<tr><td><code>key_pressed(k)</code></td><td>Whether a key went down this frame.</td></tr>
+<tr><td><code>time()</code></td><td>Scene time in seconds.</td></tr>
+<tr><td><code>time_scale(k)</code></td><td>Sets the game speed when given a number (0 pauses, 0.5 is slow motion) and returns it.</td></tr>
+<tr><td><code>log(...)</code></td><td>Writes to the Console, tagged with the script's file.</td></tr>
+<tr><td><code>say(text, seconds)</code></td><td>A label over the script's own object; <code>say(obj, text, seconds)</code> over another.</td></tr>
+<tr><td><code>tween(obj, prop, to, seconds, ease)</code></td><td>Same as <code>obj:tween</code>.</td></tr>
+<tr><td><code>quit()</code></td><td>Ends the game.</td></tr>
+</table>
+<p>Terminals report key presses but not releases, so there a key counts as held for a moment after each press, extended by key repeat. In the editor and in graphical backends releases are exact.</p>
+
+<h2>Camera, environment and pipeline</h2>
+<pre><code>camera.span = 24                  <span class="c">-- zoom: world units across the view</span>
+camera.pitch, camera.yaw = 45, 15
+camera.target = vec3(10, 20, 0)
+camera.follow(find(<span class="s">"hero"</span>), 5)      <span class="c">-- follow with a rate; follow(nil) stops</span>
+
+env.hour = 21.5                   <span class="c">-- any Environment property of the Scene</span>
+env.auto = <span class="k">false</span>
+
+pipeline.pass(<span class="s">"fog"</span>).density = 0.8  <span class="c">-- any pass setting from the Pipeline tab</span>
+pipeline.enable(<span class="s">"outline"</span>, <span class="k">false</span>)
+log(pipeline.enabled(<span class="s">"grade"</span>))</code></pre>
+
+<h2 id="draw">Drawing from Lua</h2>
+<p>A script with a <code>draw(self, d)</code> hook draws extra shapes every frame. Positions and sizes are in the object's local space, so they move, turn and scale with it.</p>
+<table>
+<tr><th>Call</th><th>Draws</th></tr>
+<tr><td><code>d:box(pos, size, color, glow)</code></td><td>A box standing on <code>pos</code>.</td></tr>
+<tr><td><code>d:blob(pos, radius, color, glow)</code></td><td>A sphere resting on <code>pos</code>.</td></tr>
+<tr><td><code>d:cylinder(pos, radius, height, color)</code>, <code>d:cone(...)</code></td><td>Upright solids.</td></tr>
+<tr><td><code>d:point(pos, size, color, glow)</code></td><td>A glowing dot, for sparks and stars.</td></tr>
+<tr><td><code>d:light(pos, radius, color, intensity)</code></td><td>A point light.</td></tr>
+<tr><td><code>d:shadow(pos, rx, ry)</code></td><td>A soft contact shadow.</td></tr>
+</table>
+<pre><code><span class="k">function</span> draw(self, d)
+  <span class="k">local</span> h = 1 + math.sin(time() * 3) * 0.3
+  d:blob(vec3(0, 0, h), 0.4, <span class="s">"#9fd8ff"</span>, 0.8)
+  d:light(vec3(0, 0, h), 6, <span class="s">"#9fd8ff"</span>, 1.2)
+<span class="k">end</span></code></pre>
+
+<h2>From the first API</h2>
+<p>Scripts written for 0.0.1 keep working: <code>dist(a, b)</code> (distance on the ground), <code>hour()</code>, <code>setHour(h)</code>, <code>o:pos()</code> and <code>o:moveTo(x, y, z)</code> are still there.</p>
+<nav class="pager"><a class="prev" href="building.html"><small>Previous</small>Build and release</a><a class="next" href="cli.html"><small>Next</small>CLI reference</a></nav>
+</main>
+</div>
+</body>
+</html>

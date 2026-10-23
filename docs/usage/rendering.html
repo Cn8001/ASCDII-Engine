@@ -17,14 +17,20 @@
 <a href="first-game.html">Your first game</a>
 <h4>Guides</h4>
 <a href="editor.html">The editor</a>
+<a href="gameobjects.html">GameObjects and components</a>
 <a href="scenes.html">Scenes and prefabs</a>
+<a href="assets.html">Assets and import</a>
+<a href="textures.html">Textures and materials</a>
+<a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
 <a href="scripting.html">Lua scripting</a>
 <a href="rendering.html" class="on">Rendering</a>
 <a href="building.html">Build and release</a>
 <h4>Reference</h4>
+<a href="lua-api.html">Lua API</a>
 <a href="cli.html">CLI reference</a>
 <a href="go-api.html">Go API</a>
+<a href="architecture.html">Architecture</a>
 </aside>
 <main>
 <div class="kicker">Guides</div>
@@ -35,7 +41,7 @@
 <h2>A frame, step by step</h2>
 <ol class="steps">
 <li><b>Projection.</b> The camera looks down at a pitch, by default about 52 degrees. Ground depth shrinks with the sine of the pitch and height rises with its cosine, which gives the three quarter look.</li>
-<li><b>Geometry.</b> Nodes draw into a buffer of dots, 2x4 per terminal cell. Each dot keeps its color, surface normal, depth, world position and the entity that drew it. Sprites are vertical planes, so a knight in front of a wall covers it and one behind it is hidden, dot by dot.</li>
+<li><b>Geometry.</b> Components draw into a buffer of dots, 2x4 per terminal cell, sampling textures per dot. Each dot keeps its color, surface normal, depth, world position and the object that drew it. Sprites are vertical planes, so a knight in front of a wall covers it and one behind it is hidden, dot by dot.</li>
 <li><b>Lighting.</b> Shadows are laid on the ground, then every dot is lit by the sun, the sky and point lights such as lanterns and dragon fire.</li>
 <li><b>Post.</b> Water glints, distance fog, a light outline on depth edges, and a final color grade with exposure, contrast, saturation, warmth and vignette.</li>
 <li><b>Braille.</b> Each cell has eight dot colors but a terminal can show only two. The encoder splits the eight into two groups and writes the matching Braille glyph with one foreground and one background color.</li>

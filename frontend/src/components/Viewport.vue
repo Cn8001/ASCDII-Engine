@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { assetKind, type FileDrop } from '../lib/filedrop'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { EventsOn, Viewport } from '../lib/api'
+import { Assets, EventsOn, Viewport } from '../lib/api'
 import { decodeBytes, Painter } from '../lib/cells'
 import { engineKey } from '../lib/keys'
 import { call, findNode, refresh, refreshProps, select, setFrame, store } from '../lib/store'
@@ -231,6 +231,15 @@ async function drop(e: DragEvent) {
   if (!data) return
   const [kind, ...rest] = data.split(':')
   const path = rest.join(':')
+  if (kind === 'material') {
+    const p = local(e)
+    const id = await call(() => Assets.MaterialAt(path, Math.floor(p.x / cw.value), Math.floor(p.y / ch.value)))
+    if (id !== undefined) {
+      await refresh()
+      await select(id)
+    }
+    return
+  }
   if (kind !== 'prefab' && kind !== 'art' && kind !== 'model') return
   await place(`${kind}:${path}`, local(e))
 }

@@ -110,6 +110,8 @@ func Ground(w, d float64, c Color) Component   { return components.NewGround(w, 
 func Water(w, d float64, c Color) Component    { return components.NewWater(w, d, c) }
 func Light(radius float64, c Color) Component  { return components.NewLight(radius, c) }
 func Emitter() Component                       { return components.NewEmitter() }
+func Plane(w, d float64, c Color) Component    { return components.NewPlane(w, d, c) }
+func Quad(w, h float64, c Color) Component     { return components.NewQuad(w, h, c) }
 func Label(text string) Component              { return components.NewLabel(text) }
 func Player() Component                        { return components.NewPlayer() }
 func Toggle(key, target, p string) Component   { return components.NewToggle(key, target, p) }

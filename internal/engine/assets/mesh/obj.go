@@ -38,7 +38,7 @@ func ParseOBJ(r io.Reader, o Options) (*Mesh, []string, error) {
 				return
 			}
 		}
-		m.Parts = append(m.Parts, Part{Material: name, Color: clay()})
+		m.Parts = append(m.Parts, Part{Material: name, Color: clay(), Kd: clay()})
 		part = len(m.Parts) - 1
 	}
 	sc := bufio.NewScanner(r)
@@ -64,23 +64,34 @@ func ParseOBJ(r io.Reader, o Options) (*Mesh, []string, error) {
 				v[i] = x
 			}
 			m.Pos = append(m.Pos, o.engine(geom.V3(v[0], v[1], v[2])))
+		case "vt":
+			if len(f) < 3 {
+				return nil, nil, fmt.Errorf("%w: line %d: texture coordinate needs 2 numbers", ErrBadOBJ, line)
+			}
+			u, eu := strconv.ParseFloat(f[1], 64)
+			v, ev := strconv.ParseFloat(f[2], 64)
+			if eu != nil || ev != nil {
+				return nil, nil, fmt.Errorf("%w: line %d: bad texture coordinate", ErrBadOBJ, line)
+			}
+			m.UV = append(m.UV, geom.V2(u, v))
 		case "f":
 			if len(f) < 4 {
 				return nil, nil, fmt.Errorf("%w: line %d: face needs 3 corners", ErrBadOBJ, line)
 			}
 			idx := make([]int, 0, len(f)-1)
+			uvs := make([]int, 0, len(f)-1)
 			for _, c := range f[1:] {
-				i, err := corner(c, len(m.Pos))
+				i, t, err := corner(c, len(m.Pos), len(m.UV))
 				if err != nil {
 					return nil, nil, fmt.Errorf("%w: line %d: %w", ErrBadOBJ, line, err)
 				}
-				idx = append(idx, i)
+				idx, uvs = append(idx, i), append(uvs, t)
 			}
 			if part < 0 {
 				use("")
 			}
 			for k := 2; k < len(idx); k++ {
-				m.Tris = append(m.Tris, Tri{V: [3]int{idx[0], idx[k], idx[k-1]}, Part: part})
+				m.Tris = append(m.Tris, Tri{V: [3]int{idx[0], idx[k], idx[k-1]}, T: [3]int{uvs[0], uvs[k], uvs[k-1]}, Part: part})
 			}
 		case "usemtl":
 			use(strings.Join(f[1:], " "))
@@ -98,11 +109,24 @@ func ParseOBJ(r io.Reader, o Options) (*Mesh, []string, error) {
 	return m, libs, nil
 }
 
-// corner reads the position index of "v", "v/vt", "v//vn" or "v/vt/vn";
-// negative indices count back from the last vertex.
-func corner(s string, n int) (int, error) {
-	v, _, _ := strings.Cut(s, "/")
-	i, err := strconv.Atoi(v)
+// corner reads "v", "v/vt", "v//vn" or "v/vt/vn" into a position index and
+// a texture coordinate index, -1 when absent; negative indices count back.
+func corner(s string, n, nt int) (int, int, error) {
+	v, rest, _ := strings.Cut(s, "/")
+	i, err := index(v, n)
+	if err != nil {
+		return 0, 0, err
+	}
+	vt, _, _ := strings.Cut(rest, "/")
+	if vt == "" {
+		return i, -1, nil
+	}
+	t, err := index(vt, nt)
+	return i, t, err
+}
+
+func index(s string, n int) (int, error) {
+	i, err := strconv.Atoi(s)
 	if err != nil {
 		return 0, err
 	}
@@ -110,7 +134,7 @@ func corner(s string, n int) (int, error) {
 		i = n + i + 1
 	}
 	if i < 1 || i > n {
-		return 0, fmt.Errorf("vertex %d out of range", i)
+		return 0, fmt.Errorf("index %d out of range", i)
 	}
 	return i - 1, nil
 }
@@ -192,7 +216,7 @@ func Load(ctx context.Context, fsys fs.FS, p string, o Options) (*Mesh, error) {
 		if !ok {
 			continue
 		}
-		m.Parts[i].Color, m.Parts[i].Texture = mat.Color, mat.Texture
+		m.Parts[i].Color, m.Parts[i].Kd, m.Parts[i].Texture = mat.Color, mat.Color, mat.Texture
 		if mat.Texture == "" {
 			continue
 		}

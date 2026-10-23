@@ -8,8 +8,12 @@ One Go module.
 
 - `pkg/ascdii` public facade: type aliases and constructors for engine users.
   Nothing else lives under `pkg/`.
-- `internal/engine/...` the engine, one package per concern (color, geom, raster,
-  scene, pipeline, ...).
+- `internal/engine/...` the engine, one package per concern, grouped by module:
+  `core` (color, geom, prop, input, ...), `render` (raster, texture, draw,
+  pipeline, ...), `world` (scene: GameObjects, components, references;
+  components; anim; fx), `assets` (asset, mesh, material), `script/vm` (Lua),
+  `platform` (backend contract, terminal, headless), `runtime` (app, project,
+  bundle, ...).
 - `internal/dragonfall/...` example game content built on the engine.
 - `internal/editor/...` editor backend (session, services, Wails adapters).
 - `cmd/launcher` the terminal main menu as its own program; the menu code is
@@ -45,14 +49,17 @@ engine never imports either.
 
 ## Assets
 
-Every asset has a `<file>.meta` with a UUIDv7 (`internal/engine/guid`). Scenes
-reference prefabs, scripts and art by that id; `asset.Library.Resolve` turns ids
-(or legacy paths) into files. Prefab instances store overrides, not copies.
+Every asset has a `<file>.meta` with a UUIDv7 (`internal/engine/core/guid`) and
+optional import settings. Scenes reference assets by that id;
+`asset.Library.Resolve` turns ids (or legacy paths) into files. Objects inside a
+scene or prefab have a random file id (`fid`); object and component references
+use it (`scene.RefOf`, `scene.Lookup`). Prefab instances store overrides, not
+copies. Generated content uses `scene.CountingFIDs` so it stays deterministic.
 
 ## Units
 
 Content is authored in world units only. Dots (2x4 per cell) and cells exist
-inside `internal/engine/raster` and the resolver. Sprite art uses art pixels (y down, origin
+inside `internal/engine/render/raster` and the resolver. Sprite art uses art pixels (y down, origin
 at the feet) scaled by `Sprite.Scale` world units per pixel.
 
 ## Commands

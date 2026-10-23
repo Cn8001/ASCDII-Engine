@@ -179,6 +179,14 @@ func (b *Binder) Model(name string, p *string) *Binder {
 	return b.text(Prop{Name: name, Type: ModelRef}, p)
 }
 
+func (b *Binder) Texture(name string, p *string) *Binder {
+	return b.text(Prop{Name: name, Type: TexRef}, p)
+}
+
+func (b *Binder) Material(name string, p *string) *Binder {
+	return b.text(Prop{Name: name, Type: MatRef}, p)
+}
+
 func (b *Binder) Prefab(name string, p *string) *Binder {
 	return b.text(Prop{Name: name, Type: PrefabRef}, p)
 }

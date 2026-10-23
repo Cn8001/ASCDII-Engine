@@ -10,6 +10,8 @@ import BuildDialog from './BuildDialog.vue'
 import ConsolePanel from './ConsolePanel.vue'
 import FloatingWindow from './FloatingWindow.vue'
 import Icon from './Icon.vue'
+import AssetInspector from './AssetInspector.vue'
+import NewProjectDialog from './NewProjectDialog.vue'
 import Inspector from './Inspector.vue'
 import PipelinePanel from './PipelinePanel.vue'
 import ProjectWindow from './ProjectWindow.vue'
@@ -42,6 +44,9 @@ async function shortcut(e: KeyboardEvent) {
   } else if (mod && k === 'd' && store.selected) {
     e.preventDefault()
     await duplicate(store.selected)
+  } else if (mod && k === 'n') {
+    e.preventDefault()
+    store.newProject = true
   } else if (mod && k === 'b') {
     e.preventDefault()
     store.buildOpen = true
@@ -141,7 +146,8 @@ function tab(active: boolean) {
           <button class="relative flex h-9 items-center gap-1.5 px-2 text-[12px] transition" :class="tab(store.right === 'pipeline')" @click="store.right = 'pipeline'"><Icon name="layers" :size="13" /> Pipeline</button>
         </nav>
         <div class="min-h-0 flex-1">
-          <Inspector v-if="store.right === 'inspector'" />
+          <AssetInspector v-if="store.right === 'inspector' && store.asset" />
+          <Inspector v-else-if="store.right === 'inspector'" />
           <PipelinePanel v-else />
         </div>
       </aside>
@@ -150,5 +156,6 @@ function tab(active: boolean) {
       <AnimationPanel floating />
     </FloatingWindow>
     <BuildDialog v-if="store.buildOpen" />
-  </div>
+    <NewProjectDialog />
+</div>
 </template>

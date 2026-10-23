@@ -604,3 +604,16 @@ func TestUnit_LegacyNamesStillResolve(t *testing.T) {
 		t.Fatalf("got %+v", got)
 	}
 }
+
+func TestUnit_NewObjectsGetRandomFileIDs(t *testing.T) {
+	// Arrange
+	a, b := New("a"), New("b")
+
+	// Act
+	x, y := a.Add("x"), b.Add("x")
+
+	// Assert
+	if x.FID == y.FID || x.FID < 1<<20 || x.FID >= 1<<53 {
+		t.Fatalf("fids %d %d", x.FID, y.FID)
+	}
+}

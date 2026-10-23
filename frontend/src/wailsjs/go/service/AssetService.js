@@ -6,12 +6,44 @@ export function AddSprite(arg1) {
   return window['go']['service']['AssetService']['AddSprite'](arg1);
 }
 
+export function ApplyMaterial(arg1, arg2) {
+  return window['go']['service']['AssetService']['ApplyMaterial'](arg1, arg2);
+}
+
+export function ConvertToArt(arg1, arg2) {
+  return window['go']['service']['AssetService']['ConvertToArt'](arg1, arg2);
+}
+
+export function CreateFolder(arg1) {
+  return window['go']['service']['AssetService']['CreateFolder'](arg1);
+}
+
+export function CreateMaterial(arg1) {
+  return window['go']['service']['AssetService']['CreateMaterial'](arg1);
+}
+
+export function Delete(arg1) {
+  return window['go']['service']['AssetService']['Delete'](arg1);
+}
+
+export function Folders() {
+  return window['go']['service']['AssetService']['Folders']();
+}
+
 export function Import(arg1, arg2) {
   return window['go']['service']['AssetService']['Import'](arg1, arg2);
 }
 
 export function List() {
   return window['go']['service']['AssetService']['List']();
+}
+
+export function MaterialAt(arg1, arg2, arg3) {
+  return window['go']['service']['AssetService']['MaterialAt'](arg1, arg2, arg3);
+}
+
+export function Move(arg1, arg2) {
+  return window['go']['service']['AssetService']['Move'](arg1, arg2);
 }
 
 export function NewScript(arg1) {
@@ -26,10 +58,26 @@ export function Preview(arg1) {
   return window['go']['service']['AssetService']['Preview'](arg1);
 }
 
+export function Props(arg1) {
+  return window['go']['service']['AssetService']['Props'](arg1);
+}
+
 export function Reload() {
   return window['go']['service']['AssetService']['Reload']();
 }
 
 export function Rename(arg1, arg2) {
   return window['go']['service']['AssetService']['Rename'](arg1, arg2);
+}
+
+export function RenameFolder(arg1, arg2) {
+  return window['go']['service']['AssetService']['RenameFolder'](arg1, arg2);
+}
+
+export function SetProp(arg1, arg2, arg3) {
+  return window['go']['service']['AssetService']['SetProp'](arg1, arg2, arg3);
+}
+
+export function Thumb(arg1, arg2) {
+  return window['go']['service']['AssetService']['Thumb'](arg1, arg2);
 }

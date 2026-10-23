@@ -26,6 +26,7 @@ export const store = reactive({
   tree: [] as session.Node[],
   kinds: { components: [] as session.Kind[], prefabs: [] as string[], models: [] as string[] },
   selected: 0,
+  asset: '', // the Project window pick the inspector shows instead of an object
   props: [] as prop.Prop[],
   sceneProps: [] as prop.Prop[],
   assets: [] as asset.Entry[],
@@ -42,6 +43,7 @@ export const store = reactive({
   dots: 'dots' as DotStyle,
   cellPx: 8,
   buildOpen: false,
+  newProject: false,
   busy: '',
   logs: [] as session.LogEntry[],
   key: null as { clip: number; prop: string; t: number } | null,
@@ -106,6 +108,7 @@ export async function refreshAssets() {
 
 export async function select(id: number) {
   store.selected = id
+  store.asset = ''
   await call(() => Scene.Select(id))
   await Promise.all([refreshProps(), refreshClips()])
 }

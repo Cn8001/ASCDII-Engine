@@ -17,14 +17,20 @@
 <a href="first-game.html">Your first game</a>
 <h4>Guides</h4>
 <a href="editor.html">The editor</a>
+<a href="gameobjects.html">GameObjects and components</a>
 <a href="scenes.html">Scenes and prefabs</a>
+<a href="assets.html">Assets and import</a>
+<a href="textures.html">Textures and materials</a>
+<a href="models.html">Models</a>
 <a href="animation.html" class="on">Animation</a>
 <a href="scripting.html">Lua scripting</a>
 <a href="rendering.html">Rendering</a>
 <a href="building.html">Build and release</a>
 <h4>Reference</h4>
+<a href="lua-api.html">Lua API</a>
 <a href="cli.html">CLI reference</a>
 <a href="go-api.html">Go API</a>
+<a href="architecture.html">Architecture</a>
 </aside>
 <main>
 <div class="kicker">Guides</div>
@@ -34,7 +40,7 @@
 
 <h2>Concepts</h2>
 <ul>
-<li>A <b>clip</b> belongs to an entity and has a play mode: <code>once</code>, <code>loop</code> or <code>pingpong</code>.</li>
+<li>A <b>clip</b> belongs to an object and has a play mode: <code>once</code>, <code>loop</code> or <code>pingpong</code>.</li>
 <li>A <b>track</b> animates one property, such as <code>pos.z</code>, <code>color</code> or <code>glow</code>. Numbers, vectors and colors blend smoothly; switches change at the key.</li>
 <li>A <b>key</b> is a value at a time, with an <b>ease</b> toward the next key: <code>linear</code>, <code>in</code>, <code>out</code>, <code>inout</code>, <code>step</code>, <code>back</code> or <code>elastic</code>.</li>
 </ul>
@@ -57,7 +63,7 @@
 <h2>Animation from scripts</h2>
 <p>Scripts can start tweens at runtime, for doors, pickups and UI. They use the same easing and are never saved into the scene.</p>
 <pre><code>tween(self, "pos.z", 4, 0.6, "out")</code></pre>
-<nav class="pager"><a class="prev" href="scenes.html"><small>Previous</small>Scenes and prefabs</a><a class="next" href="scripting.html"><small>Next</small>Lua scripting</a></nav>
+<nav class="pager"><a class="prev" href="models.html"><small>Previous</small>Models</a><a class="next" href="scripting.html"><small>Next</small>Lua scripting</a></nav>
 </main>
 </div>
 </body>

@@ -106,6 +106,8 @@ func Code(err error) string {
 		{session.ErrNotInstance, "not_instance"},
 		{session.ErrUnsupported, "unsupported"},
 		{session.ErrNotReference, "not_reference"},
+		{session.ErrNoSettings, "no_settings"},
+		{session.ErrBadPath, "bad_path"},
 		{asset.ErrExists, "exists"},
 		{session.ErrUnknownTemplate, "unknown_template"},
 		{project.ErrNoManifest, "no_manifest"},

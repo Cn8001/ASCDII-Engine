@@ -119,7 +119,11 @@ export async function dropAsset(e: DragEvent, parent: number): Promise<boolean> 
   if (!data) return false
   const [kind, ...rest] = data.split(':')
   const path = rest.join(':')
-  if (kind === 'prefab' || kind === 'model') {
+  if (kind === 'material' && parent) {
+    await call(() => Assets.ApplyMaterial(parent, path))
+    await refresh()
+    await select(parent)
+  } else if (kind === 'prefab' || kind === 'model') {
     await add(parent, `${kind}:${path}`)
   } else if (kind === 'script' && parent) {
     const key = await call(() => Scene.AddComponent(parent, 'script'))

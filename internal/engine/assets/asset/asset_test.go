@@ -6,6 +6,8 @@ import (
 	"context"
 	"encoding/binary"
 	"errors"
+	"image"
+	stdcolor "image/color"
 	"os"
 	"path/filepath"
 	"strings"
@@ -241,5 +243,33 @@ func TestUnit_MoveKeepsGUID(t *testing.T) {
 	// Assert
 	if err != nil || errMeta != nil || errScript != nil || after.GUID != before.GUID || text != "x = 1" {
 		t.Fatalf("err %v %v %v before %s after %s", err, errMeta, errScript, before.GUID, after.GUID)
+	}
+}
+
+func TestUnit_ImageBecomesGlyphArtAndLoadsBack(t *testing.T) {
+	// Arrange
+	img := image.NewNRGBA(image.Rect(0, 0, 8, 8))
+	for y := 0; y < 8; y++ {
+		for x := 0; x < 8; x++ {
+			if x >= 4 {
+				img.Set(x, y, stdcolor.NRGBA{R: 255, A: 255})
+			}
+		}
+	}
+
+	// Act
+	s, err := ArtFromImage(img, 8)
+	var b bytes.Buffer
+	errEnc := EncodeJSON(&b, "half", s)
+	back, errLoad := LoadJSON(&b)
+
+	// Assert
+	if err != nil || errEnc != nil || errLoad != nil {
+		t.Fatalf("errs %v %v %v", err, errEnc, errLoad)
+	}
+	left, _ := back.At(0, 0)
+	right, _ := back.At(7, 0)
+	if back.Width != 8 || back.Height != 4 || !left.Transparent || right.FG.R < 240 || right.Rune != '▀' {
+		t.Fatalf("size %dx%d left %+v right %+v", back.Width, back.Height, left, right)
 	}
 }
