@@ -13,6 +13,18 @@ import (
 
 var ErrNoData = errors.New("no game data next to the player")
 
+// ModsDir is the folder next to a built game that players put mods in.
+const ModsDir = "mods"
+
+// AddModsDir gives a folder build the empty mods folder, so players of a game
+// with mods enabled see where theirs go.
+func AddModsDir(dir string) error {
+	if err := os.MkdirAll(filepath.Join(dir, ModsDir), 0o755); err != nil {
+		return fmt.Errorf("build: %w", err)
+	}
+	return nil
+}
+
 // BuildFolder writes a game as dir/<exe> plus dir/data/game.pak, replacing
 // what dir held, and a SHA256SUMS of both.
 func BuildFolder(ctx context.Context, dir, exe, player string, fsys fs.FS, skip ...string) (string, error) {

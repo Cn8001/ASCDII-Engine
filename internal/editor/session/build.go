@@ -65,6 +65,11 @@ func (s *Session) Build(ctx context.Context, goos string, single bool, version s
 		if err != nil {
 			return BuildResult{}, err
 		}
+		if m.Mods.Enabled {
+			if err := bundle.AddModsDir(filepath.Dir(exe)); err != nil {
+				return BuildResult{}, err
+			}
+		}
 		return BuildResult{Files: []string{exe}, Dir: filepath.Dir(exe)}, nil
 	}
 	out := filepath.Join(dir, project.BuildDir, name+t.Ext())

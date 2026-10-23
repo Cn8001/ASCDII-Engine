@@ -68,9 +68,9 @@
 <table>
 <tr><th>Target</th><th>Function</th></tr>
 <tr><td><code>make test</code></td><td><code>go vet</code> and <code>go test -race</code> for the whole module.</td></tr>
-<tr><td><code>make cli</code></td><td>Builds <code>bin/ascdii</code>.</td></tr>
-<tr><td><code>make players</code></td><td>Builds the Linux and Windows players into <code>bin/</code>, next to the editor, for builds on both platforms.</td></tr>
-<tr><td><code>make editor-linux</code>, <code>make editor-windows</code></td><td>Builds the editor and copies it into <code>bin/</code>, next to <code>ascdii</code>.</td></tr>
+<tr><td><code>make all</code></td><td>Builds <code>bin/linux</code> and <code>bin/windows</code>. Each folder is a complete installation for its platform and runs from any location it is copied to.</td></tr>
+<tr><td><code>make cli</code></td><td>Builds <code>bin/linux/ascdii</code> and <code>bin/windows/ascdii.exe</code>.</td></tr>
+<tr><td><code>make editor-linux</code>, <code>make editor-windows</code></td><td>Builds the editor into <code>bin/linux</code> or <code>bin/windows</code>, next to <code>ascdii</code>.</td></tr>
 <tr><td><code>make editor-dev</code></td><td>Runs the editor with hot reload; it does not need to be started by <code>ascdii</code>.</td></tr>
 <tr><td><code>make dist</code></td><td>Builds the release archives in <code>bin/dist</code>.</td></tr>
 <tr><td><code>make hello</code>, <code>make dragonfall</code></td><td>Runs the two examples in the terminal.</td></tr>

@@ -273,3 +273,32 @@ func TestUnit_ImageBecomesGlyphArtAndLoadsBack(t *testing.T) {
 		t.Fatalf("size %dx%d left %+v right %+v", back.Width, back.Height, left, right)
 	}
 }
+
+func TestUnit_LoadUnderPrefixesModAssetsAndKeepsGameIDs(t *testing.T) {
+	// Arrange
+	game := fstest.MapFS{
+		"a.sprite.json":      {Data: []byte(tree)},
+		"a.sprite.json.meta": {Data: MetaBytes("01a160e8-5000-7000-8000-000000000001")},
+	}
+	mod := fstest.MapFS{
+		"coin.sprite.json":      {Data: []byte(tree)},
+		"coin.sprite.json.meta": {Data: MetaBytes("01a160e8-5000-7000-8000-000000000001")},
+		"gem.sprite.json":       {Data: []byte(tree)},
+		"gem.sprite.json.meta":  {Data: MetaBytes("01a160e8-5000-7000-8000-000000000002")},
+	}
+	l := NewLibrary(scene.NewRegistry())
+	ctx := context.Background()
+
+	// Act
+	errGame := l.Load(ctx, game)
+	errMod := l.LoadUnder(ctx, mod, "mods/shiny")
+	_, errCoin := l.Sprite("mods/shiny/coin.sprite.json")
+
+	// Assert
+	if errGame != nil || errMod != nil || errCoin != nil {
+		t.Fatal(errGame, errMod, errCoin)
+	}
+	if l.Resolve("01a160e8-5000-7000-8000-000000000001") != "a.sprite.json" || l.Resolve("01a160e8-5000-7000-8000-000000000002") != "mods/shiny/gem.sprite.json" {
+		t.Fatalf("ids %s %s", l.Resolve("01a160e8-5000-7000-8000-000000000001"), l.Resolve("01a160e8-5000-7000-8000-000000000002"))
+	}
+}

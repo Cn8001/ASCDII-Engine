@@ -18,6 +18,7 @@ import (
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/pipeline"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/pack"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/project"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/script/vm"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/scene"
 )
 
@@ -117,6 +118,8 @@ func Code(err error) string {
 		{session.ErrNotParticles, "not_particles"},
 		{session.ErrUnknownPreset, "unknown_preset"},
 		{session.ErrUnknownAction, "unknown_action"},
+		{session.ErrBadSettings, "bad_settings"},
+		{vm.ErrModAPI, "mod_api"},
 		{pack.ErrConflict, "conflict"},
 		{pack.ErrBadName, "bad_name"},
 		{pack.ErrNotPack, "not_package"},

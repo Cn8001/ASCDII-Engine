@@ -38,6 +38,9 @@ const PakFile = "game.pak"
 // stay out; the .meta contents go into the asset index instead.
 func gameFile(p string) bool {
 	l := strings.ToLower(p)
+	if top, _, _ := strings.Cut(l, "/"); top == ModsDir {
+		return false // a project's own mods are for testing, players bring theirs
+	}
 	if strings.HasSuffix(l, ".ascdiiproj") || strings.HasSuffix(l, ".mtl") {
 		return true
 	}

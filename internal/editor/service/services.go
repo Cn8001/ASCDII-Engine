@@ -75,9 +75,15 @@ func (p *ProjectService) OpenScene(rel string) error {
 	return wrap(p.d.Session.OpenScene(p.d.Ctx.Get(), rel))
 }
 func (p *ProjectService) SetStart() error { return wrap(p.d.Session.SetStart(p.d.Ctx.Get())) }
-func (p *ProjectService) Close()          { p.d.Session.CloseProject() }
-func (p *ProjectService) Undo() error     { return wrap(p.d.Session.Undo()) }
-func (p *ProjectService) Redo() error     { return wrap(p.d.Session.Redo()) }
+func (p *ProjectService) Settings() (session.ProjectSettings, error) {
+	return wrap1(p.d.Session.ProjectSettings())
+}
+func (p *ProjectService) SetSettings(v session.ProjectSettings) error {
+	return wrap(p.d.Session.SetProjectSettings(p.d.Ctx.Get(), v))
+}
+func (p *ProjectService) Close()      { p.d.Session.CloseProject() }
+func (p *ProjectService) Undo() error { return wrap(p.d.Session.Undo()) }
+func (p *ProjectService) Redo() error { return wrap(p.d.Session.Redo()) }
 
 type SceneService struct{ d Deps }
 

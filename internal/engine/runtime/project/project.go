@@ -30,16 +30,24 @@ var (
 )
 
 type Manifest struct {
-	Format  int      `json:"format"`
-	Name    string   `json:"name"`
-	Version string   `json:"version"` // semver of the game, used for release names
-	Engine  string   `json:"engine"`  // engine version the project was last saved with
-	Start   string   `json:"start"`
-	Cols    int      `json:"cols,omitempty"`
-	Rows    int      `json:"rows,omitempty"`
-	FPS     int      `json:"fps,omitempty"`
-	Modules []string `json:"modules,omitempty"` // compiled Go components the project uses
-	Legacy  []string `json:"packs,omitempty"`   // the name modules had before packages existed
+	Format  int         `json:"format"`
+	Name    string      `json:"name"`
+	Version string      `json:"version"` // semver of the game, used for release names
+	Engine  string      `json:"engine"`  // engine version the project was last saved with
+	Start   string      `json:"start"`
+	Cols    int         `json:"cols,omitempty"`
+	Rows    int         `json:"rows,omitempty"`
+	FPS     int         `json:"fps,omitempty"`
+	Modules []string    `json:"modules,omitempty"` // compiled Go components the project uses
+	Legacy  []string    `json:"packs,omitempty"`   // the name modules had before packages existed
+	Mods    ModSettings `json:"mods,omitzero"`
+}
+
+// ModSettings decide whether players' mods load, and the script that defines
+// everything they can do.
+type ModSettings struct {
+	Enabled bool   `json:"enabled"`
+	API     string `json:"api,omitempty"`
 }
 
 // Module is compiled content, component kinds written in Go, that a project

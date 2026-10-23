@@ -96,6 +96,8 @@ func TestUnit_FolderBuildPacksOnlyGameData(t *testing.T) {
 		"README.md":                {Data: []byte("notes")},
 		".gitignore":               {Data: []byte("build/")},
 		"build/old":                {Data: []byte("x")},
+		"mods/test/main.lua":       {Data: []byte("log('x')")},
+		"mods/test/coin.png":       {Data: []byte("PNG")},
 	}
 
 	// Act
@@ -112,7 +114,7 @@ func TestUnit_FolderBuildPacksOnlyGameData(t *testing.T) {
 	if _, err := fs.Stat(fsys, "scenes/a.scene.json"); err != nil {
 		t.Fatal("the scene is missing from the pak")
 	}
-	for _, gone := range []string{"README.md", ".gitignore", "build/old", "scenes/a.scene.json.meta"} {
+	for _, gone := range []string{"README.md", ".gitignore", "build/old", "scenes/a.scene.json.meta", "mods/test/main.lua", "mods/test/coin.png"} {
 		if _, err := fs.Stat(fsys, gone); err == nil {
 			t.Fatalf("%s should not be in a build", gone)
 		}

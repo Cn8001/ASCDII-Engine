@@ -19,6 +19,7 @@ import (
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/pipeline"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/loop"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/project"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/script/vm"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/scene"
 )
 
@@ -30,6 +31,8 @@ type Options struct {
 	// Speaker plays the game's sound stream; nil runs silent. Injected so
 	// only the terminal player links the sound device.
 	Speaker func(r io.Reader) (io.Closer, error)
+	Mods    fs.FS                           // the folder holding mod folders; nil loads none
+	Log     func(level, source, msg string) // engine and script messages; nil drops them
 }
 
 func (o Options) withDefaults() Options {
@@ -58,6 +61,13 @@ type Engine struct {
 	frame *pipeline.Frame
 	ctx   scene.Ctx
 	input *input.State
+	mods  *pendingMods // loaded at Open, started by the first Update
+}
+
+type pendingMods struct {
+	api     string
+	sources []vm.ModSource
+	errs    []error
 }
 
 // NewPipeline is the standard chain plus the scene passes bound to get, so the
@@ -71,6 +81,7 @@ func build(o Options, reg *scene.Registry, lib *asset.Library, s *scene.Scene) *
 	e := &Engine{opts: o, reg: reg, lib: lib, scn: s, input: input.NewState()}
 	e.pipe = NewPipeline(e.Scene, o.Now)
 	e.ctx.Pipeline = e.pipe
+	e.ctx.Log = o.Log
 	e.frame = pipeline.NewFrame(o.Cols, o.Rows)
 	return e
 }
@@ -106,6 +117,10 @@ func Open(ctx context.Context, fsys fs.FS, o Options) (*Engine, error) {
 	}
 	e := build(o.withDefaults(), p.Registry, p.Library, s)
 	e.proj = p
+	if m.Mods.Enabled && o.Mods != nil {
+		sources, errs := project.LoadMods(ctx, p.Library, o.Mods)
+		e.mods = &pendingMods{api: m.Mods.API, sources: sources, errs: errs}
+	}
 	return e, nil
 }
 
@@ -140,6 +155,13 @@ func (e *Engine) Update(dt float64, keys []input.Key) (bool, error) {
 		}
 	}
 	e.ctx.Scene = e.scn
+	if m := e.mods; m != nil {
+		e.mods = nil
+		// Mods start once the scene runs, so the API script sees the game.
+		for _, err := range append(m.errs, vm.StartMods(&e.ctx, e.lib, e.reg, m.api, m.sources)...) {
+			e.ctx.Logf("error", "mods", "%v", err)
+		}
+	}
 	if err := e.scn.Update(&e.ctx, dt, keys); err != nil {
 		return false, fmt.Errorf("update: %w", err)
 	}
