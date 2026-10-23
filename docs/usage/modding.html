@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mods | ASCDII Engine</title>
+<link rel="icon" href="img/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+<script src="zoom.js" defer></script>
+</head>
+<body>
+<div class="layout">
+<aside class="side">
+<a class="brand" href="index.html"><img src="img/logo.svg" alt=""><span>ASCDII Engine<small>0.0.1 docs</small></span></a>
+<h4>Start</h4>
+<a href="index.html">Welcome</a>
+<a href="install.html">Install</a>
+<a href="first-game.html">Your first game</a>
+<h4>Guides</h4>
+<a href="editor.html">The editor</a>
+<a href="gameobjects.html">GameObjects and components</a>
+<a href="scenes.html">Scenes and prefabs</a>
+<a href="assets.html">Assets and import</a>
+<a href="packages.html">Packages</a>
+<a href="textures.html">Textures, materials, sprites</a>
+<a href="models.html">Models</a>
+<a href="animation.html">Animation</a>
+<a href="particles.html">Particles</a>
+<a href="audio.html">Audio</a>
+<a href="physics.html">Physics</a>
+<a href="scripting.html">Lua scripting</a>
+<a href="rendering.html">Rendering</a>
+<a href="building.html">Build</a>
+<a href="modding.html" class="on">Mods</a>
+<h4>Reference</h4>
+<a href="components.html">Component reference</a>
+<a href="dragonfall.html">Dragonfall module</a>
+<a href="lua-api.html">Lua API</a>
+<a href="cli.html">CLI reference</a>
+<a href="go-api.html">Go API</a>
+<a href="architecture.html">Architecture</a>
+</aside>
+<main>
+<div class="kicker">Guides</div>
+<h1>Mods</h1>
+<p class="lead">Mods let the players of a built game extend it with Lua and assets of their own. The developer decides whether a game accepts mods and defines everything they can do in one script, the mod API. Mods cannot reach the scene, GameObjects or components; they call only what the API provides.</p>
+
+<h2>Overview</h2>
+<table>
+<tr><th>Part</th><th>Written by</th><th>Function</th></tr>
+<tr><td>Mod settings</td><td>Developer</td><td>Turn mod support on and name the API script, in <b>Project Settings</b>. Mods are off by default.</td></tr>
+<tr><td>API script</td><td>Developer</td><td>A project script that declares functions, values and events with the <code>api</code> global. It runs in the game with the full <a href="lua-api.html">Lua API</a>.</td></tr>
+<tr><td>Events</td><td>Developer</td><td>Game scripts send declared events to every mod with <code>mods.emit</code>.</td></tr>
+<tr><td>Mod</td><td>Player</td><td>A folder in <code>mods/</code> next to the game with a <code>main.lua</code> and optional assets.</td></tr>
+</table>
+
+<h2 id="enabling">Enabling mods</h2>
+<figure><img src="img/project-settings.png" alt="Project Settings window"><figcaption>Project Settings with mods enabled and <code>scripts/modapi.lua</code> as the API script.</figcaption></figure>
+<ol class="steps">
+<li>Create the API script, for example <code>scripts/modapi.lua</code>, see <a href="#api-script">The API script</a>.</li>
+<li>Open <b>Project Settings</b> with the sliders button in the toolbar, next to <b>Build</b>.</li>
+<li>Select <b>Mods</b> and choose the script under <b>API script</b>. Press <b>Save</b>.</li>
+</ol>
+<p>The settings are stored in the manifest:</p>
+<pre><code>"mods": {
+  "enabled": true,
+  "api": "scripts/modapi.lua"
+}</code></pre>
+<p>With mods disabled, the game never reads a <code>mods/</code> folder, builds contain no <code>mods/</code> folder and <code>mods.emit</code> does nothing.</p>
+<p>The other fields of the window edit the manifest as well: <b>Name</b> and <b>Version</b> of the game, the <b>Start scene</b> a build begins with, the <b>Terminal size</b> in columns and rows the game requests, and the <b>Frame rate</b>. A size or frame rate of 0 uses the defaults of 120 by 40 cells and 30 frames per second.</p>
+
+<h2 id="api-script">The API script</h2>
+<p>The API script runs once when the game starts, after the start scene is loaded and before any mod runs. It is an ordinary project script with access to the whole Lua API, and one additional global, <code>api</code>:</p>
+<table>
+<tr><th>Function</th><th>Effect</th></tr>
+<tr><td><code>api.func(name, fn)</code></td><td>Mods call <code>game.&lt;name&gt;(...)</code>, which runs <code>fn</code> in the game with the arguments and returns its first result.</td></tr>
+<tr><td><code>api.value(name, fn)</code></td><td>Mods read <code>game.&lt;name&gt;()</code>. The function returns a copy of the value; mods cannot change it.</td></tr>
+<tr><td><code>api.event(name)</code></td><td>Declares an event that mods handle with a global function <code>on_&lt;name&gt;</code>. The event <code>load</code> is built in.</td></tr>
+</table>
+<p>Names consist of letters, digits and underscores and do not start with a digit. Functions and values share the <code>game</code> table, so each name is used once.</p>
+
+<h2 id="events">Sending events</h2>
+<p>Every game script has the global <code>mods</code>. <code>mods.emit(name, ...)</code> calls <code>on_&lt;name&gt;(...)</code> in every mod that defines it, in the order the mods were loaded. The name must be declared with <code>api.event</code>; any other name raises an error. Without mods, the call does nothing, so scripts can send events unconditionally.</p>
+<pre><code><span class="c">-- scripts/rules.lua, on a GameObject of the scene</span>
+function key(self, k)
+  mods.emit("key", k)
+end</code></pre>
+<p>Events sent from inside a mod handler, through an API function, are delivered to a depth of four; deeper events are dropped.</p>
+
+<h2 id="writing">Writing a mod</h2>
+<p>A mod is a folder in <code>mods/</code> next to the game executable. The folder name is the mod's name. A folder without <code>main.lua</code> is ignored.</p>
+<pre><code>Dragonfall/
+  Dragonfall              <span class="c">the game</span>
+  data/game.pak
+  mods/
+    coins/
+      main.lua            <span class="c">required</span>
+      coin.sprite.json    <span class="c">optional assets</span>
+      coin.prefab.json
+      pickup.wav</code></pre>
+<p><code>main.lua</code> runs once when the game starts. It defines the handlers the mod uses; after every mod has loaded, each mod's <code>on_load()</code> runs.</p>
+<p>A mod has these globals:</p>
+<table>
+<tr><th>Global</th><th>Function</th></tr>
+<tr><td><code>game</code></td><td>The functions and values of the API script.</td></tr>
+<tr><td><code>log(...)</code></td><td>Writes a message tagged <code>mod:&lt;name&gt;</code>. <code>print</code> does the same.</td></tr>
+<tr><td><code>asset(path)</code></td><td>Turns a path inside the mod folder into the path the game knows, <code>mods/&lt;name&gt;/&lt;path&gt;</code>, for passing to API functions. Paths that leave the mod folder raise an error.</td></tr>
+<tr><td><code>vec3(x, y, z)</code></td><td>A vector, as in game scripts.</td></tr>
+<tr><td><code>math</code>, <code>string</code>, <code>table</code></td><td>The standard Lua libraries.</td></tr>
+</table>
+<p>Nothing else is available: no <code>find</code>, <code>spawn</code> or other game functions, no files (<code>io</code>, <code>os</code>, <code>require</code>, <code>load</code>), and no access to other mods.</p>
+
+<h3>Values across the boundary</h3>
+<p>Every mod runs in a Lua state of its own. Arguments and results are copied between the mod and the game, and only plain data is copied: numbers, strings, booleans, vectors and tables of these, to a depth of eight. GameObject and component handles, functions and other values become <code>nil</code>. A mod therefore never holds an object of the game; the API decides what it may see.</p>
+
+<h3>Assets</h3>
+<p>The assets of a mod folder are loaded like project assets, under <code>mods/&lt;name&gt;/</code>. Sprites, prefabs, textures, materials, models and sounds created in the editor keep their <code>.meta</code> files. An id the game already uses keeps referring to the game's asset; the mod's copy is then reached by its path. A mod uses its assets by passing <code>asset(path)</code> to an API function that accepts asset paths, such as a spawn function.</p>
+
+<h3>Errors and time limit</h3>
+<p>Every call into a mod has a time limit of 50 milliseconds. A mod that fails to load, raises an error or exceeds the limit is reported with its name; the handler is skipped and the game and the other mods continue. A mod with an error in <code>main.lua</code> is not loaded.</p>
+
+<h2 id="logs">Messages</h2>
+<table>
+<tr><th>Where the game runs</th><th>Mod messages and errors</th></tr>
+<tr><td>Built game, <code>ascdii run</code></td><td><code>mods/log.txt</code>, rewritten at the first message of each run; the terminal shows the game.</td></tr>
+<tr><td><code>ascdii preview</code>, <code>--preview</code></td><td>Standard error.</td></tr>
+<tr><td>Editor play mode</td><td>The Console, with the source <code>mod:&lt;name&gt;</code>.</td></tr>
+</table>
+
+<h2 id="testing">Testing mods</h2>
+<p>Play mode in the editor and <code>ascdii run</code> load the project's own <code>mods/</code> folder, so the API can be tested with real mods. Builds leave the project's <code>mods/</code> folder out of the game data; a folder build of a game with mods enabled contains an empty <code>mods/</code> folder for players.</p>
+
+<h2 id="example">Example</h2>
+<p>The developer exposes spawning, the hero's position and key presses:</p>
+<pre><code><span class="c">-- scripts/modapi.lua</span>
+api.func("spawn", function(prefab, x, y)
+  spawn(prefab, x, y)
+  return true
+end)
+
+api.value("hero_position", function()
+  return find("hero").position
+end)
+
+api.event("key")</code></pre>
+<p>A mod places its own lantern next to the hero and reports keys:</p>
+<pre><code><span class="c">-- mods/lamp/main.lua</span>
+function on_load()
+  local p = game.hero_position()
+  game.spawn(asset("lamp.prefab.json"), p.x + 3, p.y)
+  log("lamp placed at", p.x + 3, p.y)
+end
+
+function on_key(k)
+  log("key", k)
+end</code></pre>
+<p><code>game.hero_position()</code> returns a copy of the vector; <code>find</code> is <code>nil</code> inside the mod, so the hero object itself stays out of reach.</p>
+<nav class="pager"><a class="prev" href="building.html"><small>Previous</small>Build</a><a class="next" href="components.html"><small>Next</small>Component reference</a></nav>
+</main>
+</div>
+</body>
+</html>

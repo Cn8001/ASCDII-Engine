@@ -31,6 +31,7 @@
 <a href="scripting.html">Lua scripting</a>
 <a href="rendering.html">Rendering</a>
 <a href="building.html">Build</a>
+<a href="modding.html">Mods</a>
 <h4>Reference</h4>
 <a href="components.html">Component reference</a>
 <a href="dragonfall.html">Dragonfall module</a>
@@ -106,6 +107,9 @@ docs/     usage (these pages), nav.py (rewrites their navigation)</code></pre>
 
 <h2>Modules and packages</h2>
 <p>A <b>module</b> (<code>project.Module</code>) is Go code: a name and a function that registers component kinds. Modules are compiled into the editor and the player, and a project lists the ones it uses in its manifest; only those are installed into its registry. A <b>package</b> (<code>runtime/pack</code>) is data: assets with .meta files and a <code>pack.json</code> naming the modules they need. Installing a package copies it into <code>packages/&lt;name&gt;/</code> and adds its modules; see <a href="packages.html">Packages</a>.</p>
+
+<h2>Mods</h2>
+<p><code>script/vm</code> hosts mods (<code>mods.go</code>). The developer's API script runs in the game's VM and fills a host with the functions, values and events it declares. Each mod gets a Lua state of its own with only the base, string, table and math libraries plus <code>game</code>, <code>log</code>, <code>asset</code> and <code>vec3</code>. A bridge function per API entry copies arguments and results as plain Go data (<code>marshal.go</code>), which drops handles, so no reference into the game crosses. Calls into a mod run under a 50 millisecond context deadline. <code>runtime/project.LoadMods</code> reads the mod folders and loads their assets under <code>mods/&lt;name&gt;/</code> with <code>asset.Library.LoadUnder</code>; <code>runtime/app</code> starts the mods on the first update, when the scene runs, and the editor does the same when play mode starts.</p>
 
 <h2>The editor</h2>
 <p><code>editor/session</code> owns the open project, the edited scene, a cloned scene during play, the undo history and the render loop. <code>editor/service</code> is the boundary to the Vue interface: Wails binds its methods, and every error leaves it with a stable code such as <code>not_found:</code> or <code>prefab_locked:</code>. Frames reach the interface as raw bytes from a small HTTP handler rather than as JSON, so a 220 by 60 view remains cheap at 60 frames per second.</p>

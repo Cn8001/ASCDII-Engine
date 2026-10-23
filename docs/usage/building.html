@@ -31,6 +31,7 @@
 <a href="scripting.html">Lua scripting</a>
 <a href="rendering.html">Rendering</a>
 <a href="building.html" class="on">Build</a>
+<a href="modding.html">Mods</a>
 <h4>Reference</h4>
 <a href="components.html">Component reference</a>
 <a href="dragonfall.html">Dragonfall module</a>
@@ -61,6 +62,7 @@ build/windows/Dragonfall/
   data/game.pak
   SHA256SUMS</code></pre>
 <p>A single file build is the player with the compiled project appended, together with a <code>.sha256</code> file.</p>
+<p>When mods are enabled in Project Settings, a folder build also contains an empty <code>mods/</code> folder, where players place mods; a single file build reads the <code>mods/</code> folder next to the executable. The project's own <code>mods/</code> folder is never part of a build. See <a href="modding.html">Mods</a>.</p>
 
 <h2>Players</h2>
 <p>The player is the <code>ascdii-player</code> program, renamed to the game: started with game data, it plays the game. The editor takes the player for its own platform from the <code>ascdii-player</code> next to it. An installation contains only the player of its own platform. To build for the other platform, copy the <code>ascdii-player</code> of that platform into the editor folder under this name: <code>ascdii-player-windows-amd64.exe</code> next to a Linux editor, <code>ascdii-player-linux-amd64</code> next to a Windows editor. Platforms without a player cannot be selected in the build dialog.</p>
@@ -88,7 +90,7 @@ cd Quest && sha256sum -c SHA256SUMS   <span class="c"># verify the files</span>
 ./Quest/Quest --preview -size 160x50 -time 2   <span class="c"># one frame as text, without a terminal</span></code></pre>
 <p>The player first looks for data appended to itself, then for <code>data/game.pak</code> next to it; the two must stay together when a folder build is moved.</p>
 <div class="note"><b>Versions</b>The engine version is 0.0.1. Empty projects start at version 0.0.1, projects from the Dragonfall template at 0.1.0. The manifest also records the engine version the project was last saved with.</div>
-<nav class="pager"><a class="prev" href="rendering.html"><small>Previous</small>Rendering</a><a class="next" href="components.html"><small>Next</small>Component reference</a></nav>
+<nav class="pager"><a class="prev" href="rendering.html"><small>Previous</small>Rendering</a><a class="next" href="modding.html"><small>Next</small>Mods</a></nav>
 </main>
 </div>
 </body>

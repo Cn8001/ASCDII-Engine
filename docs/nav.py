@@ -7,7 +7,7 @@ nav = [
   ('Start', [('index.html','Welcome'),('install.html','Install'),('first-game.html','Your first game')]),
   ('Guides', [('editor.html','The editor'),('gameobjects.html','GameObjects and components'),('scenes.html','Scenes and prefabs'),
               ('assets.html','Assets and import'),('packages.html','Packages'),('textures.html','Textures, materials, sprites'),('models.html','Models'),
-              ('animation.html','Animation'),('particles.html','Particles'),('audio.html','Audio'),('physics.html','Physics'),('scripting.html','Lua scripting'),('rendering.html','Rendering'),('building.html','Build')]),
+              ('animation.html','Animation'),('particles.html','Particles'),('audio.html','Audio'),('physics.html','Physics'),('scripting.html','Lua scripting'),('rendering.html','Rendering'),('building.html','Build'),('modding.html','Mods')]),
   ('Reference', [('components.html','Component reference'),('dragonfall.html','Dragonfall module'),('lua-api.html','Lua API'),('cli.html','CLI reference'),('go-api.html','Go API'),('architecture.html','Architecture')]),
 ]
 order = [p for _, ps in nav for p in ps]
