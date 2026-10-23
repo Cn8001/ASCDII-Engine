@@ -1,0 +1,85 @@
+# ASCDII Engine 0.0.1
+
+A 2.5D render engine that draws into Unicode Braille. Every terminal cell holds
+2x4 depth tested, lit subpixels that are reduced to one foreground and one
+background color. Games run in any truecolor terminal; the editor is a Wails
+desktop app.
+
+## Quick start
+
+```bash
+make test                       # go vet + go test -race
+make hello                      # smallest program, see cmd/hello
+make dragonfall                 # the sample game in the terminal
+make players editor-dev         # editor with hot reload (WSLg / Linux)
+```
+
+```go
+e := ascdii.New(ascdii.Options{})
+s := e.Scene()
+s.Add("ground", ascdii.Ground(40, 40, ascdii.Hex("#46623e")))
+s.Add("crate", ascdii.Box(ascdii.V3(2, 2, 2), ascdii.Hex("#b08050"))).Blocking()
+s.Add("hero", ascdii.Blob(.8, ascdii.Hex("#e8b04b"))).At(0, 5, 0).With(ascdii.Player())
+s.Animate("crate", ascdii.Tween("pos.z", 0.0, 1.5, 1.2, ascdii.InOut).Bouncing())
+err := e.Run(ctx, os.Stdin, os.Stdout)
+```
+
+## Projects
+
+A game is a folder you can keep in git:
+
+```
+MyGame/
+  MyGame.ascdiiproj      manifest: name, version, engine, start scene, packs
+  scenes/*.scene.json    entity trees, camera, environment, animation clips
+  prefabs/*.prefab.json  reusable entity trees, instanced by reference
+  art/*.json | *.xp      glyph art (JSON palette art or REXPaint)
+  build/                 output, ignored by the generated .gitignore
+```
+
+CLI, also the game player:
+
+```bash
+ascdii new MyGame -template dragonfall
+ascdii run MyGame
+ascdii preview MyGame -size 160x50 -time 2
+ascdii build MyGame                          # one executable, project appended
+ascdii release MyGame -players bin/players   # per platform exe + zip + SHA256SUMS
+ascdii version
+```
+
+A build is the `ascdii` binary with the project zipped onto its end; when it
+finds a bundle it plays it, so a release is a single file per platform.
+
+## Editor
+
+`make editor-linux` and `make editor-windows` write `cmd/editor/build/bin/`.
+Panels: scene tree (drag to reparent, right click to add, duplicate, save as
+prefab), live 2.5D viewport (drag pan, right drag orbit, wheel zoom, click to
+pick, drag the handle to move), inspector (scrub labels, key any property),
+pipeline (toggle, reorder, timings, pass settings), assets, timeline, build and
+release.
+
+Keys: Space play, Esc stop, Ctrl+S save, Ctrl+Z / Ctrl+Y undo and redo,
+Ctrl+D duplicate, Del delete, F focus, Ctrl+B build.
+
+## Render model
+
+- One unit: world units. Dots and cells exist only inside the rasterizer.
+- Camera with pitch and yaw; depth comes from the projection, never by hand.
+- Deferred G-buffer per dot: albedo, normal, depth, world position, tag.
+- Passes: clear, scene, shadows, lighting, water, fog, outline, grade,
+  braille, cells. Add your own with `ascdii.Func(name, stage, fn)`.
+- Collision reads the same bounds that drawing uses.
+
+## Documentation
+
+Open `docs/usage/index.html` in a browser: an offline tutorial covering install,
+a first game, the editor, scenes and prefabs, animation, Lua scripting,
+rendering, building and the Go API.
+
+## Layout
+
+`pkg/ascdii` is the only public package. The engine lives in
+`internal/engine/*`, the sample content in `internal/dragonfall`, the editor
+backend in `internal/editor`, the UI in `frontend/`. See `CLAUDE.md` for rules.

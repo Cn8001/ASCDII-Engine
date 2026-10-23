@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CLI reference | ASCDII Engine</title>
+<link rel="icon" href="img/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="layout">
+<aside class="side">
+<a class="brand" href="index.html"><img src="img/logo.svg" alt=""><span>ASCDII Engine<small>0.0.1 docs</small></span></a>
+<h4>Start</h4>
+<a href="index.html">Welcome</a>
+<a href="install.html">Install</a>
+<a href="first-game.html">Your first game</a>
+<h4>Guides</h4>
+<a href="editor.html">The editor</a>
+<a href="scenes.html">Scenes and prefabs</a>
+<a href="animation.html">Animation</a>
+<a href="scripting.html">Lua scripting</a>
+<a href="rendering.html">Rendering</a>
+<a href="building.html">Build and release</a>
+<h4>Reference</h4>
+<a href="cli.html" class="on">CLI reference</a>
+<a href="go-api.html">Go API</a>
+</aside>
+<main>
+<div class="kicker">Reference</div>
+<h1>CLI reference</h1>
+<p class="lead">The ascdii binary is both the developer tool and the game player. When it finds a packed project inside itself, it just plays it.</p>
+<h2>Main menu</h2>
+<p>Start <code>ascdii</code> without arguments, or double click it, and a menu opens in the terminal: continue the last project, play the Dragonfall demo, open a project from the recent list or by path, or create a new one. Use the arrow keys or <kbd>W</kbd> <kbd>S</kbd>, <kbd>Enter</kbd> to choose, <kbd>Esc</kbd> to go back. When a game ends you return to the menu. The recent list is shared with the editor.</p>
+<h2>Commands</h2>
+<table>
+<tr><th>Command</th><th>Does</th></tr>
+<tr><td><code>ascdii new &lt;dir&gt; [-name N] [-template dragonfall]</code></td><td>Create a project. Without a template you get a small starter scene.</td></tr>
+<tr><td><code>ascdii run &lt;dir&gt;</code></td><td>Play a project folder in this terminal.</td></tr>
+<tr><td><code>ascdii preview &lt;dir&gt; [-size 160x50] [-time 2] [-hour 22] [-plain]</code></td><td>Print one frame after simulating some time.</td></tr>
+<tr><td><code>ascdii build &lt;dir&gt; [-out path] [-player path]</code></td><td>One executable. The player defaults to this binary.</td></tr>
+<tr><td><code>ascdii release &lt;dir&gt; [-version v] [-players dir]</code></td><td>Executables, zips and SHA256SUMS for every available player.</td></tr>
+<tr><td><code>ascdii version</code></td><td>Print the engine version.</td></tr>
+<tr><td><code>ascdii help</code></td><td>Print this list.</td></tr>
+</table>
+
+<h2>Make targets</h2>
+<table>
+<tr><th>Target</th><th>Does</th></tr>
+<tr><td><code>make test</code></td><td><code>go vet</code> and <code>go test -race</code> for the whole module.</td></tr>
+<tr><td><code>make cli</code></td><td>Build <code>bin/ascdii</code>.</td></tr>
+<tr><td><code>make players</code></td><td>Linux and Windows players, also copied into the editor.</td></tr>
+<tr><td><code>make editor-dev</code>, <code>make editor-linux</code>, <code>make editor-windows</code></td><td>Run or build the editor.</td></tr>
+<tr><td><code>make hello</code>, <code>make dragonfall</code></td><td>The two examples in the terminal.</td></tr>
+<tr><td><code>make template</code></td><td>Regenerate the Dragonfall template from its Go source.</td></tr>
+<tr><td><code>make brand</code></td><td>Regenerate the app icon.</td></tr>
+<tr><td><code>make bench</code></td><td>Frame time of the sample scene.</td></tr>
+</table>
+<nav class="pager"><a class="prev" href="building.html"><small>Previous</small>Build and release</a><a class="next" href="go-api.html"><small>Next</small>Go API</a></nav>
+</main>
+</div>
+</body>
+</html>

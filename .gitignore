@@ -1,0 +1,10 @@
+/bin/
+/cmd/editor/build/bin/
+/internal/editor/players/bin/ascdii-*
+/frontend/node_modules/
+/frontend/dist/*
+!/frontend/dist/.gitkeep
+*.test
+*.out
+/dragonfall
+/hello

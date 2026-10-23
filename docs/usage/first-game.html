@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your first game | ASCDII Engine</title>
+<link rel="icon" href="img/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="layout">
+<aside class="side">
+<a class="brand" href="index.html"><img src="img/logo.svg" alt=""><span>ASCDII Engine<small>0.0.1 docs</small></span></a>
+<h4>Start</h4>
+<a href="index.html">Welcome</a>
+<a href="install.html">Install</a>
+<a href="first-game.html" class="on">Your first game</a>
+<h4>Guides</h4>
+<a href="editor.html">The editor</a>
+<a href="scenes.html">Scenes and prefabs</a>
+<a href="animation.html">Animation</a>
+<a href="scripting.html">Lua scripting</a>
+<a href="rendering.html">Rendering</a>
+<a href="building.html">Build and release</a>
+<h4>Reference</h4>
+<a href="cli.html">CLI reference</a>
+<a href="go-api.html">Go API</a>
+</aside>
+<main>
+<div class="kicker">Start</div>
+<h1>Your first game</h1>
+<p class="lead">Fifteen minutes from nothing to a knight walking past a castle at sunset. You will create a project, look around, change things, play, save and commit.</p>
+<h2>1. Create a project</h2>
+<ol class="steps">
+<li>Start the editor. After the splash you see the start screen.</li>
+<li>Pick <b>Dragonfall</b> as the template, type a name, choose a <b>Location</b> with the folder dialog and press <b>Create</b>.</li>
+<li>The editor creates <code>&lt;location&gt;/&lt;name&gt;/</code> with a <code>.ascdiiproj</code> manifest, scenes, prefabs, art and scripts, and opens it.</li>
+</ol>
+<figure><img src="img/editor-start.png" alt="Start screen"><figcaption>Start screen: templates on the left, recent projects on the right.</figcaption></figure>
+<p>Prefer the terminal? The same thing:</p>
+<pre><code>ascdii new ~/games/quest -name "Quest" -template dragonfall</code></pre>
+
+<h2>2. Look around</h2>
+<figure><img src="img/editor-main.png" alt="Editor"><figcaption>Hierarchy on the left, the live Scene view in the middle, Inspector on the right, Project, Console and Animation below.</figcaption></figure>
+<ul>
+<li><b>Drag</b> with the left mouse button to pan, <b>right drag</b> to orbit, use the <b>wheel</b> to zoom.</li>
+<li><b>Click</b> anything to select it. The Inspector shows its components.</li>
+<li>Press <kbd>F</kbd> to frame the selection.</li>
+<li>The sun button in the view toolbar toggles <b>Live</b>: water, wind, flames and animation clips keep moving while you edit.</li>
+</ul>
+
+<h2>3. Change something</h2>
+<ol class="steps">
+<li>Select <b>dragon</b> in the Hierarchy and switch <code>awake</code> on in the Inspector. It wakes, flaps and breathes fire in the editor.</li>
+<li>Select <b>Scene</b> at the top of the Hierarchy. Drag the <code>hour</code> label left and right: every label next to a number is a scrub handle. Watch the sun travel and the lanterns take over at night.</li>
+<li>Open the <b>Project</b> tab, drag the <b>lantern</b> prefab into the view and drop it on the road. It lands exactly under the cursor.</li>
+<li>Move it with the gizmo: the red arrow moves along X, the green along Y, the amber one changes height, the square in the middle moves freely on the ground.</li>
+</ol>
+
+<h2>4. Play</h2>
+<p>Press <kbd>Space</kbd> or the play button. The view switches to <b>Game</b> and uses the scene's own camera. Click the view and use <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>, <kbd>Space</kbd> to jump, <kbd>E</kbd> near the dragon, <kbd>T</kbd> for a sunset.</p>
+<figure><img src="img/editor-play.png" alt="Play mode"><figcaption>Play mode runs on a copy of the scene, so nothing you do while playing is saved by accident. The Console shows what scripts log.</figcaption></figure>
+<p>Press <kbd>Esc</kbd> to stop. The scene is exactly as it was before you pressed play.</p>
+
+<h2>5. Save and commit</h2>
+<p><kbd>Ctrl</kbd>+<kbd>S</kbd> writes the scene. The project is ready for git: new projects come with a <code>.gitignore</code> that keeps the <code>build/</code> folder out.</p>
+<pre><code>cd ~/games/quest
+git init
+git add .
+git commit -m "First scene"</code></pre>
+
+<h2>6. Ship it</h2>
+<p>Press <b>Build</b>, keep Windows and Linux checked, set the version and press <b>Build</b> again. <a href="building.html">Build and release</a> explains what you get.</p>
+<nav class="pager"><a class="prev" href="install.html"><small>Previous</small>Install</a><a class="next" href="editor.html"><small>Next</small>The editor</a></nav>
+</main>
+</div>
+</body>
+</html>

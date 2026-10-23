@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rendering | ASCDII Engine</title>
+<link rel="icon" href="img/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="layout">
+<aside class="side">
+<a class="brand" href="index.html"><img src="img/logo.svg" alt=""><span>ASCDII Engine<small>0.0.1 docs</small></span></a>
+<h4>Start</h4>
+<a href="index.html">Welcome</a>
+<a href="install.html">Install</a>
+<a href="first-game.html">Your first game</a>
+<h4>Guides</h4>
+<a href="editor.html">The editor</a>
+<a href="scenes.html">Scenes and prefabs</a>
+<a href="animation.html">Animation</a>
+<a href="scripting.html">Lua scripting</a>
+<a href="rendering.html" class="on">Rendering</a>
+<a href="building.html">Build and release</a>
+<h4>Reference</h4>
+<a href="cli.html">CLI reference</a>
+<a href="go-api.html">Go API</a>
+</aside>
+<main>
+<div class="kicker">Guides</div>
+<h1>Rendering</h1>
+<p class="lead">What happens between a scene and the Braille characters on screen, and which knobs to turn when an image looks too busy or too flat.</p>
+<figure><img src="img/game-day.png" alt="Dragonfall by day"></figure>
+
+<h2>A frame, step by step</h2>
+<ol class="steps">
+<li><b>Projection.</b> The camera looks down at a pitch, by default about 52 degrees. Ground depth shrinks with the sine of the pitch and height rises with its cosine, which gives the three quarter look.</li>
+<li><b>Geometry.</b> Nodes draw into a buffer of dots, 2x4 per terminal cell. Each dot keeps its color, surface normal, depth, world position and the entity that drew it. Sprites are vertical planes, so a knight in front of a wall covers it and one behind it is hidden, dot by dot.</li>
+<li><b>Lighting.</b> Shadows are laid on the ground, then every dot is lit by the sun, the sky and point lights such as lanterns and dragon fire.</li>
+<li><b>Post.</b> Water glints, distance fog, a light outline on depth edges, and a final color grade with exposure, contrast, saturation, warmth and vignette.</li>
+<li><b>Braille.</b> Each cell has eight dot colors but a terminal can show only two. The encoder splits the eight into two groups and writes the matching Braille glyph with one foreground and one background color.</li>
+<li><b>Cells.</b> Text and glyph art are written on top as whole characters, so labels stay sharp.</li>
+</ol>
+
+<h2>The passes</h2>
+<table>
+<tr><th>Pass</th><th>Stage</th><th>Settings</th></tr>
+<tr><td><code>clear</code></td><td>geometry</td><td></td></tr>
+<tr><td><code>scene</code></td><td>geometry</td><td></td></tr>
+<tr><td><code>shadows</code></td><td>lighting</td><td>strength</td></tr>
+<tr><td><code>lighting</code></td><td>lighting</td><td></td></tr>
+<tr><td><code>water</code></td><td>post</td><td>strength, speed</td></tr>
+<tr><td><code>fog</code></td><td>post</td><td>density, start, end, height</td></tr>
+<tr><td><code>outline</code></td><td>post</td><td>threshold, strength</td></tr>
+<tr><td><code>grade</code></td><td>post</td><td>exposure, contrast, saturation, warmth, vignette</td></tr>
+<tr><td><code>braille</code></td><td>resolve</td><td>calm</td></tr>
+<tr><td><code>cells</code></td><td>overlay</td><td></td></tr>
+</table>
+<p>Open the Pipeline tab to switch passes off, reorder them within a stage and read how long each takes. Turning <code>braille</code> off shows the raw dot colors, which is a good way to see what the encoder has to work with.</p>
+
+<h2>Keeping it easy on the eyes</h2>
+<p>Braille images get tiring when many cells turn tiny color differences into random dot patterns. Three things keep a scene calm:</p>
+<ul>
+<li><b>Smooth sources.</b> Terrain blends its colors across tile corners, so the encoder sees gradients instead of hard tile steps that would turn into a checkered dot pattern.</li>
+<li><b>The calm setting</b> of the <code>braille</code> pass. Cells whose two colors are closer than this are drawn as one flat color, so only real edges become dots. Too high and the image turns into flat blocks; the default keeps edges and drops noise.</li>
+<li><b>Low contrast detail.</b> Grass, grain and other small texture should stay close to the color under it. Bright, saturated speckles read as noise.</li>
+<li><b>Slow motion for thin things.</b> A one dot wide blade that moves quickly flickers. The sample grass sways slowly and with small amplitude.</li>
+</ul>
+<div class="tip"><b>Resolution</b>More cells means more dots per object. In the editor, smaller cell sizes in the view toolbar show the scene at higher resolution; in a terminal, a smaller font does the same.</div>
+
+<h2>Time of day</h2>
+<p>With <code>auto</code> on, the environment derives the sun direction and color, the ambient light, the sky and the fog from <code>hour</code>. Night keeps a dim, cool moon so scenes stay readable, and point lights carry the mood.</p>
+<nav class="pager"><a class="prev" href="scripting.html"><small>Previous</small>Lua scripting</a><a class="next" href="building.html"><small>Next</small>Build and release</a></nav>
+</main>
+</div>
+</body>
+</html>
