@@ -75,6 +75,7 @@ at the feet) scaled by `Sprite.Scale` world units per pixel.
   regenerates the component reference. Every component property needs a
   description in `cmd/docref/notes.go`.
 - `make hello`, `make dragonfall` run the terminal examples.
-- `make cli`, `make players` (cross platform players next to it in `bin/`),
-  `make editor-dev`, `make editor-linux`,
-  `make editor-windows`.
+- `make all` builds `bin/linux` and `bin/windows`, each a complete install
+  of that platform only (ascdii and the editor) that runs where it is
+  copied. Parts: `make cli`, `make editor-linux`, `make editor-windows`;
+  `make editor-dev` for hot reload.

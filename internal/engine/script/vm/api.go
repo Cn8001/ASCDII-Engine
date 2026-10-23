@@ -21,6 +21,7 @@ func (v *VM) install() {
 	installFields(v.L)
 	v.installGlobals()
 	v.installEngine()
+	v.installMods()
 }
 
 // selfTable is a script's self: the owner's handle, plus the script's own

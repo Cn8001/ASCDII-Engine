@@ -18,6 +18,7 @@ import (
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/render/pipeline"
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/pack"
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/project"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/script/vm"
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/world/scene"
 )
 
@@ -117,6 +118,8 @@ func Code(err error) string {
 		{session.ErrNotParticles, "not_particles"},
 		{session.ErrUnknownPreset, "unknown_preset"},
 		{session.ErrUnknownAction, "unknown_action"},
+		{session.ErrBadSettings, "bad_settings"},
+		{vm.ErrModAPI, "mod_api"},
 		{pack.ErrConflict, "conflict"},
 		{pack.ErrBadName, "bad_name"},
 		{pack.ErrNotPack, "not_package"},

@@ -36,6 +36,7 @@ type VM struct {
 	follow  uint64
 	rate    float64
 	says    []saying
+	mods    *modHost // nil until StartMods; mods.emit is then a no-op
 }
 
 type saying struct {

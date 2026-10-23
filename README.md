@@ -11,8 +11,8 @@ desktop app.
 make test                       # go vet + go test -race
 make hello                      # smallest program, see cmd/hello
 make dragonfall                 # the sample game in the terminal
-make cli players editor-linux   # bin/: ascdii, the players and the editor
-bin/ascdii                      # opens the editor at its start screen
+make all                        # bin/linux and bin/windows, complete installs
+bin/linux/ascdii                # opens the editor at its start screen
 make editor-dev                 # editor with hot reload
 ```
 
@@ -67,8 +67,8 @@ release.
 
 ## Editor
 
-`make editor-linux` and `make editor-windows` write `cmd/editor/build/bin/`
-and copy the editor next to `bin/ascdii`, which starts it at its start screen;
+`make editor-linux` and `make editor-windows` put the editor next to
+`bin/linux/ascdii` and `bin/windows/ascdii.exe`, which start it at its start screen;
 started directly, the editor restarts itself through `ascdii`.
 The editor has a GameObject menu, a Hierarchy (drag to reparent, right click to
 create, duplicate, save as prefab), a live 2.5D viewport with move, rotate and

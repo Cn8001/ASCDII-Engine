@@ -19,6 +19,8 @@ func (s *Session) Play() error {
 	}
 	s.play, s.mode, s.keys = c, Play, nil
 	s.resetCtx()
+	s.sctx.Scene = c
+	s.startMods()
 	s.touch()
 	return nil
 }

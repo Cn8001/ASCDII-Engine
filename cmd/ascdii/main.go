@@ -56,12 +56,12 @@ func run(ctx context.Context, args []string) error {
 	}
 	if fsys, closer, err := bundle.OpenFile(ctx, self); err == nil {
 		defer closer.Close()
-		return play(ctx, fsys, args)
+		return play(ctx, fsys, filepath.Join(filepath.Dir(self), project.ModsDir), args)
 	} else if !errors.Is(err, bundle.ErrNoBundle) {
 		return err
 	}
 	if fsys, err := bundle.OpenData(self); err == nil {
-		return play(ctx, fsys, args)
+		return play(ctx, fsys, filepath.Join(filepath.Dir(self), project.ModsDir), args)
 	}
 	if len(args) == 0 {
 		return edit(ctx, "")
@@ -79,7 +79,7 @@ func run(ctx context.Context, args []string) error {
 		if _, err := project.RenameSprites(ctx, args[1]); err != nil {
 			return err
 		}
-		return play(ctx, os.DirFS(args[1]), args[2:])
+		return play(ctx, os.DirFS(args[1]), filepath.Join(args[1], project.ModsDir), args[2:])
 	case "preview":
 		return cmdPreview(ctx, args[1:])
 	case "build":
@@ -107,11 +107,18 @@ func edit(ctx context.Context, manifest string) error {
 	return launch.StartEditor(ctx, editor, manifest)
 }
 
-func play(ctx context.Context, fsys fs.FS, args []string) error {
+// play runs a game; mods is the folder its mods are read from.
+func play(ctx context.Context, fsys fs.FS, mods string, args []string) error {
 	if len(args) > 0 && args[0] == "--preview" {
-		return preview(ctx, fsys, args[1:])
+		return preview(ctx, fsys, mods, args[1:])
 	}
-	e, err := app.Open(ctx, fsys, app.Options{Modules: modules(), Speaker: speaker.Open})
+	o := app.Options{Modules: modules(), Speaker: speaker.Open, Mods: modsDir(mods)}
+	if o.Mods != nil {
+		l := newFileLog(mods)
+		defer l.Close()
+		o.Log = l.Log
+	}
+	e, err := app.Open(ctx, fsys, o)
 	if err != nil {
 		return err
 	}
@@ -176,10 +183,10 @@ func cmdPreview(ctx context.Context, args []string) error {
 	if _, err := project.RenameSprites(ctx, dir); err != nil {
 		return err
 	}
-	return preview(ctx, os.DirFS(dir), rest)
+	return preview(ctx, os.DirFS(dir), filepath.Join(dir, project.ModsDir), rest)
 }
 
-func preview(ctx context.Context, fsys fs.FS, args []string) error {
+func preview(ctx context.Context, fsys fs.FS, mods string, args []string) error {
 	fl := flag.NewFlagSet("preview", flag.ContinueOnError)
 	size := fl.String("size", "160x50", "COLSxROWS")
 	secs := fl.Float64("time", 1, "seconds to simulate")
@@ -193,7 +200,7 @@ func preview(ctx context.Context, fsys fs.FS, args []string) error {
 	if err != nil {
 		return err
 	}
-	e, err := app.Open(ctx, fsys, app.Options{Cols: cols, Rows: rows, Modules: modules()})
+	e, err := app.Open(ctx, fsys, app.Options{Cols: cols, Rows: rows, Modules: modules(), Mods: modsDir(mods), Log: stderrLog})
 	if err != nil {
 		return err
 	}
@@ -252,6 +259,11 @@ func cmdBuild(ctx context.Context, self string, args []string) error {
 		exe, err := bundle.BuildFolder(ctx, folder, name+ext, *player, fsys, project.BuildDir)
 		if err != nil {
 			return err
+		}
+		if p.Manifest.Mods.Enabled {
+			if err := bundle.AddModsDir(folder); err != nil {
+				return err
+			}
 		}
 		fmt.Println(exe)
 		return nil

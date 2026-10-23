@@ -144,32 +144,45 @@ func NewLibrary(reg *scene.Registry) *Library {
 
 // Load reads every sprite and prefab from fsys.
 func (l *Library) Load(ctx context.Context, fsys fs.FS, skip ...string) error {
+	return l.load(ctx, fsys, "", skip)
+}
+
+// LoadUnder reads the assets of fsys as if they lived in the folder prefix,
+// which is how a mod's files join the game's. An id the library already
+// gives another file is left out, so a mod cannot stand in for game assets.
+func (l *Library) LoadUnder(ctx context.Context, fsys fs.FS, prefix string) error {
+	return l.load(ctx, fsys, prefix, nil)
+}
+
+func (l *Library) load(ctx context.Context, fsys fs.FS, prefix string, skip []string) error {
 	entries, err := List(ctx, fsys, skip...)
 	if err != nil {
 		return err
 	}
 	for _, e := range entries {
-		if e.GUID != "" {
+		src := e.Path
+		e.Path = path.Join(prefix, e.Path)
+		if e.GUID != "" && (prefix == "" || l.Resolve(e.GUID) == e.GUID) {
 			l.SetGUID(e.Path, e.GUID)
 		}
 		if e.Kind == Scene {
 			continue
 		}
 		if e.Kind == Texture {
-			if t, err := LoadTexture(fsys, e.Path); err == nil {
+			if t, err := LoadTexture(fsys, src); err == nil {
 				l.PutTexture(e.Path, t)
 			}
 			continue
 		}
 		if e.Kind == Model {
-			m, err := mesh.Load(ctx, fsys, e.Path, ModelOptions(fsys, e.Path))
+			m, err := mesh.Load(ctx, fsys, src, ModelOptions(fsys, src))
 			if err != nil {
 				continue // a broken model shows as missing, like a broken sprite
 			}
 			l.PutModel(e.Path, m)
 			continue
 		}
-		b, err := fs.ReadFile(fsys, e.Path)
+		b, err := fs.ReadFile(fsys, src)
 		if err != nil {
 			return fmt.Errorf("load %s: %w", e.Path, err)
 		}
