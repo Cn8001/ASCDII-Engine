@@ -1,6 +1,6 @@
 # ASCDII Engine 0.0.1
 
-A 2.5D render engine that draws into Unicode Braille. Every terminal cell holds
+A 2.5D game engine that draws into Unicode Braille. Every terminal cell holds
 2x4 depth tested, lit subpixels that are reduced to one foreground and one
 background color. Games run in any truecolor terminal; the editor is a Wails
 desktop app.
