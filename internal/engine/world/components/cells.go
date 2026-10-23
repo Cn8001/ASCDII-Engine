@@ -2,6 +2,7 @@ package components
 
 import (
 	"math"
+	"strings"
 	"unicode/utf8"
 
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/asset"
@@ -93,38 +94,46 @@ func (l *Label) Bounds(t scene.Transform) geom.AABB {
 }
 
 func (l *Label) DrawCells(f *pipeline.Frame, t scene.Transform) {
-	w, g := utf8.RuneCountInString(l.Text), f.Cells
+	lines, g := strings.Split(l.Text, "\n"), f.Cells
+	n := len(lines)
 	ox, oy := int(t.Pos.X), int(t.Pos.Y)
-	var x, y int
+	// top is the first line's row; each line is aligned on its own.
+	var top int
+	align := func(w int) int { return (g.W-w)/2 + ox }
 	switch l.Anchor {
 	case "world":
 		col, row, depth := cellOf(f, t.Pos)
 		if f.Buf.CellDepth(col, row) > depth+2 {
 			return
 		}
-		x, y = col-w/2, row
+		top = row - (n - 1) // the block grows upward, so it stays above the object
+		align = func(w int) int { return col - w/2 }
 	case "top-left":
-		x, y = ox, oy
+		top, align = oy, func(int) int { return ox }
 	case "top":
-		x, y = (g.W-w)/2+ox, oy
+		top = oy
 	case "top-right":
-		x, y = g.W-w-ox, oy
+		top, align = oy, func(w int) int { return g.W - w - ox }
 	case "bottom-left":
-		x, y = ox, g.H-1-oy
+		top, align = g.H-n-oy, func(int) int { return ox }
 	case "bottom":
-		x, y = (g.W-w)/2+ox, g.H-1-oy
+		top = g.H - n - oy
 	case "bottom-right":
-		x, y = g.W-w-ox, g.H-1-oy
+		top, align = g.H-n-oy, func(w int) int { return g.W - w - ox }
 	default:
-		x, y = (g.W-w)/2+ox, g.H/2+oy
+		top = g.H/2 - n/2 + oy
 	}
-	for i, r := range []rune(l.Text) {
-		bg := l.Back
-		if !l.Solid {
-			if c, ok := g.At(x+i, y); ok {
-				bg = c.BG
+	for k, line := range lines {
+		y := top + k
+		x := align(utf8.RuneCountInString(line))
+		for i, r := range []rune(line) {
+			bg := l.Back
+			if !l.Solid {
+				if c, ok := g.At(x+i, y); ok {
+					bg = c.BG
+				}
 			}
+			g.Set(x+i, y, cell.Cell{Rune: r, FG: l.Color, BG: bg})
 		}
-		g.Set(x+i, y, cell.Cell{Rune: r, FG: l.Color, BG: bg})
 	}
 }
