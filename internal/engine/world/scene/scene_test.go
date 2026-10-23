@@ -408,6 +408,28 @@ func TestUnit_InstanceTakesPrefabNameWhenUnnamed(t *testing.T) {
 	}
 }
 
+func TestUnit_InstanceTakesPrefabTagUnlessItHasOne(t *testing.T) {
+	// Arrange
+	src := New("src")
+	src.Add("brazier", newCrate()).Tag = "interact"
+	var pf bytes.Buffer
+	if err := EncodePrefab(&pf, src.Find("brazier")); err != nil {
+		t.Fatal(err)
+	}
+	s := New("level")
+	s.UsePrefabs(prefabMap{"brazier": pf.Bytes()})
+	plain, own := s.Add("a", nil), s.Add("b", nil)
+	plain.Prefab, own.Prefab, own.Tag = "brazier", "brazier", "special"
+
+	// Act
+	err := s.Instantiate()
+
+	// Assert
+	if err != nil || plain.Tag != "interact" || own.Tag != "special" {
+		t.Fatalf("err %v tags %q %q", err, plain.Tag, own.Tag)
+	}
+}
+
 func TestUnit_OverrideSurvivesRebuildAndSave(t *testing.T) {
 	// Arrange
 	s, inst := instanceScene(t)

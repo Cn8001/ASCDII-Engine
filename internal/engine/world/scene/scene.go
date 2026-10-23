@@ -272,6 +272,9 @@ func (s *Scene) Instantiate() error {
 		if e.Name == "" {
 			e.Name = src.Name
 		}
+		if e.Tag == "" {
+			e.Tag = src.Tag // scripts find instances by the prefab's tag
+		}
 		for _, c := range src.Children {
 			s.adopt(c, true)
 			e.attach(c, -1)
