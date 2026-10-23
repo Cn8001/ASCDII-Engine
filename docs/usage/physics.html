@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Physics | ASCDII Engine</title>
+<link rel="icon" href="img/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="layout">
+<aside class="side">
+<a class="brand" href="index.html"><img src="img/logo.svg" alt=""><span>ASCDII Engine<small>0.0.1 docs</small></span></a>
+<h4>Start</h4>
+<a href="index.html">Welcome</a>
+<a href="install.html">Install</a>
+<a href="first-game.html">Your first game</a>
+<h4>Guides</h4>
+<a href="editor.html">The editor</a>
+<a href="gameobjects.html">GameObjects and components</a>
+<a href="scenes.html">Scenes and prefabs</a>
+<a href="assets.html">Assets and import</a>
+<a href="packages.html">Packages</a>
+<a href="textures.html">Textures and materials</a>
+<a href="models.html">Models</a>
+<a href="animation.html">Animation</a>
+<a href="audio.html">Audio</a>
+<a href="physics.html" class="on">Physics</a>
+<a href="scripting.html">Lua scripting</a>
+<a href="rendering.html">Rendering</a>
+<a href="building.html">Build</a>
+<h4>Reference</h4>
+<a href="lua-api.html">Lua API</a>
+<a href="cli.html">CLI reference</a>
+<a href="go-api.html">Go API</a>
+<a href="architecture.html">Architecture</a>
+</aside>
+<main>
+<div class="kicker">Guides</div>
+<h1>Physics</h1>
+<p class="lead">Colliders give objects a footprint on the ground; a Rigidbody makes an object fall, slide and bounce off them. The model fits a 2.5D world: shapes live on the ground plane, and height is a range above it.</p>
+
+<h2>Colliders</h2>
+<table>
+<tr><th>Component</th><th>Shape</th><th>Settings</th></tr>
+<tr><td><b>Box Collider</b></td><td>A rectangle that turns with the object's Z rotation.</td><td><code>size</code> (x and y on the ground, z the height), <code>offset</code>, <code>trigger</code></td></tr>
+<tr><td><b>Circle Collider</b></td><td>A circle.</td><td><code>radius</code>, <code>height</code>, <code>offset</code>, <code>trigger</code></td></tr>
+<tr><td><b>Mesh Collider</b></td><td>The footprint of the object's model, its outline seen from above.</td><td><code>trigger</code></td></tr>
+</table>
+<p>Select an object to see its colliders outlined in green in the Scene view, triggers in blue. A collider that is not a trigger blocks the player and rigidbodies; objects without colliders still block with their bounds when marked <b>Solid</b>.</p>
+
+<h2>Rigidbody</h2>
+<p>Add a <b>Rigidbody</b> next to a collider and the object moves on its own in play mode.</p>
+<table>
+<tr><th>Property</th><th>Does</th></tr>
+<tr><td><code>mass</code></td><td>Heavier bodies push lighter ones further; forces move them less.</td></tr>
+<tr><td><code>gravity</code></td><td>Fall until the ground or the top of a collider below.</td></tr>
+<tr><td><code>drag</code></td><td>How quickly sliding slows down.</td></tr>
+<tr><td><code>bounce</code></td><td>0 stops dead at a wall, 1 bounces back at full speed.</td></tr>
+<tr><td><code>kinematic</code></td><td>Moved only by scripts and animation; others still bump into it.</td></tr>
+<tr><td><code>velocity</code></td><td>Current speed in world units per second; set it to throw things.</td></tr>
+</table>
+
+<h2>Triggers and hooks</h2>
+<p>A trigger collider reports contacts without pushing, for doors, pickups and zones. Scripts on either object hear about a contact when it begins:</p>
+<pre><code><span class="k">function</span> on_trigger(self, other)
+  <span class="k">if</span> other.name == <span class="s">"hero"</span> <span class="k">then</span>
+    play_sound(<span class="s">"audio/coin.wav"</span>)
+    self:destroy()
+  <span class="k">end</span>
+<span class="k">end</span>
+
+<span class="k">function</span> on_collision(self, other)
+  log(<span class="s">"bumped into"</span>, other.name)
+<span class="k">end</span></code></pre>
+<pre><code><span class="k">local</span> rb = self:component(<span class="s">"rigidbody"</span>)
+rb:add_force(vec3(0, 0, 9))   <span class="c">-- a jump: velocity changes by force / mass</span>
+rb.velocity = vec3(4, 0, 0)</code></pre>
+<div class="tip"><b>Keep it simple</b>Physics is deliberately small: no friction model, no stacking solver, no rotation from impacts. It is enough for crates, balls, pickups and walls; for anything more, move objects from a script.</div>
+<nav class="pager"><a class="prev" href="audio.html"><small>Previous</small>Audio</a><a class="next" href="scripting.html"><small>Next</small>Lua scripting</a></nav>
+</main>
+</div>
+</body>
+</html>

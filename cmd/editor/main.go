@@ -99,6 +99,15 @@ func run() error {
 func frames(sess *session.Session) assetserver.Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if rel, ok := strings.CutPrefix(r.URL.Path, "/asset/"); ok {
+				file, err := sess.AssetFile(rel)
+				if err != nil {
+					http.NotFound(w, r)
+					return
+				}
+				http.ServeFile(w, r, file) // sounds for play mode and asset previews
+				return
+			}
 			if r.URL.Path != "/frame" {
 				next.ServeHTTP(w, r)
 				return

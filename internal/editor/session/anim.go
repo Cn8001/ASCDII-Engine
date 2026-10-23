@@ -16,6 +16,7 @@ type Clip struct {
 	Speed  float64      `json:"speed"`
 	Length float64      `json:"length"`
 	Tracks []anim.Track `json:"tracks"`
+	Active bool         `json:"active"`
 }
 
 // Clips lists the clips bound to an entity; id 0 lists every clip.
@@ -34,7 +35,7 @@ func (s *Session) Clips(id uint64) ([]Clip, error) {
 	out := []Clip{}
 	for i, c := range sc.Clips {
 		if name == "" || c.Target == name {
-			out = append(out, Clip{Index: i, Name: c.Name, Target: c.Target, Mode: c.Mode, Speed: c.Speed, Length: c.Length(), Tracks: c.Tracks})
+			out = append(out, Clip{Index: i, Name: c.Name, Target: c.Target, Mode: c.Mode, Speed: c.Speed, Length: c.Length(), Tracks: c.Tracks, Active: i == s.active})
 		}
 	}
 	return out, nil
@@ -49,17 +50,58 @@ func (s *Session) AddKey(id uint64, name string, t float64) error {
 		if !ok {
 			return fmt.Errorf("%w: %s", prop.ErrUnknownProp, name)
 		}
+		if s.active >= 0 && s.active < len(sc.Clips) && sc.Clips[s.active].Target == e.Name {
+			sc.Clips[s.active].SetKey(name, t, prop.Encode(p), anim.InOut)
+			return nil
+		}
 		for i := range sc.Clips {
 			if sc.Clips[i].Target == e.Name {
 				sc.Clips[i].SetKey(name, t, prop.Encode(p), anim.InOut)
+				s.active = i
 				return nil
 			}
 		}
 		c := anim.Clip{Name: e.Name, Target: e.Name, Mode: anim.Loop}
 		c.SetKey(name, t, prop.Encode(p), anim.InOut)
 		sc.Clips = append(sc.Clips, c)
+		s.active = len(sc.Clips) - 1
 		return nil
 	})
+}
+
+// NewClip adds an empty clip for an object and makes it the one keys go to,
+// so an object can have idle, walk and jump clips for an animator.
+func (s *Session) NewClip(id uint64, name string) error {
+	return s.edit1(id, "", func(sc *scene.Scene, e *scene.GameObject) error {
+		if name == "" {
+			return fmt.Errorf("new clip: %w", ErrBadPath)
+		}
+		sc.Clips = append(sc.Clips, anim.Clip{Name: name, Target: e.Name, Mode: anim.Loop, Tracks: []anim.Track{}})
+		s.active = len(sc.Clips) - 1
+		return nil
+	})
+}
+
+func (s *Session) PickClip(index int) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.active = index
+}
+
+func (s *Session) RenameClip(index int, name string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	c, err := s.clip(index)
+	if err != nil {
+		return err
+	}
+	if name == "" {
+		return fmt.Errorf("rename clip: %w", ErrBadPath)
+	}
+	s.checkpoint("")
+	c.Name = name
+	s.changed()
+	return nil
 }
 
 func (s *Session) clip(index int) (*anim.Clip, error) {

@@ -24,9 +24,11 @@
 <a href="textures.html">Textures and materials</a>
 <a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
+<a href="audio.html">Audio</a>
+<a href="physics.html">Physics</a>
 <a href="scripting.html">Lua scripting</a>
 <a href="rendering.html" class="on">Rendering</a>
-<a href="building.html">Build and release</a>
+<a href="building.html">Build</a>
 <h4>Reference</h4>
 <a href="lua-api.html">Lua API</a>
 <a href="cli.html">CLI reference</a>
@@ -49,6 +51,19 @@
 <li><b>Cells.</b> Text and glyph art are written on top as whole characters, so labels stay sharp.</li>
 </ol>
 
+<h2>Lights</h2>
+<table>
+<tr><th>Light type</th><th>Lights</th></tr>
+<tr><td>Point</td><td>Everything within its radius, softening toward the edge.</td></tr>
+<tr><td>Spot</td><td>A cone within its radius, aimed by the object's rotation: unturned it points straight down. <code>angle</code> is the cone's width.</td></tr>
+<tr><td>Directional</td><td>The whole scene from one direction, replacing the environment's sun while it is enabled; turn the object to aim it.</td></tr>
+</table>
+<p>Ambient light from the sky and the ground, and the sun when no directional light is on, come from the scene's Environment. Lights are components, so scripts change them like anything else: <code>find("lamp"):component("light").intensity = 0</code>.</p>
+
+<h2>In a terminal</h2>
+<figure><img src="img/terminal.png" alt="A frame in a terminal"><figcaption>A frame as a terminal emulator draws it from the text the player writes.</figcaption></figure>
+<p>All of this ends as text: one Braille character per cell with a 24 bit foreground and background color, written with standard escape codes. Nothing else reaches the terminal, which is why games run in any truecolor terminal and over SSH. The editor's view and the screenshots in these pages show exactly those cells.</p>
+
 <h2>The passes</h2>
 <table>
 <tr><th>Pass</th><th>Stage</th><th>Settings</th></tr>
@@ -65,6 +80,8 @@
 </table>
 <p>Open the Pipeline tab to switch passes off, reorder them within a stage and read how long each takes. The <code>braille</code> pass is what turns dots into characters, so turning it off leaves the view empty apart from text; switch off <code>fog</code>, <code>outline</code> or <code>grade</code> instead to compare a frame with and without them.</p>
 
+<p>The editor adds two passes of its own, shown only in the Scene view: <code>grid</code>, the ground grid, and <code>colliders</code>, the outlines of the selected object's colliders.</p>
+
 <h2>Keeping it easy on the eyes</h2>
 <p>Braille images get tiring when many cells turn tiny color differences into random dot patterns. Three things keep a scene calm:</p>
 <ul>
@@ -77,7 +94,7 @@
 
 <h2>Time of day</h2>
 <p>With <code>auto</code> on, the environment derives the sun direction and color, the ambient light, the sky and the fog from <code>hour</code>. Night keeps a dim, cool moon so scenes stay readable, and point lights carry the mood.</p>
-<nav class="pager"><a class="prev" href="scripting.html"><small>Previous</small>Lua scripting</a><a class="next" href="building.html"><small>Next</small>Build and release</a></nav>
+<nav class="pager"><a class="prev" href="scripting.html"><small>Previous</small>Lua scripting</a><a class="next" href="building.html"><small>Next</small>Build</a></nav>
 </main>
 </div>
 </body>

@@ -14,6 +14,8 @@ const chosen = ref<string[]>([])
 const version = ref(store.info?.version ?? '0.1.0')
 const result = ref<session.BuildResult | null>(null)
 const busy = ref(false)
+const single = ref(false) // one executable per platform instead of a folder with data
+
 
 onMounted(async () => {
   available.value = (await call(() => Build.Targets())) ?? []
@@ -25,11 +27,17 @@ function toggle(id: string) {
   chosen.value = chosen.value.includes(id) ? chosen.value.filter((x) => x !== id) : [...chosen.value, id]
 }
 
-// One action: every chosen platform gets an executable, a zip and a checksum.
+// build writes a game folder per chosen platform into build/<platform>/:
+// the player, its packed data and SHA256SUMS, ready to hand out as is.
 async function build() {
   busy.value = true
   result.value = null
-  const r = await call(() => Build.Release(version.value, chosen.value))
+  let r: session.BuildResult | undefined
+  for (const t of chosen.value) {
+    r = await call(() => Build.Build(t, single.value, version.value))
+    if (!r) break
+  }
+  if (r && chosen.value.length > 1) r = { ...r, dir: r.dir.replace(/[\\/][^\\/]+[\\/][^\\/]+$/, '') } as session.BuildResult
   busy.value = false
   if (r) {
     result.value = r
@@ -62,12 +70,20 @@ async function build() {
         </button>
       </div>
 
-      <div class="flex items-center gap-2">
-        <label class="flex flex-1 items-center gap-2 rounded-lg bg-ink-800 px-3 ring-1 ring-ink-700">
+      <label class="mb-2 flex items-center gap-2 text-[12px] text-ink-300" title="Off: an executable next to a data folder with the assets. On: everything inside one executable.">
+        <input v-model="single" type="checkbox" class="accent-[var(--color-amber-glow)]" />
+        Single file
+        <span class="text-ink-500">{{ single ? 'one executable' : 'executable + data folder' }}</span>
+      </label>
+
+
+      <div class="mt-4 flex items-center gap-2">
+        <label class="flex w-28 items-center gap-2 rounded-lg bg-ink-800 px-3 ring-1 ring-ink-700" title="Version of the game; stored in the manifest">
           <span class="text-[11px] text-ink-500">v</span>
           <input v-model="version" class="h-9 w-full bg-transparent font-mono text-[13px] outline-none" />
         </label>
-        <button class="btn btn-accent h-9 px-5 text-[13px]" :disabled="busy || !chosen.length" @click="build">
+        <span class="flex-1" />
+        <button class="btn btn-accent h-9 px-5 text-[13px]" :disabled="busy || !chosen.length" title="A game folder per platform, ready to run and to hand out" @click="build">
           <Icon :name="busy ? 'refresh' : 'hammer'" :size="14" :class="busy ? 'animate-spin' : ''" /> Build
         </button>
       </div>

@@ -125,7 +125,9 @@ function scrub(e: PointerEvent, axis = -1) {
         <option v-if="p.value && !arts.some((a) => a.value === p.value)" :value="p.value">{{ assetPath(String(p.value)) }}</option>
       </select>
 
-      <RefField v-else-if="['object', 'component', 'prefab', 'texture', 'material'].includes(p.type)" :p="p" @ref="(n, t, k) => emit('ref', n, t, k)" @set="(n, v) => emit('set', n, v)" />
+      <span v-else-if="p.type === 'data'" class="text-[12px] text-ink-400">{{ Array.isArray(p.value) ? `${p.value.length} strokes` : 'data' }}</span>
+
+      <RefField v-else-if="['object', 'component', 'prefab', 'texture', 'material', 'controller', 'audio'].includes(p.type)" :p="p" @ref="(n, t, k) => emit('ref', n, t, k)" @set="(n, v) => emit('set', n, v)" />
 
       <select v-else-if="p.type === 'model'" class="field" :value="p.value" :disabled="p.locked" @change="set(($event.target as HTMLSelectElement).value)">
         <option value="">-</option>

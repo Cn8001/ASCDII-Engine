@@ -34,13 +34,20 @@ const (
 	PrefabRef Type = "prefab"
 	TexRef    Type = "texture"
 	MatRef    Type = "material"
+	CtrlRef   Type = "controller" // an animator controller
+	AudioRef  Type = "audio"
+	Data      Type = "data"      // structured data a component saves, not edited field by field
 	ObjectRef Type = "object"    // a GameObject in the same scene or prefab
 	CompRef   Type = "component" // Options[0], when set, limits the kind
 )
 
 // Ref reports whether values of t name assets, which are stored as GUIDs.
 func (t Type) Ref() bool {
-	return t == Asset || t == ScriptRef || t == ModelRef || t == PrefabRef || t == TexRef || t == MatRef
+	switch t {
+	case Asset, ScriptRef, ModelRef, PrefabRef, TexRef, MatRef, CtrlRef, AudioRef:
+		return true
+	}
+	return false
 }
 
 type Prop struct {

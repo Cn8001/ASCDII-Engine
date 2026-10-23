@@ -24,9 +24,11 @@
 <a href="textures.html">Textures and materials</a>
 <a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
+<a href="audio.html">Audio</a>
+<a href="physics.html">Physics</a>
 <a href="scripting.html">Lua scripting</a>
 <a href="rendering.html">Rendering</a>
-<a href="building.html">Build and release</a>
+<a href="building.html">Build</a>
 <h4>Reference</h4>
 <a href="lua-api.html" class="on">Lua API</a>
 <a href="cli.html">CLI reference</a>
@@ -95,6 +97,15 @@
 <tr><td><code>object</code></td><td>The object it belongs to.</td></tr>
 </table>
 
+<h3>Component methods</h3>
+<table>
+<tr><th>Component</th><th>Methods</th></tr>
+<tr><td><code>animator</code></td><td><code>a:play(state)</code>, <code>a:set(param, value)</code>, <code>a:get(param)</code>, <code>a:trigger(name)</code>; <code>a.state</code> is the active state.</td></tr>
+<tr><td><code>audio_source</code></td><td><code>s:play()</code>, <code>s:stop()</code>, <code>s:playing()</code>; <code>s.volume</code>, <code>s.loop</code>, <code>s.clip</code>.</td></tr>
+<tr><td><code>rigidbody</code></td><td><code>rb:add_force(vec3)</code>; <code>rb.velocity</code>, <code>rb.mass</code>, <code>rb.gravity</code>, <code>rb.kinematic</code>.</td></tr>
+<tr><td><code>light</code></td><td>Fields only: <code>type</code>, <code>radius</code>, <code>color</code>, <code>intensity</code>, <code>angle</code>.</td></tr>
+</table>
+
 <h2>Fields</h2>
 <table>
 <tr><th>In <code>fields</code></th><th>Inspector</th><th>On <code>self</code></th></tr>
@@ -124,6 +135,7 @@ log(a:len(), a:dist(b), a:dot(b), a:cross(b), a:lerp(b, 0.5))</code></pre>
 <tr><td><code>log(...)</code></td><td>Writes to the Console, tagged with the script's file.</td></tr>
 <tr><td><code>say(text, seconds)</code></td><td>A label over the script's own object; <code>say(obj, text, seconds)</code> over another.</td></tr>
 <tr><td><code>tween(obj, prop, to, seconds, ease)</code></td><td>Same as <code>obj:tween</code>.</td></tr>
+<tr><td><code>play_sound(sound, volume)</code></td><td>Plays a sound asset once, by path or from a field.</td></tr>
 <tr><td><code>quit()</code></td><td>Ends the game.</td></tr>
 </table>
 <p>Terminals report key presses but not releases, so there a key counts as held for a moment after each press, extended by key repeat. In the editor and in graphical backends releases are exact.</p>
@@ -160,7 +172,7 @@ log(pipeline.enabled(<span class="s">"grade"</span>))</code></pre>
 
 <h2>From the first API</h2>
 <p>Scripts written for 0.0.1 keep working: <code>dist(a, b)</code> (distance on the ground), <code>hour()</code>, <code>setHour(h)</code>, <code>o:pos()</code> and <code>o:moveTo(x, y, z)</code> are still there.</p>
-<nav class="pager"><a class="prev" href="building.html"><small>Previous</small>Build and release</a><a class="next" href="cli.html"><small>Next</small>CLI reference</a></nav>
+<nav class="pager"><a class="prev" href="building.html"><small>Previous</small>Build</a><a class="next" href="cli.html"><small>Next</small>CLI reference</a></nav>
 </main>
 </div>
 </body>

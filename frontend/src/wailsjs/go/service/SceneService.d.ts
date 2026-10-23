@@ -9,11 +9,15 @@ export function AddComponent(arg1:number,arg2:string):Promise<string>;
 
 export function Apply(arg1:number,arg2:string):Promise<void>;
 
+export function ClosePrefab():Promise<void>;
+
 export function Duplicate(arg1:number):Promise<number>;
 
 export function Kinds():Promise<session.Kinds>;
 
 export function MoveComponent(arg1:number,arg2:number,arg3:number):Promise<void>;
+
+export function OpenPrefab(arg1:string):Promise<void>;
 
 export function Props(arg1:number):Promise<Array<prop.Prop>>;
 

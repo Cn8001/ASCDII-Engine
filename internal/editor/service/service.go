@@ -113,6 +113,7 @@ func Code(err error) string {
 		{session.ErrNoSettings, "no_settings"},
 		{session.ErrBadPath, "bad_path"},
 		{session.ErrPackageLocked, "package_locked"},
+		{session.ErrMissed, "missed"},
 		{pack.ErrConflict, "conflict"},
 		{pack.ErrBadName, "bad_name"},
 		{pack.ErrNotPack, "not_package"},

@@ -24,9 +24,11 @@
 <a href="textures.html">Textures and materials</a>
 <a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
+<a href="audio.html">Audio</a>
+<a href="physics.html">Physics</a>
 <a href="scripting.html">Lua scripting</a>
 <a href="rendering.html">Rendering</a>
-<a href="building.html">Build and release</a>
+<a href="building.html">Build</a>
 <h4>Reference</h4>
 <a href="lua-api.html">Lua API</a>
 <a href="cli.html">CLI reference</a>
@@ -84,6 +86,9 @@
 <li>Need a one off variation? Right click an instance and <b>Unpack</b> it into ordinary objects.</li>
 </ol>
 <p>An instance stores its own name, transform and visibility, the prefab id, and a list of <b>overrides</b>; everything else comes from the prefab. That keeps scene files small and diffs readable.</p>
+
+<h2>Prefab mode</h2>
+<p>Double click a prefab in the Project window to edit it on its own, as in Unity. The toolbar shows the prefab's name with <b>Save</b> and <b>Back</b>. Save writes the prefab file; Back returns to the scene, with its undo history and unsaved changes as you left them, and every instance shows the saved prefab. A prefab has one root object; prefabs of installed packages open read only.</p>
 
 <h2>Overrides</h2>
 <p>Select an instance, or anything inside it, and change a value. Instead of being locked, the change is recorded as an override on the instance: the label turns <b>bold amber</b>, the Hierarchy shows an amber dot and a band at the top of the Inspector counts the overrides.</p>

@@ -33,6 +33,10 @@ func defaultFolder(k asset.Kind) string {
 		return "textures"
 	case asset.Material:
 		return "materials"
+	case asset.Audio:
+		return "audio"
+	case asset.Animator:
+		return "animators"
 	}
 	return "art"
 }

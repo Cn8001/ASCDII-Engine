@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Project, Viewport } from '../lib/api'
+import { Project, Scene, Viewport } from '../lib/api'
 import { addMenu, createParent } from '../lib/actions'
 import { ask, confirmAction } from '../lib/dialog'
 import { openBelow } from '../lib/menu'
@@ -83,6 +83,13 @@ async function closeProject() {
   await refreshInfo()
 }
 
+async function closePrefab() {
+  if (store.info?.unsaved && !(await confirmAction('Leave without saving?', 'The prefab has changes that are not saved.', 'Leave'))) return
+  await call(() => Scene.ClosePrefab())
+  store.selected = 0
+  await refresh()
+}
+
 async function setStart() {
   await call(() => Project.SetStart())
   toast('Start scene', 'ok')
@@ -103,7 +110,12 @@ defineExpose({ save, undo, redo, play, stop })
       <button class="icon-btn" title="New project  Ctrl+N" @click="store.newProject = true"><Icon name="plus" :size="15" /></button>
       <button class="icon-btn" title="Open project" @click="openProject"><Icon name="open" :size="15" /></button>
       <button class="icon-btn" title="Close project" @click="closeProject"><Icon name="x" :size="15" /></button>
-      <select class="h-7 max-w-56 rounded-md bg-ink-800 px-2 text-[12px] text-ink-200 outline-none ring-1 ring-ink-700" :value="store.info?.scene" @change="openScene(($event.target as HTMLSelectElement).value)">
+      <template v-if="store.info?.prefab">
+        <span class="flex h-7 items-center gap-1.5 rounded-md bg-amber-glow/10 px-2 text-[12px] text-amber-glow ring-1 ring-amber-soft/50"><Icon name="package" :size="13" /> {{ store.info.prefab.split('/').pop()?.replace('.prefab.json', '') }}</span>
+        <button class="btn h-7" title="Save the prefab  Ctrl+S" @click="save"><Icon name="save" :size="13" /> Save</button>
+        <button class="btn h-7" title="Back to the scene" @click="closePrefab"><Icon name="undo" :size="13" /> Back</button>
+      </template>
+      <select v-else class="h-7 max-w-56 rounded-md bg-ink-800 px-2 text-[12px] text-ink-200 outline-none ring-1 ring-ink-700" :value="store.info?.scene" @change="openScene(($event.target as HTMLSelectElement).value)">
         <option v-for="s in store.info?.scenes ?? []" :key="s" :value="s">{{ s.replace('scenes/', '') }}</option>
         <option value="+">+ scene</option>
       </select>

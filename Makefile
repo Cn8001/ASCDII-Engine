@@ -4,7 +4,7 @@ EDITOR   := cmd/editor
 WAILS    := wails
 LINUXTAG := webkit2_41
 
-.PHONY: test bench template brand cli players hello dragonfall editor-dev editor-linux editor-windows clean
+.PHONY: test bench template brand cli players hello dragonfall editor-dev editor-linux editor-windows dist clean
 
 test:
 	go vet ./...
@@ -21,7 +21,6 @@ brand:
 
 cli:
 	go build -o $(BIN)/ascdii ./cmd/ascdii
-	go build -o $(BIN)/launcher ./cmd/launcher
 
 # Players are the ascdii binary per platform; builds and the editor append projects to them.
 players:
@@ -44,6 +43,18 @@ editor-linux: players
 
 editor-windows: players
 	cd $(EDITOR) && $(WAILS) build -platform windows/amd64
+
+# dist packs what someone without the source needs: the editor and the
+# ascdii command, one archive per platform.
+VERSION = $(shell go run ./cmd/ascdii version | cut -d' ' -f3)
+dist: editor-linux editor-windows
+	rm -rf $(BIN)/dist && mkdir -p $(BIN)/dist/ascdii-$(VERSION)-linux-amd64 $(BIN)/dist/ascdii-$(VERSION)-windows-amd64
+	cp $(EDITOR)/build/bin/ascdii-editor $(PLAYERS)/ascdii-linux-amd64 $(BIN)/dist/ascdii-$(VERSION)-linux-amd64/
+	mv $(BIN)/dist/ascdii-$(VERSION)-linux-amd64/ascdii-linux-amd64 $(BIN)/dist/ascdii-$(VERSION)-linux-amd64/ascdii
+	cp $(EDITOR)/build/bin/ascdii-editor.exe $(BIN)/dist/ascdii-$(VERSION)-windows-amd64/
+	cp $(PLAYERS)/ascdii-windows-amd64.exe $(BIN)/dist/ascdii-$(VERSION)-windows-amd64/ascdii.exe
+	cd $(BIN)/dist && tar czf ascdii-$(VERSION)-linux-amd64.tar.gz ascdii-$(VERSION)-linux-amd64
+	cd $(BIN)/dist && python3 -m zipfile -c ascdii-$(VERSION)-windows-amd64.zip ascdii-$(VERSION)-windows-amd64
 
 clean:
 	rm -rf $(BIN) $(EDITOR)/build/bin

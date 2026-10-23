@@ -1,9 +1,8 @@
-// Package bundle packs a project next to a player executable. The zip is
-// appended to the binary with a footer, so a build is one file to ship.
+// Package bundle turns a project into a game: the player executable with
+// the game data packed beside it, or appended to it for a single file.
 package bundle
 
 import (
-	"archive/zip"
 	"bytes"
 	"context"
 	"encoding/binary"
@@ -12,56 +11,19 @@ import (
 	"io"
 	"io/fs"
 	"os"
-	"slices"
-	"strings"
 )
 
 const magic = "ASCDIIPK"
 
 var ErrNoBundle = errors.New("no bundled project")
 
-func Zip(ctx context.Context, w io.Writer, fsys fs.FS, skip ...string) error {
-	z := zip.NewWriter(w)
-	err := fs.WalkDir(fsys, ".", func(p string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if err := ctx.Err(); err != nil {
-			return err
-		}
-		if d.IsDir() {
-			if p != "." && (slices.Contains(skip, p) || strings.HasPrefix(d.Name(), ".")) {
-				return fs.SkipDir
-			}
-			return nil
-		}
-		b, err := fs.ReadFile(fsys, p)
-		if err != nil {
-			return err
-		}
-		f, err := z.Create(p)
-		if err != nil {
-			return err
-		}
-		_, err = f.Write(b)
-		return err
-	})
-	if err != nil {
-		return fmt.Errorf("zip project: %w", err)
-	}
-	if err := z.Close(); err != nil {
-		return fmt.Errorf("zip project: %w", err)
-	}
-	return nil
-}
-
-// Write emits player followed by the zipped project and the footer.
+// Write emits player followed by the packed game data and the footer.
 func Write(ctx context.Context, w io.Writer, player io.Reader, fsys fs.FS, skip ...string) error {
 	if _, err := io.Copy(w, player); err != nil {
 		return fmt.Errorf("copy player: %w", err)
 	}
 	var z bytes.Buffer
-	if err := Zip(ctx, &z, fsys, skip...); err != nil {
+	if _, err := Pack(ctx, &z, fsys, skip...); err != nil {
 		return err
 	}
 	if _, err := w.Write(z.Bytes()); err != nil {
@@ -95,11 +57,11 @@ func Read(ctx context.Context, r io.ReaderAt, size int64) (fs.FS, error) {
 	if n <= 0 || n > size-16 {
 		return nil, fmt.Errorf("%w: corrupt footer", ErrNoBundle)
 	}
-	z, err := zip.NewReader(io.NewSectionReader(r, size-16-n, n), n)
-	if err != nil {
-		return nil, fmt.Errorf("open bundle: %w", err)
+	b := make([]byte, n)
+	if _, err := r.ReadAt(b, size-16-n); err != nil {
+		return nil, fmt.Errorf("read bundle: %w", err)
 	}
-	return z, nil
+	return Unpack(b)
 }
 
 // OpenFile reads the bundle of an executable; the caller closes the file.

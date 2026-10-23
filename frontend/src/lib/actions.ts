@@ -6,6 +6,10 @@ import type { MenuItem } from './menu'
 export function kindIcon(kind: string): string {
   if (!kind) return 'layers'
   if (kind.includes('light')) return 'sun'
+  if (kind.includes('audio')) return 'music'
+  if (kind === 'animator') return 'graph'
+  if (kind === 'paint') return 'brush'
+  if (kind.includes('collider') || kind === 'rigidbody') return 'grid'
   if (kind.includes('emitter')) return 'rocket'
   if (kind.includes('label') || kind.includes('hud')) return 'file'
   if (kind.includes('sprite')) return 'image'
@@ -78,6 +82,10 @@ export function addMenu(parent: number): MenuItem[] {
     list.push({ label: k.label, icon: kindIcon(k.kind), run: () => add(parent, k.kind) })
     groups.set(k.category, list)
   }
+  groups.get('light')?.push(
+    { label: 'Spot Light', icon: 'sun', run: () => addLight(parent, 'spot', 'Spot Light') },
+    { label: 'Directional Light', icon: 'sun', run: () => addLight(parent, 'directional', 'Directional Light') },
+  )
   const order = [...Object.keys(categories), ...[...groups.keys()].filter((c) => !categories[c]).sort()]
   const items: MenuItem[] = [{ label: 'Create Empty', icon: 'layers', run: () => add(parent, 'empty') }, { label: '-' }]
   for (const c of order) {
@@ -89,6 +97,17 @@ export function addMenu(parent: number): MenuItem[] {
   items.push({ label: '-' }, { label: 'Model', icon: 'box', disabled: !models.length, children: models })
   items.push({ label: 'Prefab', icon: 'package', disabled: !prefabs.length, children: prefabs })
   return items
+}
+
+// addLight makes a light of a type the Light component switches between.
+async function addLight(parent: number, type: string, name: string) {
+  const id = await call(() => Scene.Add(parent, 'light'))
+  if (id === undefined) return
+  await call(() => Scene.SetProp(id, 'light.type', type))
+  await call(() => Scene.SetProp(id, 'name', name))
+  if (type === 'spot') await call(() => Scene.SetProp(id, 'pos.z', 4))
+  await refresh()
+  await select(id)
 }
 
 // createParent is where the menu bar creates objects: under the selection,

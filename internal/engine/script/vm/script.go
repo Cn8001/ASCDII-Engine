@@ -269,6 +269,18 @@ func (s *Script) Key(c *scene.Ctx, o *scene.GameObject, k input.Key) bool {
 	return lua.LVAsBool(s.call("key", s.self, lua.LString(k.String())))
 }
 
+// Collide runs on_collision or on_trigger when a contact begins.
+func (s *Script) Collide(c *scene.Ctx, o, other *scene.GameObject, trigger bool) {
+	if !s.prepare(c, o) {
+		return
+	}
+	hook := "on_collision"
+	if trigger {
+		hook = "on_trigger"
+	}
+	s.call(hook, s.self, s.vm.handle(other))
+}
+
 // Draw runs the draw hook while a game runs; scripts do not run in the editor.
 func (s *Script) Draw(c *draw.Context, t scene.Transform) {
 	if s.env == nil || s.failed {

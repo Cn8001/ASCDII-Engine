@@ -6,6 +6,10 @@ export function AddKey(arg1, arg2, arg3) {
   return window['go']['service']['AnimService']['AddKey'](arg1, arg2, arg3);
 }
 
+export function AnimatorState(arg1) {
+  return window['go']['service']['AnimService']['AnimatorState'](arg1);
+}
+
 export function Clips(arg1) {
   return window['go']['service']['AnimService']['Clips'](arg1);
 }
@@ -18,12 +22,24 @@ export function MoveKey(arg1, arg2, arg3, arg4) {
   return window['go']['service']['AnimService']['MoveKey'](arg1, arg2, arg3, arg4);
 }
 
+export function NewClip(arg1, arg2) {
+  return window['go']['service']['AnimService']['NewClip'](arg1, arg2);
+}
+
+export function PickClip(arg1) {
+  return window['go']['service']['AnimService']['PickClip'](arg1);
+}
+
 export function RemoveClip(arg1) {
   return window['go']['service']['AnimService']['RemoveClip'](arg1);
 }
 
 export function RemoveKey(arg1, arg2, arg3) {
   return window['go']['service']['AnimService']['RemoveKey'](arg1, arg2, arg3);
+}
+
+export function RenameClip(arg1, arg2) {
+  return window['go']['service']['AnimService']['RenameClip'](arg1, arg2);
 }
 
 export function SetClip(arg1, arg2, arg3) {

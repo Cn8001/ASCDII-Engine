@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Audio | ASCDII Engine</title>
+<link rel="icon" href="img/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="layout">
+<aside class="side">
+<a class="brand" href="index.html"><img src="img/logo.svg" alt=""><span>ASCDII Engine<small>0.0.1 docs</small></span></a>
+<h4>Start</h4>
+<a href="index.html">Welcome</a>
+<a href="install.html">Install</a>
+<a href="first-game.html">Your first game</a>
+<h4>Guides</h4>
+<a href="editor.html">The editor</a>
+<a href="gameobjects.html">GameObjects and components</a>
+<a href="scenes.html">Scenes and prefabs</a>
+<a href="assets.html">Assets and import</a>
+<a href="packages.html">Packages</a>
+<a href="textures.html">Textures and materials</a>
+<a href="models.html">Models</a>
+<a href="animation.html">Animation</a>
+<a href="audio.html" class="on">Audio</a>
+<a href="physics.html">Physics</a>
+<a href="scripting.html">Lua scripting</a>
+<a href="rendering.html">Rendering</a>
+<a href="building.html">Build</a>
+<h4>Reference</h4>
+<a href="lua-api.html">Lua API</a>
+<a href="cli.html">CLI reference</a>
+<a href="go-api.html">Go API</a>
+<a href="architecture.html">Architecture</a>
+</aside>
+<main>
+<div class="kicker">Guides</div>
+<h1>Audio</h1>
+<p class="lead">Drop .wav and .mp3 files into the project, put an Audio Source on an object, and the sound plays in the editor's play mode and in built games, through the computer's speakers.</p>
+
+<h2>Sound files</h2>
+<p>Drag sound files into the Project window; they land in <code>audio/</code>. Double click a sound to hear it. WAV files may be 8 or 16 bit, mono or stereo, at any rate; MP3 files of any common rate work too.</p>
+
+<h2>Audio Source</h2>
+<p>Add an <b>Audio Source</b> with <b>Add Component</b> and drag a sound onto its <b>clip</b> slot.</p>
+<table>
+<tr><th>Property</th><th>Does</th></tr>
+<tr><td><code>clip</code></td><td>The sound to play.</td></tr>
+<tr><td><code>volume</code></td><td>0 to 1. Changing it while the sound plays fades it.</td></tr>
+<tr><td><code>loop</code></td><td>Start over at the end, for music and ambience.</td></tr>
+<tr><td><code>playOnStart</code></td><td>Play when the game starts. Turn it off to play from a script.</td></tr>
+</table>
+
+<h2>From scripts</h2>
+<pre><code><span class="k">function</span> key(self, k)
+  <span class="k">if</span> k == <span class="s">"e"</span> <span class="k">then</span>
+    <span class="k">local</span> door = self:component(<span class="s">"audio_source"</span>)
+    door.volume = 0.6
+    door:play()
+  <span class="k">end</span>
+<span class="k">end</span>
+
+<span class="c">-- a one shot without a component</span>
+play_sound(<span class="s">"audio/coin.wav"</span>, 0.8)</code></pre>
+<p><code>play()</code>, <code>stop()</code> and <code>playing()</code> are the Audio Source's methods; every property is a field. See the <a href="lua-api.html">Lua API</a>.</p>
+
+<div class="note"><b>Where sound comes from</b>In the editor the sounds play through the editor window. A built game mixes them itself and plays them on the system's sound device; on Linux that is ALSA, present on almost every desktop. Without a sound device the game runs silent instead of failing.</div>
+<nav class="pager"><a class="prev" href="animation.html"><small>Previous</small>Animation</a><a class="next" href="physics.html"><small>Next</small>Physics</a></nav>
+</main>
+</div>
+</body>
+</html>

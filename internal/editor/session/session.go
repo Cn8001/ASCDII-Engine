@@ -82,6 +82,9 @@ type Session struct {
 	keys      []input.Key
 	sctx      scene.Ctx
 	hist      history
+	active    int    // the clip new keys go to; picked in the Animation panel
+	prefab    string // the prefab being edited in prefab mode, "" otherwise
+	stash     *stashed
 	logs      logbook
 	raw       []byte
 	seq       uint64
@@ -104,6 +107,7 @@ func New(d Deps) *Session {
 	s.cam = s.edit.Camera
 	s.pipe = app.NewPipeline(s.current, d.Now)
 	s.pipe.Add(pipeline.Func("grid", pipeline.Geometry, s.grid))
+	s.pipe.Add(pipeline.Func("colliders", pipeline.Post, s.colliders))
 	s.frame = pipeline.NewFrame(120, 40)
 	s.resetCtx()
 	return s
@@ -111,7 +115,10 @@ func New(d Deps) *Session {
 
 // resetCtx starts a run from scratch: no Lua state or time scale carried over.
 func (s *Session) resetCtx() {
-	s.sctx = scene.Ctx{Pipeline: s.pipe, Input: input.NewState(), Log: func(level, source, msg string) { s.Log(s.appCtx, level, source, msg) }}
+	if old, ok := s.sctx.Audio.(*editorAudio); ok && len(old.live) > 0 {
+		old.emit(AudioEvent{Op: "stopall"})
+	}
+	s.sctx = scene.Ctx{Pipeline: s.pipe, Input: input.NewState(), Audio: &editorAudio{s: s, live: map[uint64]bool{}}, Log: func(level, source, msg string) { s.Log(s.appCtx, level, source, msg) }}
 }
 
 func (s *Session) current() *scene.Scene {
@@ -141,6 +148,7 @@ type Info struct {
 	Templates []string `json:"templates"`
 	CanUndo   bool     `json:"canUndo"`
 	CanRedo   bool     `json:"canRedo"`
+	Prefab    string   `json:"prefab,omitempty"` // set in prefab mode
 }
 
 func (s *Session) Info(ctx context.Context) (Info, error) {
@@ -156,6 +164,7 @@ func (s *Session) Info(ctx context.Context) (Info, error) {
 	m := s.proj.Manifest
 	in.Open, in.Name, in.Version, in.Dir, in.Scene = true, m.Name, m.Version, s.dir, s.scenePath
 	in.Manifest = filepath.Join(s.dir, s.proj.File)
+	in.Prefab = s.prefab
 	entries, err := asset.List(ctx, os.DirFS(s.dir), project.BuildDir)
 	if err != nil {
 		return in, err
@@ -207,6 +216,8 @@ func (s *Session) load(sc *scene.Scene, path string) {
 	s.edit, s.play, s.scenePath, s.cam = sc, nil, path, sc.Camera
 	s.mode, s.sel, s.unsaved, s.keys = Edit, 0, false, nil
 	s.hist = history{}
+	s.active = -1
+	s.prefab, s.stash = "", nil
 	s.touch()
 }
 
@@ -301,6 +312,9 @@ func (s *Session) SaveAs(ctx context.Context, rel string) error {
 func (s *Session) save(ctx context.Context, rel string) error {
 	if err := s.need(); err != nil {
 		return err
+	}
+	if s.prefab != "" {
+		return s.savePrefabMode(ctx)
 	}
 	if locked(rel) {
 		return lockedErr(rel)

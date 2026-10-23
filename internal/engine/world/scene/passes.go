@@ -36,6 +36,25 @@ func (g *Geometry) Run(f *pipeline.Frame) {
 	f.Buf.SetTag(0)
 }
 
+// Painted applies paint layers to the dots their objects drew.
+type Painted struct{ Scene func() *Scene }
+
+func (*Painted) Name() string          { return "paint" }
+func (*Painted) Stage() pipeline.Stage { return pipeline.Geometry }
+func (p *Painted) Run(f *pipeline.Frame) {
+	p.Scene().Walk(func(o *GameObject, visible bool) bool {
+		if !visible {
+			return false
+		}
+		for _, c := range o.Components {
+			if d, ok := c.(DotPainter); ok && o.Enabled(c) {
+				d.PaintDots(f, o, o.World())
+			}
+		}
+		return true
+	})
+}
+
 type Cells struct{ Scene func() *Scene }
 
 func (*Cells) Name() string          { return "cells" }

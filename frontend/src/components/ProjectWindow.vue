@@ -4,6 +4,7 @@ import { Assets, EventsOn, Packages, Project, Scene } from '../lib/api'
 import { openMenu, type MenuItem } from '../lib/menu'
 import { ask, confirmAction } from '../lib/dialog'
 import { call, refresh, refreshAssets, select, store, toast } from '../lib/store'
+import { previewSound } from '../lib/audio'
 import type { FileDrop } from '../lib/filedrop'
 import type { asset } from '../wailsjs/go/models'
 import ArtThumb from './ArtThumb.vue'
@@ -17,6 +18,8 @@ const kinds = [
   { id: 'model', label: 'Models' },
   { id: 'texture', label: 'Textures' },
   { id: 'material', label: 'Materials' },
+  { id: 'audio', label: 'Audio' },
+  { id: 'animator', label: 'Animators' },
   { id: 'art', label: 'Art' },
   { id: 'script', label: 'Scripts' },
 ] as const
@@ -71,11 +74,11 @@ onBeforeUnmount(() => off?.())
 watch(() => store.assetsVersion, reloadAll)
 
 function name(p: string) {
-  return base(p).replace(/\.(prefab|scene|material)\.json$/, '').replace(/\.(json|xp|lua|obj|png|jpe?g|gif)$/i, '')
+  return base(p).replace(/\.(prefab|scene|material|animator)\.json$/, '').replace(/\.(json|xp|lua|obj|png|jpe?g|gif|wav|mp3)$/i, '')
 }
 
 function icon(k: string) {
-  return { scene: 'scene', prefab: 'package', model: 'box', texture: 'image', material: 'sun', art: 'image', script: 'file' }[k] ?? 'file'
+  return { scene: 'scene', prefab: 'package', model: 'box', texture: 'image', material: 'sun', art: 'image', script: 'file', audio: 'music', animator: 'graph' }[k] ?? 'file'
 }
 
 function go(path: string) {
@@ -136,7 +139,17 @@ async function openAsset(a: asset.Entry) {
     await call(() => Assets.OpenExternal(a.path, 0))
   } else if (a.kind === 'texture' || a.kind === 'material') {
     pick(a)
-  } else if (a.kind === 'prefab' || a.kind === 'model') {
+  } else if (a.kind === 'audio') {
+    previewSound(a.path)
+  } else if (a.kind === 'animator') {
+    store.animator = a.path
+  } else if (a.kind === 'prefab') {
+    const ok = await call(() => Scene.OpenPrefab(a.path).then(() => true))
+    if (ok) {
+      store.selected = 0
+      await refresh()
+    }
+  } else if (a.kind === 'model') {
     const id = await call(() => Scene.Add(0, `${a.kind}:${a.path}`))
     if (id !== undefined) {
       await refresh()
@@ -148,6 +161,14 @@ async function openAsset(a: asset.Entry) {
       await refresh()
       await select(id)
     }
+  }
+}
+
+async function place(a: asset.Entry) {
+  const id = await call(() => Scene.Add(0, `${a.kind}:${a.path}`))
+  if (id !== undefined) {
+    await refresh()
+    await select(id)
   }
 }
 
@@ -186,6 +207,16 @@ async function newMaterial(texture = '') {
   toast(rel, 'ok')
   await reloadAll()
   store.asset = rel
+}
+
+async function newController() {
+  const n = await ask('New animator controller', 'animator', { suffix: '.animator.json' })
+  if (!n) return
+  const rel = await call(() => Assets.CreateController(within(n)))
+  if (!rel) return
+  toast(rel, 'ok')
+  await reloadAll()
+  store.animator = rel
 }
 
 async function newFolder(parent = cwd.value) {
@@ -247,6 +278,7 @@ function createItems(): MenuItem[] {
     { label: 'Script', icon: 'file', run: newScript },
     { label: 'Scene', icon: 'scene', run: newScene },
     { label: 'Material', icon: 'sun', run: () => newMaterial() },
+    { label: 'Animator Controller', icon: 'graph', run: newController },
   ]
 }
 
@@ -296,6 +328,12 @@ function itemMenu(e: MouseEvent, a: asset.Entry) {
   const items: MenuItem[] = []
   if (a.kind === 'texture') {
     items.push({ label: 'Create Material', icon: 'sun', run: () => newMaterial(a.path) }, { label: 'Convert to Art', icon: 'image', run: () => toArt(a) })
+  } else if (a.kind === 'prefab') {
+    items.push({ label: 'Open Prefab', icon: 'open', run: () => openAsset(a) }, { label: 'Place', icon: 'plus', run: () => place(a) })
+  } else if (a.kind === 'audio') {
+    items.push({ label: 'Play', icon: 'music', run: () => previewSound(a.path) })
+  } else if (a.kind === 'animator') {
+    items.push({ label: 'Open Animator', icon: 'graph', run: () => (store.animator = a.path) })
   } else if (a.kind === 'material' || a.kind === 'model') {
     items.push({ label: a.kind === 'model' ? 'Place' : 'Edit', icon: 'open', run: () => (a.kind === 'model' ? openAsset(a) : pick(a)) })
     if (a.kind === 'model') items.push({ label: 'Import Settings', icon: 'sliders', run: () => pick(a) })
@@ -428,7 +466,7 @@ async function reload() {
             <div class="grid h-12 w-16 place-items-center rounded-md bg-ink-950/60">
               <ArtThumb v-if="a.kind === 'art'" :path="a.path" />
               <TexThumb v-else-if="a.kind === 'texture'" :path="a.path" />
-              <Icon v-else :name="icon(a.kind)" :size="22" :class="a.kind === 'prefab' ? 'text-amber-soft' : a.kind === 'script' ? 'text-ok' : a.kind === 'model' ? 'text-ink-200' : 'text-ink-400'" />
+              <Icon v-else :name="icon(a.kind)" :size="22" :class="a.kind === 'prefab' ? 'text-amber-soft' : a.kind === 'script' || a.kind === 'audio' ? 'text-ok' : a.kind === 'model' || a.kind === 'animator' ? 'text-ink-200' : 'text-ink-400'" />
             </div>
             <span class="w-full truncate text-center text-[11px] text-ink-300 group-hover:text-ink-100">{{ name(a.path) }}</span>
           </button>

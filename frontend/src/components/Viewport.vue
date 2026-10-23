@@ -124,7 +124,7 @@ const hover = ref('')
 const selectedName = computed(() => findNode(store.selected)?.name ?? '')
 const playing = computed(() => store.frame.mode !== 'edit')
 
-type DragMode = 'none' | 'pan' | 'orbit' | 'move'
+type DragMode = 'none' | 'pan' | 'orbit' | 'move' | 'paint'
 let mode: DragMode = 'none'
 let axis = 'free'
 let prev = { x: 0, y: 0 }
@@ -141,11 +141,27 @@ function queue(fn: () => void) {
   pending = fn
 }
 
+// paintAt sends one brush dab; a slow backend drops dabs instead of queueing them.
+let painting = false
+async function paintAt(p: { x: number; y: number }) {
+  if (painting || !store.selected) return
+  painting = true
+  const b = store.brush
+  await Viewport.Paint(store.selected, p.x / cw.value, p.y / ch.value, b.color, b.radius, b.erase).catch(() => {})
+  painting = false
+}
+
 function down(e: PointerEvent) {
   host.value?.focus()
   const p = local(e)
   prev = p
   moved = 0
+  if (store.brush.on && e.button === 0 && store.selected && store.view === 'scene') {
+    mode = 'paint'
+    void paintAt(p)
+    ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+    return
+  }
   const hit = hitAxis(p)
   if (e.button === 2) mode = 'orbit'
   else if (e.button === 1) mode = 'pan'
@@ -183,6 +199,8 @@ function move(e: PointerEvent) {
     queue(() => Viewport.Pan((p.x - from.x) / cw.value, (p.y - from.y) / ch.value))
   } else if (mode === 'orbit') {
     queue(() => Viewport.Orbit(dx * 0.4, -dy * 0.25))
+  } else if (mode === 'paint') {
+    void paintAt(p)
   } else if (mode === 'move' && store.selected) {
     const from = prev
     const id = store.selected
@@ -200,7 +218,7 @@ async function up(e: PointerEvent) {
     const id = await call(() => Viewport.Pick(Math.floor(p.x / cw.value), Math.floor(p.y / ch.value)))
     await select(id ?? 0)
   }
-  if (was === 'move') await refreshProps()
+  if (was === 'move' || was === 'paint') await refreshProps()
 }
 
 function wheel(e: WheelEvent) {
@@ -325,6 +343,14 @@ function setLive() {
       <button v-for="px in [6, 8, 10, 12]" :key="px" class="h-7 rounded-md px-1.5 font-mono text-[11px] transition" :class="store.cellPx === px ? 'bg-ink-750 text-amber-glow' : 'text-ink-400 hover:text-ink-100'" @click="store.cellPx = px">{{ px }}</button>
       <span class="mx-1 h-4 w-px bg-ink-700" />
       <button class="icon-btn" :class="store.info?.live ? 'text-amber-glow' : ''" title="Live" @click="setLive"><Icon name="sun" :size="14" /></button>
+      <span class="mx-1 h-4 w-px bg-ink-700" />
+      <button class="icon-btn" :class="store.brush.on ? 'text-amber-glow' : ''" title="Braille brush: paint or erase the selected object's dots" @click="store.brush.on = !store.brush.on"><Icon name="brush" :size="14" /></button>
+      <template v-if="store.brush.on">
+        <input v-model="store.brush.color" type="color" class="size-6 cursor-pointer rounded" title="Color" />
+        <input v-model.number="store.brush.radius" type="range" min="0.1" max="3" step="0.05" class="h-1 w-20 accent-[var(--color-amber-glow)]" title="Size" />
+        <button class="h-7 rounded-md px-1.5 text-[11px] transition" :class="store.brush.erase ? 'bg-ink-750 text-amber-glow' : 'text-ink-400 hover:text-ink-100'" title="Erase dots" @click="store.brush.erase = !store.brush.erase">erase</button>
+        <span v-if="!store.selected" class="px-1 text-[11px] text-ink-500">select an object</span>
+      </template>
     </div>
 
     <div class="pointer-events-none absolute right-2 top-10 rounded-md border border-ink-750 bg-ink-900/85 px-2 py-1 font-mono text-[10.5px] text-ink-400 backdrop-blur">

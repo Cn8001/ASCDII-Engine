@@ -4,15 +4,23 @@ import {session} from '../models';
 
 export function AddKey(arg1:number,arg2:string,arg3:number):Promise<void>;
 
+export function AnimatorState(arg1:number):Promise<string>;
+
 export function Clips(arg1:number):Promise<Array<session.Clip>>;
 
 export function Eases():Promise<Array<string>>;
 
 export function MoveKey(arg1:number,arg2:string,arg3:number,arg4:number):Promise<void>;
 
+export function NewClip(arg1:number,arg2:string):Promise<void>;
+
+export function PickClip(arg1:number):Promise<void>;
+
 export function RemoveClip(arg1:number):Promise<void>;
 
 export function RemoveKey(arg1:number,arg2:string,arg3:number):Promise<void>;
+
+export function RenameClip(arg1:number,arg2:string):Promise<void>;
 
 export function SetClip(arg1:number,arg2:string,arg3:number):Promise<void>;
 

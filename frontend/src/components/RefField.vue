@@ -13,15 +13,15 @@ const emit = defineEmits<{ ref: [name: string, target: number, key: string]; set
 const over = ref(false)
 const kind = computed(() => props.p.options?.[0] ?? '')
 // asset slots take files from the Project window instead of scene objects.
-const asset = computed(() => ['prefab', 'texture', 'material'].includes(props.p.type))
+const asset = computed(() => ['prefab', 'texture', 'material', 'controller', 'audio'].includes(props.p.type))
 const empty = computed(() => !props.p.value)
 const label = computed(() => {
-  if (asset.value) return assetPath(String(props.p.value)).split('/').pop()!.replace(/\.(prefab|material)\.json$/, '')
+  if (asset.value) return assetPath(String(props.p.value)).split('/').pop()!.replace(/\.(prefab|material|animator)\.json$/, '')
   return props.p.display || String(props.p.value)
 })
-const names: Record<string, string> = { object: 'Object', prefab: 'Prefab', texture: 'Texture', material: 'Material' }
+const names: Record<string, string> = { object: 'Object', prefab: 'Prefab', texture: 'Texture', material: 'Material', controller: 'Animator', audio: 'Sound' }
 const what = computed(() => names[props.p.type] ?? (kind.value ? kindLabel(kind.value) : 'Component'))
-const icon = computed(() => ({ object: 'box', prefab: 'package', texture: 'image', material: 'sun' })[props.p.type] ?? 'sliders')
+const icon = computed(() => ({ object: 'box', prefab: 'package', texture: 'image', material: 'sun', controller: 'graph', audio: 'music' })[props.p.type] ?? 'sliders')
 const missing = computed(() => props.p.display === 'Missing')
 
 function accepts(e: DragEvent): boolean {
@@ -43,7 +43,7 @@ function drop(e: DragEvent) {
   if (!dt) return
   if (asset.value) {
     const [k, ...rest] = dt.getData('text/asset').split(':')
-    if (k === props.p.type) emit('set', props.p.name, rest.join(':'))
+    if (k === props.p.type || (k === 'animator' && props.p.type === 'controller')) emit('set', props.p.name, rest.join(':'))
     return
   }
   const comp = dt.getData('text/component')
@@ -60,8 +60,9 @@ function drop(e: DragEvent) {
 function pick(e: MouseEvent) {
   const items: MenuItem[] = [{ label: 'None', icon: 'x', run: () => (asset.value ? emit('set', props.p.name, '') : emit('ref', props.p.name, 0, '')) }, { label: '-' }]
   if (asset.value) {
-    for (const a of store.assets.filter((x) => x.kind === props.p.type)) {
-      items.push({ label: a.path.split('/').pop()!.replace(/\.(prefab|material)\.json$/, ''), icon: icon.value, run: () => emit('set', props.p.name, a.guid || a.path) })
+    const want = props.p.type === 'controller' ? 'animator' : props.p.type
+    for (const a of store.assets.filter((x) => x.kind === want)) {
+      items.push({ label: a.path.split('/').pop()!.replace(/\.(prefab|material|animator)\.json$/, ''), icon: icon.value, run: () => emit('set', props.p.name, a.guid || a.path) })
     }
   } else {
     for (const n of allNodes()) {

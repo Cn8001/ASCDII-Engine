@@ -14,6 +14,10 @@ export function Apply(arg1, arg2) {
   return window['go']['service']['SceneService']['Apply'](arg1, arg2);
 }
 
+export function ClosePrefab() {
+  return window['go']['service']['SceneService']['ClosePrefab']();
+}
+
 export function Duplicate(arg1) {
   return window['go']['service']['SceneService']['Duplicate'](arg1);
 }
@@ -24,6 +28,10 @@ export function Kinds() {
 
 export function MoveComponent(arg1, arg2, arg3) {
   return window['go']['service']['SceneService']['MoveComponent'](arg1, arg2, arg3);
+}
+
+export function OpenPrefab(arg1) {
+  return window['go']['service']['SceneService']['OpenPrefab'](arg1);
 }
 
 export function Props(arg1) {

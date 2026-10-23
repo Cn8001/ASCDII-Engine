@@ -24,9 +24,11 @@
 <a href="textures.html">Textures and materials</a>
 <a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
+<a href="audio.html">Audio</a>
+<a href="physics.html">Physics</a>
 <a href="scripting.html">Lua scripting</a>
 <a href="rendering.html">Rendering</a>
-<a href="building.html">Build and release</a>
+<a href="building.html">Build</a>
 <h4>Reference</h4>
 <a href="lua-api.html">Lua API</a>
 <a href="cli.html">CLI reference</a>
@@ -43,15 +45,16 @@
 <pre><code>internal/engine/
   core/      color, geom, noise, guid, par, prop, input
   render/    cell, raster, braille, texture, view, light, draw, pipeline
-  world/     scene (GameObjects, components, references), components, anim, fx
-  assets/    asset (catalog, .meta, library, glyph art), mesh (OBJ), material
+  world/     scene (GameObjects, components, references), components, anim, fx,
+             physics (2D shapes on the ground plane)
+  assets/    asset (catalog, .meta, library, glyph art), mesh (OBJ), material, animator
+  audio/     sound decoding (WAV, MP3) and the mixer
   script/    vm (Lua: VM, scripts, fields, API)
-  platform/  the backend contract, terminal, headless
+  platform/  the backend contract, terminal, headless, speaker (sound output)
   runtime/   app, loop, bundle, project (manifest, modules), pack (packages), version
 internal/editor/   session, service (the Wails boundary), players, recent, brand
 internal/dragonfall/  the sample: a code module and a package
-cmd/      ascdii (CLI and player), launcher (menu program, menu code in launcher/menu),
-          editor (Wails), snapshot, hello</code></pre>
+cmd/      ascdii (CLI, player and the menu in ascdii/menu), editor (Wails), snapshot, hello</code></pre>
 <p>Dependencies point one way: <code>core</code> ← <code>render</code> ← <code>world</code> ← <code>script</code>, with <code>assets</code> using core, render and world types, and <code>runtime</code> tying it together. The editor and content modules depend on the engine; the engine never depends on them. Nothing keeps package level state: registries, libraries and VMs are created at startup and passed in.</p>
 
 <h2>A frame</h2>
@@ -87,6 +90,9 @@ cmd/      ascdii (CLI and player), launcher (menu program, menu code in launcher
 <li><code>runtime/app</code> runs any pair with <code>Engine.RunOn(ctx, display, input)</code>.</li>
 </ul>
 <div class="tip"><b>Adding SDL</b>A window backend would live in <code>platform/sdl</code>: open a window in <code>Open</code>, draw <code>Frame.Dots</code> as pixels or <code>Frame.Cells</code> with a font in <code>Present</code>, and turn window key down and key up events into <code>input.Event</code>s. Nothing else in the engine changes.</div>
+
+<h2>Sound</h2>
+<p>The scene context carries an <code>AudioOut</code>: play a sound asset, stop it, change its volume. The terminal player's is the <code>audio</code> mixer read by <code>platform/speaker</code>, injected into <code>runtime/app</code> so that only the player links the sound device. The editor's sends play and stop events to its web view, which plays the files itself.</p>
 
 <h2>Modules and packages</h2>
 <p>A <b>module</b> (<code>project.Module</code>) is Go code: a name and a function that registers component kinds. Modules are compiled into the editor and the player, and a project lists the ones it uses in its manifest; only those are installed into its registry. A <b>package</b> (<code>runtime/pack</code>) is data: assets with .meta files and a <code>pack.json</code> naming the modules they need. Installing a package copies it into <code>packages/&lt;name&gt;/</code> and adds its modules; see <a href="packages.html">Packages</a>.</p>
