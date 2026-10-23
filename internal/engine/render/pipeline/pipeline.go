@@ -38,6 +38,7 @@ type Frame struct {
 	Time  float64
 	Env   light.Env
 	Ctx   *draw.Context
+	extra *raster.Buffer // scratch for smoothed sprites, kept across frames
 }
 
 func NewFrame(cols, rows int) *Frame {
@@ -55,7 +56,10 @@ func (f *Frame) Begin(cam view.Camera, t float64, env light.Env) {
 	f.View = cam.View(f.Buf.W, f.Buf.H)
 	f.Time = t
 	f.Env = env.Resolved()
-	f.Ctx = &draw.Context{Buf: f.Buf, View: f.View, Time: t}
+	if f.extra == nil {
+		f.extra = raster.New(1, 1)
+	}
+	f.Ctx = &draw.Context{Buf: f.Buf, View: f.View, Time: t, Scratch: f.extra}
 }
 
 // useSun puts a directional light in place of the scene's sun.

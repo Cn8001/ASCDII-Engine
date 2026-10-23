@@ -62,7 +62,7 @@ async function build() {
           :key="t.id"
           class="flex h-12 items-center justify-center gap-2 rounded-xl border text-[13px] transition"
           :class="!available.includes(t.id) ? 'border-ink-800 text-ink-600' : chosen.includes(t.id) ? 'border-amber-soft bg-amber-glow/[.07] text-ink-100' : 'border-ink-700 text-ink-400 hover:border-ink-600'"
-          :title="available.includes(t.id) ? '' : 'make players'"
+          :title="available.includes(t.id) ? '' : `No player for ${t.id}: place ascdii-${t.id}-amd64${t.id === 'windows' ? '.exe' : ''} next to the editor`"
           @click="toggle(t.id)"
         >
           <Icon :name="chosen.includes(t.id) ? 'check' : 'package'" :size="14" :class="chosen.includes(t.id) ? 'text-amber-glow' : ''" />
@@ -70,6 +70,7 @@ async function build() {
         </button>
       </div>
 
+      <p v-if="!available.length" class="mb-3 text-[12px] leading-snug text-amber-soft">No player found. Builds start from the ascdii program next to the editor; for another platform, place ascdii-linux-amd64 or ascdii-windows-amd64.exe beside it.</p>
       <label class="mb-2 flex items-center gap-2 text-[12px] text-ink-300" title="Off: an executable next to a data folder with the assets. On: everything inside one executable.">
         <input v-model="single" type="checkbox" class="accent-[var(--color-amber-glow)]" />
         Single file

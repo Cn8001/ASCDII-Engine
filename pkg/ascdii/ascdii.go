@@ -117,8 +117,20 @@ func Player() Component                        { return components.NewPlayer() }
 func Toggle(key, target, p string) Component   { return components.NewToggle(key, target, p) }
 func DayNight() Component                      { return components.NewDayNight() }
 func Quit(key string) Component                { return &components.Quit{Press: key} }
-func Fire() Particles                          { p, _ := fx.Preset("fire"); return p }
-func Embers() Particles                        { p, _ := fx.Preset("embers"); return p }
+func BoxCollider() Component                   { return components.NewBoxCollider() }
+func CircleCollider() Component                { return components.NewCircleCollider() }
+func Rigidbody() Component                     { return components.NewRigidbody() }
+func AudioSource() Component                   { return components.NewAudioSource() }
+
+// CameraComponent makes its object the game camera, span world units across
+// the view. Camera itself is the view type a scene falls back to.
+func CameraComponent(span float64) Component {
+	c := components.NewCamera()
+	c.Span = span
+	return c
+}
+func Fire() Particles   { p, _ := fx.Preset("fire"); return p }
+func Embers() Particles { p, _ := fx.Preset("embers"); return p }
 
 // ParticlePreset is a named starting point: embers, fire, smoke, sparks,
 // rain, snow, magic, fountain or explosion.

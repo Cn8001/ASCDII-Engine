@@ -6,6 +6,7 @@
 <title>Particles | ASCDII Engine</title>
 <link rel="icon" href="img/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
+<script src="zoom.js" defer></script>
 </head>
 <body>
 <div class="layout">
@@ -21,7 +22,7 @@
 <a href="scenes.html">Scenes and prefabs</a>
 <a href="assets.html">Assets and import</a>
 <a href="packages.html">Packages</a>
-<a href="textures.html">Textures and materials</a>
+<a href="textures.html">Textures, materials, sprites</a>
 <a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
 <a href="particles.html" class="on">Particles</a>
@@ -31,6 +32,8 @@
 <a href="rendering.html">Rendering</a>
 <a href="building.html">Build</a>
 <h4>Reference</h4>
+<a href="components.html">Component reference</a>
+<a href="dragonfall.html">Dragonfall module</a>
 <a href="lua-api.html">Lua API</a>
 <a href="cli.html">CLI reference</a>
 <a href="go-api.html">Go API</a>
@@ -39,17 +42,17 @@
 <main>
 <div class="kicker">Guides</div>
 <h1>Particles</h1>
-<p class="lead">A <b>Particle System</b> component emits dots that fly, fall, fade and bounce: fire, smoke, sparks, rain, snow, magic. Pick a preset in the Particle Editor and tune it while it runs in the Scene view.</p>
+<p class="lead">The <b>Particle System</b> component emits particles that move, fall, change color and size, and bounce off the ground, for effects such as fire, smoke, sparks, rain and snow. The Particle Editor provides presets and shows every change while the effect runs.</p>
 <figure><img src="img/editor-particles.png" alt="Particle Editor"><figcaption>The Particle Editor next to the Scene view, with the fountain preset running.</figcaption></figure>
 
-<h2>Your first effect</h2>
+<h2>Creating an effect</h2>
 <ol class="steps">
-<li>Choose <b>GameObject</b>, <b>Effects</b>, <b>Particle System</b>, or add the component to an existing object.</li>
-<li>Press the sparkle button on its Inspector card. The Particle Editor opens and turns on Live preview, so the effect runs while you edit.</li>
-<li>Click a preset: embers, fire, smoke, sparks, rain, snow, magic, fountain or explosion. A preset replaces every setting; undo brings the old ones back.</li>
-<li>Change values on the right. The bar and the line on the left preview the color and the size over a particle's life.</li>
+<li>Choose <b>GameObject</b>, <b>Effects</b>, <b>Particle System</b>, or add the component to an existing object with <b>Add Component</b>.</li>
+<li>Press the sparkle button on its Inspector card. The Particle Editor opens and enables Live preview, so the effect runs while it is edited.</li>
+<li>Select a preset: embers, fire, smoke, sparks, rain, snow, magic, fountain or explosion. A preset replaces every setting; undo restores the previous ones.</li>
+<li>Adjust the settings on the right. The color bar and the line on the left show the color and the size over a particle's life; the counter shows the number of live particles.</li>
 </ol>
-<p><b>Play</b> restarts the system, <b>Stop</b> ends births and lets live particles finish, <b>Burst</b> emits the burst count at once, <b>Clear</b> removes every particle.</p>
+<p><b>Play</b> restarts the system, <b>Stop</b> ends emission and lets live particles finish, <b>Burst</b> emits the burst count at once, and <b>Clear</b> removes every particle.</p>
 
 <h2>Settings</h2>
 <table>
@@ -71,7 +74,7 @@ log(fx:count())
 fx.rate = 80        <span class="c">-- every setting is a field</span>
 fx.start = <span class="s">"#ff4020"</span></code></pre>
 <p>A one shot effect, such as an explosion when something is destroyed: give a prefab a particle system with <code>loop</code> off and a <code>burst</code>, then <code>spawn</code> it where it should happen.</p>
-<div class="tip"><b>Keep it light</b>Every particle is drawn as dots, and a terminal frame has room for only so many. A few hundred particles look rich; thousands only cost time.</div>
+<div class="note"><b>Particle count</b>Each particle is drawn as dots, and a terminal frame has a limited number of them. A few hundred particles are sufficient for most effects; <code>max</code> limits the count.</div>
 <nav class="pager"><a class="prev" href="animation.html"><small>Previous</small>Animation</a><a class="next" href="audio.html"><small>Next</small>Audio</a></nav>
 </main>
 </div>

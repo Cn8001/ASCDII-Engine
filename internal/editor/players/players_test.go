@@ -3,6 +3,7 @@ package players
 import (
 	"context"
 	"errors"
+	"io/fs"
 	"os"
 	"testing"
 	"testing/fstest"
@@ -10,7 +11,7 @@ import (
 
 func TestUnit_ExtractWritesExecutable(t *testing.T) {
 	// Arrange
-	s := Source{FS: fstest.MapFS{"ascdii-linux-amd64": {Data: []byte("bin")}}}
+	s := Source{Dirs: []fs.FS{fstest.MapFS{}, fstest.MapFS{"ascdii-linux-amd64": {Data: []byte("bin")}}}}
 	dir := t.TempDir()
 
 	// Act
@@ -28,7 +29,7 @@ func TestUnit_ExtractWritesExecutable(t *testing.T) {
 
 func TestUnit_ExtractMissingReportsNoPlayer(t *testing.T) {
 	// Arrange
-	s := Source{FS: fstest.MapFS{}}
+	s := Source{Dirs: []fs.FS{fstest.MapFS{}}}
 
 	// Act
 	_, err := s.Extract(context.Background(), "windows", "amd64", t.TempDir())

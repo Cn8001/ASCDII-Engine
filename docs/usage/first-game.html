@@ -6,6 +6,7 @@
 <title>Your first game | ASCDII Engine</title>
 <link rel="icon" href="img/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
+<script src="zoom.js" defer></script>
 </head>
 <body>
 <div class="layout">
@@ -21,7 +22,7 @@
 <a href="scenes.html">Scenes and prefabs</a>
 <a href="assets.html">Assets and import</a>
 <a href="packages.html">Packages</a>
-<a href="textures.html">Textures and materials</a>
+<a href="textures.html">Textures, materials, sprites</a>
 <a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
 <a href="particles.html">Particles</a>
@@ -31,6 +32,8 @@
 <a href="rendering.html">Rendering</a>
 <a href="building.html">Build</a>
 <h4>Reference</h4>
+<a href="components.html">Component reference</a>
+<a href="dragonfall.html">Dragonfall module</a>
 <a href="lua-api.html">Lua API</a>
 <a href="cli.html">CLI reference</a>
 <a href="go-api.html">Go API</a>
@@ -39,47 +42,42 @@
 <main>
 <div class="kicker">Start</div>
 <h1>Your first game</h1>
-<p class="lead">This guide creates a project from the Dragonfall template and covers the editor, changing objects, play mode, saving and version control.</p>
+<p class="lead">This guide creates a project from the Dragonfall template, changes it in the editor, plays it, saves it and builds it.</p>
+
 <h2>1. Create a project</h2>
 <ol class="steps">
 <li>Run <code>ascdii</code> and select <b>New project</b>.</li>
-<li>Enter a name and a location, then select the <b>Dragonfall</b> template. <b>Empty</b> creates a project with only a manifest and a start scene.</li>
-<li><code>ascdii</code> creates <code>&lt;location&gt;/&lt;name&gt;/</code> with a <code>.ascdiiproj</code> manifest and the template's scenes, prefabs, sprites and scripts, then opens it in the editor.</li>
+<li>Enter a name and a location, then select the <b>Dragonfall</b> template. <b>Empty</b> creates a project that contains only a manifest and a start scene with a camera.</li>
+<li><code>ascdii</code> creates the folder <code>&lt;location&gt;/&lt;name&gt;/</code> with a <code>.ascdiiproj</code> manifest and the template's scenes, prefabs, sprites and scripts, and opens it in the editor.</li>
 </ol>
-<p>Further projects can be created from the editor toolbar (<kbd>Ctrl</kbd>+<kbd>N</kbd>). A project can also be created without the launcher:</p>
-<pre><code>ascdii new ~/games/quest -name "Quest" -template dragonfall</code></pre>
+<p>Further projects can be created from the editor toolbar (<kbd>Ctrl</kbd>+<kbd>N</kbd>) or with <code>ascdii new</code>, see <a href="cli.html">CLI reference</a>.</p>
 
-<h2>2. Look around</h2>
-<figure><img src="img/editor-main.png" alt="Editor"><figcaption>Hierarchy on the left, the live Scene view in the middle, Inspector on the right, Project, Console and Animation below.</figcaption></figure>
+<h2>2. Navigate</h2>
+<figure><img src="img/editor-main.png" alt="Editor"><figcaption>The Dragonfall project in the editor.</figcaption></figure>
 <ul>
-<li><b>Drag</b> with the left mouse button to pan, <b>right drag</b> to orbit, use the <b>wheel</b> to zoom.</li>
-<li><b>Click</b> anything to select it. The Inspector shows its components.</li>
-<li>Press <kbd>F</kbd> to frame the selection.</li>
-<li>The sun button in the view toolbar toggles <b>Live</b>: water, wind, flames and animation clips move while you edit. It is off when the editor opens, so nothing plays until you ask for it.</li>
+<li>Left drag pans the Scene view, right drag orbits it, the mouse wheel zooms.</li>
+<li>A click selects an object; the Inspector shows its components. <kbd>F</kbd> frames the selection.</li>
+<li><b>Live</b> in the view toolbar animates water, wind, flames and clips while editing.</li>
 </ul>
 
-<h2>3. Change something</h2>
+<h2>3. Edit the scene</h2>
 <ol class="steps">
-<li>Select <b>dragon</b> in the Hierarchy and switch <code>awake</code> on in the Inspector. It wakes, flaps and breathes fire in the editor.</li>
-<li>Select <b>Scene</b> at the top of the Hierarchy. Drag the <code>hour</code> label left and right: every label next to a number is a scrub handle. Watch the sun travel and the lanterns take over at night.</li>
-<li>Open the <b>Project</b> tab, drag the <b>lantern</b> prefab into the view and drop it on the road. It lands exactly under the cursor.</li>
-<li>Move it with the gizmo: the red arrow moves along X, the green along Y, the amber one changes height, the square in the middle moves freely on the ground.</li>
+<li>Select <b>dragon</b> in the Hierarchy and enable <code>awake</code> in the Inspector. The dragon wakes and breathes fire.</li>
+<li>Select <b>Scene</b> at the top of the Hierarchy and drag the <code>hour</code> label sideways. The sun moves and the lanterns light up at night.</li>
+<li>In the Project window, open <b>prefabs</b> and drag the <b>lantern</b> prefab onto the road in the Scene view.</li>
+<li>Move the lantern with the move tool (<kbd>W</kbd>): the red arrow moves along X, the green arrow along Y, the amber arrow changes the height, and the square in the middle moves it along the ground.</li>
 </ol>
 
 <h2>4. Play</h2>
-<p>Press <kbd>Space</kbd> or the play button. The view switches to <b>Game</b> and uses the scene's own camera. Click the view and use <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>, <kbd>Space</kbd> to jump, <kbd>E</kbd> near the dragon, <kbd>T</kbd> for a sunset.</p>
-<figure><img src="img/editor-play.png" alt="Play mode"><figcaption>Play mode runs on a copy of the scene, so nothing you do while playing is saved by accident. The Console shows what scripts log.</figcaption></figure>
-<p>Press <kbd>Esc</kbd> to stop. The scene is exactly as it was before you pressed play.</p>
+<p><kbd>Space</kbd> or the play button starts play mode. The view switches to <b>Game</b>, which shows the game camera. With the view focused, <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> move the knight, <kbd>Space</kbd> jumps, <kbd>E</kbd> wakes the dragon when the knight is near and <kbd>T</kbd> advances the time of day.</p>
+<figure><img src="img/editor-play.png" alt="Play mode"><figcaption>Play mode. The Console shows messages logged by scripts.</figcaption></figure>
+<p>Play mode runs on a copy of the scene. <kbd>Esc</kbd> stops it and restores the scene to its state before play.</p>
 
-<h2>5. Save and commit</h2>
-<p><kbd>Ctrl</kbd>+<kbd>S</kbd> writes the scene. The project is ready for git: new projects come with a <code>.gitignore</code> that keeps the <code>build/</code> folder out.</p>
-<pre><code>cd ~/games/quest
-git init
-git add .
-git commit -m "First scene"</code></pre>
+<h2>5. Save</h2>
+<p><kbd>Ctrl</kbd>+<kbd>S</kbd> saves the scene; the <code>*</code> in the window title disappears. New projects include a <code>.gitignore</code> that excludes the <code>build/</code> folder, so the project folder can be kept under version control as it is.</p>
 
-<h2>6. Ship it</h2>
-<p>Press <b>Build</b>, keep Windows and Linux checked, set the version and press <b>Build</b> again. <a href="building.html">Build</a> explains what you get: a folder per platform with the game, its data and checksums.</p>
+<h2>6. Build</h2>
+<p><b>Build</b> in the toolbar opens the build dialog. Select the platforms and the version and press <b>Build</b>. The result is a folder per platform containing the game, its compiled data and checksums, see <a href="building.html">Build</a>.</p>
 <nav class="pager"><a class="prev" href="install.html"><small>Previous</small>Install</a><a class="next" href="editor.html"><small>Next</small>The editor</a></nav>
 </main>
 </div>

@@ -125,7 +125,7 @@ func (p *Player) Update(c *scene.Ctx, e *scene.GameObject, dt float64) {
 		_ = e.Set(name, p.moving)
 	}
 	if p.Follow {
-		c.Scene.Camera.Follow(geom.V3(e.Local.Pos.X, e.Local.Pos.Y, 0), dt, p.FollowRate)
+		c.Scene.FollowView(e, geom.V3(e.Local.Pos.X, e.Local.Pos.Y, 0), dt, p.FollowRate)
 	}
 }
 

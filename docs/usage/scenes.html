@@ -6,6 +6,7 @@
 <title>Scenes and prefabs | ASCDII Engine</title>
 <link rel="icon" href="img/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
+<script src="zoom.js" defer></script>
 </head>
 <body>
 <div class="layout">
@@ -21,7 +22,7 @@
 <a href="scenes.html" class="on">Scenes and prefabs</a>
 <a href="assets.html">Assets and import</a>
 <a href="packages.html">Packages</a>
-<a href="textures.html">Textures and materials</a>
+<a href="textures.html">Textures, materials, sprites</a>
 <a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
 <a href="particles.html">Particles</a>
@@ -31,6 +32,8 @@
 <a href="rendering.html">Rendering</a>
 <a href="building.html">Build</a>
 <h4>Reference</h4>
+<a href="components.html">Component reference</a>
+<a href="dragonfall.html">Dragonfall module</a>
 <a href="lua-api.html">Lua API</a>
 <a href="cli.html">CLI reference</a>
 <a href="go-api.html">Go API</a>
@@ -39,13 +42,14 @@
 <main>
 <div class="kicker">Guides</div>
 <h1>Scenes and prefabs</h1>
-<p class="lead">How a world is put together: projects, scenes, prefabs and overrides, and the single unit everything is measured in. Objects and their components have their own page, <a href="gameobjects.html">GameObjects and components</a>.</p>
+<p class="lead">The structure of a project: its folder, the manifest, asset ids, scenes, prefabs and overrides, and the unit all sizes are given in. Objects and components are described in <a href="gameobjects.html">GameObjects and components</a>.</p>
+
 <h2>The project folder</h2>
-<p>Only the manifest and the start scene have a fixed place; everything else lives in whatever folders you like. A project might look like this:</p>
+<p>Only the manifest has a fixed place, at the top of the project folder. All other files may be organized in any folder layout, for example:</p>
 <pre><code>MyGame/
   MyGame.ascdiiproj       <span class="c">manifest: name, version, start scene</span>
   scenes/main.scene.json  <span class="c">object trees, camera, environment, clips</span>
-  knight/                 <span class="c">one folder per thing, if you like:</span>
+  knight/                 <span class="c">for example, one folder per character:</span>
     knight.prefab.json    <span class="c">  a reusable object tree</span>
     knight.lua            <span class="c">  its script</span>
     knight.sprite.json    <span class="c">  glyph art: palette JSON, or .xp from REXPaint</span>
@@ -56,15 +60,8 @@
   **/*.meta               <span class="c">one per asset: its permanent id</span>
   build/                  <span class="c">output, ignored by git</span></code></pre>
 
-<h2>Asset ids and .meta files</h2>
-<p>Every asset has a <code>.meta</code> file next to it holding a UUIDv7:</p>
-<pre><code>{
-  "format": 1,
-  "guid": "019a0f3e-7c41-7b2a-9d55-3f1c8e2a9b40"
-}</code></pre>
-<p>Scenes refer to prefabs, scripts, models, materials and sprites by this id, never by path. Rename or move an asset in the Project window (right click, <b>Rename</b>) and the <code>.meta</code> goes with it, so nothing that uses it breaks. Commit the <code>.meta</code> files together with their assets; when you move files with git or a file manager, move the <code>.meta</code> too.</p>
-<div class="note"><b>Older projects</b>Opening a project without <code>.meta</code> files creates them and rewrites path references in the scene to ids. The Console reports how many changed; save to keep the result.</div>
-<p>The manifest is short and readable:</p>
+<h2>The manifest</h2>
+<p>The <code>.ascdiiproj</code> file describes the project:</p>
 <pre><code>{
   "format": 1,
   "name": "Dragonfall",
@@ -74,31 +71,53 @@
   "cols": 160, "rows": 50, "fps": 30,
   "modules": ["dragonfall"]
 }</code></pre>
-<p><code>modules</code> lists the Go code modules the project uses; the sample uses the Dragonfall module for its terrain, castle, dragon and knight. Installing a <a href="packages.html">package</a> adds the modules it needs, and projects that only use built in components have none. Files from before 0.0.1 call this list <code>packs</code>; it is read the same way.</p>
+<table>
+<tr><th>Field</th><th>Meaning</th></tr>
+<tr><td><code>format</code></td><td>Version of the manifest format.</td></tr>
+<tr><td><code>name</code>, <code>version</code></td><td>The game's name and version; builds are named after them.</td></tr>
+<tr><td><code>engine</code></td><td>The engine version the project was last saved with.</td></tr>
+<tr><td><code>start</code></td><td>The scene a game starts with.</td></tr>
+<tr><td><code>cols</code>, <code>rows</code></td><td>The terminal size the game is designed for, in cells.</td></tr>
+<tr><td><code>fps</code></td><td>Frames per second of the game loop.</td></tr>
+<tr><td><code>modules</code></td><td>The Go code modules the project uses, such as <code>dragonfall</code> for the sample's terrain, castle, dragon and knight. Installing a <a href="packages.html">package</a> adds the modules it requires. Older files name this list <code>packs</code>; it is read the same way.</td></tr>
+</table>
+
+
+<h2>Asset ids and .meta files</h2>
+<p>Every asset has a <code>.meta</code> file next to it that holds a permanent id, a UUIDv7, and the asset's import settings:</p>
+<pre><code>{
+  "format": 1,
+  "guid": "019a0f3e-7c41-7b2a-9d55-3f1c8e2a9b40"
+}</code></pre>
+<p>Scenes and prefabs refer to assets by this id, never by path. Renaming or moving an asset in the Project window moves its <code>.meta</code> file along, so every reference remains valid. Files moved outside the editor must be moved together with their <code>.meta</code> files, and both belong under version control.</p>
+<div class="note"><b>Older projects</b>Opening a project without <code>.meta</code> files creates them and rewrites path references to ids; the Console reports the number of changes, and saving keeps the result. Sprites stored as plain <code>.json</code> files are renamed to <code>.sprite.json</code>, together with their <code>.meta</code> files.</div>
 
 <h2>World units</h2>
-<p>Everything is measured in world units, where one unit is one tile of ground. A knight is about 4 units tall, a castle wall 8, a tower with its roof about 20. You never type dots, cells or depth values: the camera projects positions, and depth comes from the projection. That is also why objects never sink into each other by accident.</p>
-<div class="tip"><b>Collision uses the same shape you see</b>Mark an object <b>Solid</b> and players cannot walk through it. The blocking area is the object's own bounds, so what you see is what you bump into. Complex components such as the castle block with their walls and towers, not their bounding box.</div>
+<p>All positions and sizes are given in world units; one unit is one tile of ground. The Dragonfall knight is about 4 units tall, a castle wall 8, a tower with its roof about 20. The camera projects world positions onto the terminal; depth follows from the projection, so objects are sorted correctly without depth values in the scene.</p>
+<div class="tip"><b>Collision</b>An object marked <b>Solid</b> blocks the player with its bounds; complex components such as the castle block with their walls and towers. Colliders define collision shapes explicitly, see <a href="physics.html">Physics</a>.</div>
+
+<h2>Scenes</h2>
+<p>A project can contain any number of scenes. The scene picker in the toolbar and a double click on a scene in the Project window open a scene; the key button next to the picker makes the open scene the start scene. <b>Create</b>, <b>Scene</b> in the Project window creates a scene in the open folder, containing a Main Camera. A scene file stores the object tree, the environment, the animation clips and the scene camera, which is used when the scene has no camera object.</p>
 
 <h2>Prefabs</h2>
 <ol class="steps">
-<li>Build something once, for example a lantern: a post, a flame emitter and a light as children.</li>
-<li>Right click its root in the Hierarchy and choose <b>Save prefab</b>, then give it a name. The object becomes an instance of <code>prefabs/&lt;name&gt;.prefab.json</code>.</li>
-<li>Place more of them by dragging the prefab from the Project window into the view or onto the Hierarchy.</li>
-<li>Edit the prefab file (or save a changed copy over it) and every instance updates.</li>
-<li>Need a one off variation? Right click an instance and <b>Unpack</b> it into ordinary objects.</li>
+<li>Build an object once, for example a lantern from a post with a flame emitter and a light as children.</li>
+<li>In the Hierarchy, open the context menu of its root, choose <b>Save prefab</b> and enter a name. The prefab is saved in the folder open in the Project window, or at the given path, and the object becomes an instance of it.</li>
+<li>Further instances are placed by dragging the prefab from the Project window into the Scene view or onto the Hierarchy.</li>
+<li>Changes to the prefab update every instance.</li>
+<li><b>Unpack</b> in an instance's context menu turns it into ordinary objects.</li>
 </ol>
-<p>An instance stores its own name, transform and visibility, the prefab id, and a list of <b>overrides</b>; everything else comes from the prefab. That keeps scene files small and diffs readable.</p>
+<p>An instance stores its own name, transform and visibility, the prefab's id and a list of <b>overrides</b>; everything else is read from the prefab.</p>
 
 <h2>Prefab mode</h2>
-<p>Double click a prefab in the Project window to edit it on its own. The toolbar shows the prefab's name with <b>Save</b> and <b>Back</b>. Save writes the prefab file; Back returns to the scene, with its undo history and unsaved changes as you left them, and every instance shows the saved prefab. A prefab has one root object; prefabs of installed packages open read only.</p>
+<p>A double click on a prefab in the Project window opens it on its own. The toolbar shows the prefab's name with <b>Save</b> and <b>Back</b>. Save writes the prefab file; Back returns to the scene with its undo history and unsaved changes intact, and every instance shows the saved prefab. A prefab has exactly one root object. Prefabs of installed packages open read only.</p>
 
 <h2>Overrides</h2>
-<p>Select an instance, or anything inside it, and change a value. Instead of being locked, the change is recorded as an override on the instance: the label turns <b>bold amber</b>, the Hierarchy shows an amber dot and a band at the top of the Inspector counts the overrides.</p>
+<p>Changing a value on an instance, or on an object inside it, records an override on the instance. The property label turns bold amber, the Hierarchy marks the instance with an amber dot, and a band at the top of the Inspector shows the number of overrides.</p>
 <ul>
-<li>Right click an overridden label for <b>Apply to prefab</b> (write the value into the prefab, so every instance gets it) or <b>Revert</b> (go back to the prefab's value).</li>
-<li><b>Apply</b> and <b>Revert</b> in the band do the same for every override of the instance.</li>
-<li>Overrides survive the prefab changing. If the prefab no longer has the child an override points at, the override is kept but does nothing.</li>
+<li>The context menu of an overridden label provides <b>Apply to prefab</b>, which writes the value into the prefab for every instance, and <b>Revert</b>, which restores the prefab's value.</li>
+<li><b>Apply</b> and <b>Revert</b> in the band act on all overrides of the instance.</li>
+<li>Overrides are kept when the prefab changes. An override whose target no longer exists in the prefab has no effect.</li>
 </ul>
 <pre><code>{
   "name": "lantern 1",
@@ -109,9 +128,6 @@
     { "path": "glow", "prop": "light.color", "value": "#ff8844" }
   ]
 }</code></pre>
-
-<h2>Scenes</h2>
-<p>A project can have many scenes. Use the scene picker in the toolbar or double click a scene in the Project window to open one, and the key button to make the open scene the one a build starts with. New scenes start empty; the Scene view shows a ground grid until you add something.</p>
 <nav class="pager"><a class="prev" href="gameobjects.html"><small>Previous</small>GameObjects and components</a><a class="next" href="assets.html"><small>Next</small>Assets and import</a></nav>
 </main>
 </div>

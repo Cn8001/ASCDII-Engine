@@ -62,6 +62,14 @@ func (s *Session) SetLive(on bool) {
 	s.touch()
 }
 
+// SetGizmos shows or hides collider and camera outlines in the Scene view.
+func (s *Session) SetGizmos(on bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.gizmos = on
+	s.touch()
+}
+
 // SetTime scrubs edit time and applies clips at that instant.
 func (s *Session) SetTime(t float64) error {
 	s.mu.Lock()

@@ -138,7 +138,7 @@ func TestUnit_RegisteredKindsRender(t *testing.T) {
 	scene.Render(p, f, s)
 
 	// Assert
-	if len(reg.Kinds()) != 24 || !reg.Meta("box").Object || reg.Meta("player").Object {
+	if len(reg.Kinds()) != 25 || !reg.Meta("box").Object || reg.Meta("player").Object {
 		t.Fatalf("kinds %v", reg.Kinds())
 	}
 }

@@ -6,6 +6,7 @@
 <title>Assets and import | ASCDII Engine</title>
 <link rel="icon" href="img/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
+<script src="zoom.js" defer></script>
 </head>
 <body>
 <div class="layout">
@@ -21,7 +22,7 @@
 <a href="scenes.html">Scenes and prefabs</a>
 <a href="assets.html" class="on">Assets and import</a>
 <a href="packages.html">Packages</a>
-<a href="textures.html">Textures and materials</a>
+<a href="textures.html">Textures, materials, sprites</a>
 <a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
 <a href="particles.html">Particles</a>
@@ -31,6 +32,8 @@
 <a href="rendering.html">Rendering</a>
 <a href="building.html">Build</a>
 <h4>Reference</h4>
+<a href="components.html">Component reference</a>
+<a href="dragonfall.html">Dragonfall module</a>
 <a href="lua-api.html">Lua API</a>
 <a href="cli.html">CLI reference</a>
 <a href="go-api.html">Go API</a>
@@ -39,58 +42,65 @@
 <main>
 <div class="kicker">Guides</div>
 <h1>Assets and import</h1>
-<p class="lead">The Project window is the project folder on disk. Organize it in folders, drop files into it from your file manager, and share assets between projects without breaking a single reference.</p>
-<figure><img src="img/editor-project.png" alt="Project window with folders"><figcaption>Folders on the left, the open folder's contents on the right.</figcaption></figure>
+<p class="lead">The Project window shows the project folder on disk. It creates, imports, organizes and deletes assets; references to assets remain valid when assets are renamed or moved.</p>
+<figure><img src="img/editor-project.png" alt="Project window with folders"><figcaption>The folder tree on the left, the open folder's contents on the right.</figcaption></figure>
 
-<h2>Folders</h2>
-<ul>
-<li>Click a folder in the tree, or double click a folder tile, to open it. The path above the tiles takes you back up.</li>
-<li><b>Create</b>, or right click empty space, makes a folder, a script, a scene or a material in the open folder.</li>
-<li>Drag tiles or folders onto a folder in the tree, a folder tile or the path to move them. The <code>.meta</code> files move along, so references keep working.</li>
-<li>Right click a folder to rename or delete it, and a tile to rename or delete it. Deleting asks first and removes the files from disk; anything that used them shows <b>Missing</b>.</li>
-<li>Search and the type filter look through every folder; right click a result and choose <b>Show in Folder</b>.</li>
-<li>Installed packages are listed under <b>Packages</b>, below your own folders, and are read only.</li>
-<li>Right click a folder and choose <b>Export Package</b> to share it, see <a href="packages.html">Packages</a>.</li>
-</ul>
+<h2>Folder layout</h2>
+<p>The engine does not require a folder layout. Assets can be grouped by type, by level, by character, or kept next to the prefab that uses them. Scenes, scripts, materials, animator controllers, prefabs and imported files are placed in the folder open in the Project window.</p>
 
-<h2>Your folders, your layout</h2>
-<p>The engine does not expect any folder layout. Keep scripts next to the prefab they belong to, group by level, by character or by type: whatever suits the game. New scenes, scripts, materials, controllers and prefabs are created in the folder open in the Project window, and moving anything later never breaks a reference.</p>
+<h2>Project window</h2>
+<table>
+<tr><th>Action</th><th>Input</th></tr>
+<tr><td>Open a folder</td><td>Click it in the tree, or double click its tile. The path above the tiles leads back up.</td></tr>
+<tr><td>Create</td><td><b>Create</b>, or the context menu of empty space: Folder, Script, Scene, Material, Animator Controller.</td></tr>
+<tr><td>Move</td><td>Drag tiles or folders onto a folder in the tree, a folder tile or the path. The <code>.meta</code> files move along.</td></tr>
+<tr><td>Rename, delete</td><td>The context menu of a tile or folder. Deleting asks for confirmation and removes the files from disk; references to them show <b>Missing</b>.</td></tr>
+<tr><td>Search, filter</td><td>The search field and the type filter search all folders; <b>Show in Folder</b> in a result's context menu opens its folder.</td></tr>
+<tr><td>Open an asset</td><td>Double click: a scene opens, a prefab opens in prefab mode, a script opens in the code editor, a sound plays, an animator controller opens the Animator window.</td></tr>
+<tr><td>Inspect an asset</td><td>A click shows textures, materials and models in the Inspector with their settings.</td></tr>
+<tr><td>Texture actions</td><td><b>Create Material</b> makes a material using the texture; <b>Convert to Sprite</b> writes a sprite next to it, see <a href="textures.html">Textures and materials</a>.</td></tr>
+<tr><td>Packages</td><td>Installed packages are listed under <b>Packages</b> and are read only. <b>Export Package</b> in a folder's context menu shares the folder, see <a href="packages.html">Packages</a>.</td></tr>
+<tr><td>Rescan</td><td>The reload button reads every file again.</td></tr>
+</table>
 
 <h2>Importing files</h2>
-<p>Drag files or whole folders from your file manager into the editor. They are copied into the folder open in the Project window, or into the folder you drop them on:</p>
+<p>Files and folders dragged from the file manager into the editor are copied into the project:</p>
 <table>
-<tr><th>Drop on</th><th>Result</th></tr>
+<tr><th>Dropped on</th><th>Result</th></tr>
 <tr><td>Project window</td><td>Copied into the open folder, or into the folder tile under the pointer.</td></tr>
-<tr><td>Scene view</td><td>Copied into the open folder and placed where you dropped it: models, prefabs and sprites.</td></tr>
-<tr><td>Hierarchy</td><td>Copied into the open folder and created under the row you dropped on.</td></tr>
+<tr><td>Scene view</td><td>Copied into the open folder; models, prefabs and sprites are placed where they were dropped.</td></tr>
+<tr><td>Hierarchy</td><td>Copied into the open folder and created under the row they were dropped on.</td></tr>
 </table>
-<table>
-<tr><th>File</th><th>Becomes</th></tr>
-<tr><td><code>.obj</code> with <code>.mtl</code></td><td>Model, with its materials and textures</td></tr>
-<tr><td><code>.png</code>, <code>.jpg</code>, <code>.gif</code></td><td>Texture</td></tr>
-<tr><td><code>.material.json</code></td><td>Material</td></tr>
-<tr><td><code>.wav</code>, <code>.mp3</code></td><td>Sound</td></tr>
-<tr><td><code>.animator.json</code></td><td>Animator controller</td></tr>
-<tr><td><code>.sprite.json</code>, <code>.xp</code></td><td>Sprite: glyph art as palette JSON or a REXPaint file</td></tr>
-<tr><td><code>.lua</code></td><td>Script</td></tr>
-<tr><td><code>.prefab.json</code>, <code>.scene.json</code></td><td>Prefab, scene</td></tr>
-</table>
-<p>A name that is taken gets a number, as in <code>house 2.obj</code>. Files already inside the project are not copied again. Other files, such as a plain <code>.json</code> with your own data, are not assets; they are copied when you import a folder and left alone otherwise.</p>
-<div class="note"><b>Sprites from older projects</b>Sprites used to be plain <code>.json</code> files. Opening or running such a project renames them to <code>.sprite.json</code>, together with their <code>.meta</code>, so every reference keeps working.</div>
+<p>A name that is already taken receives a number, as in <code>house 2.obj</code>. Files that are already inside the project are not copied.</p>
 
-<h2>.meta files and GUIDs</h2>
-<p>Every asset has a <code>.meta</code> next to it with a UUIDv7 that never changes, and everything refers to assets by that id. Some kinds keep their import settings in it too:</p>
+<h2>Asset types</h2>
+<table>
+<tr><th>Files</th><th>Asset</th><th>See</th></tr>
+<tr><td><code>.scene.json</code></td><td>Scene</td><td><a href="scenes.html">Scenes and prefabs</a></td></tr>
+<tr><td><code>.prefab.json</code></td><td>Prefab</td><td><a href="scenes.html">Scenes and prefabs</a></td></tr>
+<tr><td><code>.obj</code> with <code>.mtl</code></td><td>Model, with its materials and textures</td><td><a href="models.html">Models</a></td></tr>
+<tr><td><code>.png</code>, <code>.jpg</code>, <code>.gif</code></td><td>Texture</td><td><a href="textures.html">Textures and materials</a></td></tr>
+<tr><td><code>.material.json</code></td><td>Material</td><td><a href="textures.html">Textures and materials</a></td></tr>
+<tr><td><code>.sprite.json</code>, <code>.xp</code></td><td>Sprite: glyph art as palette JSON or a REXPaint file</td><td><a href="textures.html">Textures and materials</a></td></tr>
+<tr><td><code>.wav</code>, <code>.mp3</code></td><td>Sound</td><td><a href="audio.html">Audio</a></td></tr>
+<tr><td><code>.animator.json</code></td><td>Animator controller</td><td><a href="animation.html#animator">Animation</a></td></tr>
+<tr><td><code>.lua</code></td><td>Script</td><td><a href="scripting.html">Lua scripting</a></td></tr>
+</table>
+<p>Other files, such as notes or a plain <code>.json</code> with game data, are not assets. They are copied when a folder is imported and otherwise left unchanged; builds do not include them.</p>
+<div class="note"><b>Sprites in older projects</b>Sprites were previously stored as plain <code>.json</code> files. Opening or running such a project renames them to <code>.sprite.json</code> together with their <code>.meta</code> files; references remain valid.</div>
+
+<h2>.meta files</h2>
+<p>Every asset has a <code>.meta</code> file with a permanent UUIDv7; scenes and prefabs refer to assets by this id. Textures and models also store their import settings in it:</p>
 <pre><code>{
   "format": 1,
   "guid": "019a0f3e-7c41-7b2a-9d55-3f1c8e2a9b40",
   "import": { "maxSize": 128, "filter": "nearest", "alphaCutoff": 0.5 }
 }</code></pre>
-<p>Commit <code>.meta</code> files together with their assets. A teammate who clones the project gets the same ids, so their scenes and yours agree.</p>
+<p><code>.meta</code> files belong under version control together with their assets, so every copy of the project uses the same ids.</p>
 
 <h2>Sharing between projects</h2>
-<p>For sets of assets you reuse, make a <a href="packages.html">package</a>: one file, installed and removed as a whole. For a one off copy, the folder works too:</p>
-<p>To move a set of assets to another project, for example a prefab with its scripts, models and sprites, copy their folder <b>with the .meta files</b> and drop it on the other project's Project window. Imported assets keep their GUIDs, so the prefab still finds its scripts and textures. If the other project already has an asset with the same GUID, the copy gets a new one, which keeps both apart; files that are not assets, such as notes, are copied as they are.</p>
-<div class="note"><b>Changes made outside the editor</b>Files you change in another program are picked up while the editor runs: scripts reload, sprites, models, textures and materials refresh. The reload button in the Project window rescans everything.</div>
+<p>Sets of assets that are reused across projects are best shared as a <a href="packages.html">package</a>, which is installed and removed as a whole. For a single copy, a folder can be copied <b>together with its .meta files</b> and dropped onto the other project's Project window. The imported assets keep their ids, so a prefab still finds its scripts and textures. An asset whose id already exists in the target project receives a new id.</p>
+<div class="note"><b>Changes outside the editor</b>While the editor runs, files changed by other programs are reloaded: scripts, sprites, models, textures and materials.</div>
 <nav class="pager"><a class="prev" href="scenes.html"><small>Previous</small>Scenes and prefabs</a><a class="next" href="packages.html"><small>Next</small>Packages</a></nav>
 </main>
 </div>

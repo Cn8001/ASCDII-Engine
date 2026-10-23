@@ -39,6 +39,7 @@ func Register(r *scene.Registry, lib *asset.Library) {
 	r.Register("mesh", func() scene.Component { return NewMesh(lib, "") }, scene.Meta{Category: "3d", Label: "Mesh"})
 	r.Register("ground", func() scene.Component { return NewGround(40, 40, color.RGB(64, 92, 60)) }, obj("3d", "Ground"))
 	r.Register("water", func() scene.Component { return NewWater(12, 6, color.RGB(36, 92, 112)) }, obj("3d", "Water"))
+	r.Register("camera", func() scene.Component { return NewCamera() }, obj("camera", "Camera"))
 	r.Register("light", func() scene.Component { return NewLight(8, color.RGB(255, 190, 110)) }, obj("light", "Point Light"))
 	r.Register("emitter", func() scene.Component { return NewEmitter() }, obj("effects", "Particle System"))
 	r.Register("label", func() scene.Component { return NewLabel("label") }, obj("ui", "Text"))

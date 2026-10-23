@@ -8,6 +8,8 @@ export function AudioEnded(arg1:number):Promise<void>;
 
 export function Drag(arg1:number,arg2:string,arg3:number,arg4:number,arg5:number,arg6:number):Promise<void>;
 
+export function DragCollider(arg1:number,arg2:string,arg3:string,arg4:number,arg5:number,arg6:number,arg7:number):Promise<void>;
+
 export function Drop(arg1:string,arg2:number,arg3:number):Promise<number>;
 
 export function Focus(arg1:number):Promise<void>;
@@ -33,6 +35,8 @@ export function Pick(arg1:number,arg2:number):Promise<number>;
 export function Play():Promise<void>;
 
 export function Resize(arg1:number,arg2:number):Promise<void>;
+
+export function SetGizmos(arg1:boolean):Promise<void>;
 
 export function SetLive(arg1:boolean):Promise<void>;
 

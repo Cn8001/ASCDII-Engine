@@ -6,6 +6,7 @@
 <title>Build | ASCDII Engine</title>
 <link rel="icon" href="img/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
+<script src="zoom.js" defer></script>
 </head>
 <body>
 <div class="layout">
@@ -21,7 +22,7 @@
 <a href="scenes.html">Scenes and prefabs</a>
 <a href="assets.html">Assets and import</a>
 <a href="packages.html">Packages</a>
-<a href="textures.html">Textures and materials</a>
+<a href="textures.html">Textures, materials, sprites</a>
 <a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
 <a href="particles.html">Particles</a>
@@ -31,6 +32,8 @@
 <a href="rendering.html">Rendering</a>
 <a href="building.html" class="on">Build</a>
 <h4>Reference</h4>
+<a href="components.html">Component reference</a>
+<a href="dragonfall.html">Dragonfall module</a>
 <a href="lua-api.html">Lua API</a>
 <a href="cli.html">CLI reference</a>
 <a href="go-api.html">Go API</a>
@@ -39,56 +42,53 @@
 <main>
 <div class="kicker">Guides</div>
 <h1>Build</h1>
-<p class="lead">A build is the game, ready to hand out: a folder with the player named after your game, your project compiled into one data file, and a checksum list. Nothing to install for the people who play it.</p>
+<p class="lead">A build is a folder per platform containing the game's player, the project compiled into one data file, and a list of checksums. Players need no installation; a terminal with 24 bit color is sufficient.</p>
 
 <h2>From the editor</h2>
+<figure><img src="img/editor-build.png" alt="Build dialog"><figcaption>The build dialog.</figcaption></figure>
 <ol class="steps">
 <li>Press <b>Build</b> in the toolbar or <kbd>Ctrl</kbd>+<kbd>B</kbd>.</li>
-<li>Choose the platforms; both are on by default. Set the version if it changed; it is stored in the manifest.</li>
-<li>Press <b>Build</b>. Unsaved changes are saved first, so the build always matches the editor.</li>
-<li>Press <b>Show</b> to open the output folder.</li>
+<li>Select the platforms and the version; the version is stored in the manifest. <b>Single file</b> builds one executable per platform instead of a folder.</li>
+<li>Press <b>Build</b>. Unsaved changes are saved first, so the build matches the editor.</li>
+<li><b>Show</b> opens the output folder.</li>
 </ol>
 <pre><code>build/linux/Dragonfall/
   Dragonfall              <span class="c">the player</span>
-  data/game.pak           <span class="c">scenes, prefabs, models, sounds, scripts, compiled</span>
+  data/game.pak           <span class="c">the compiled project</span>
   SHA256SUMS
 build/windows/Dragonfall/
   Dragonfall.exe
   data/game.pak
   SHA256SUMS</code></pre>
-<p>Zip the folder or upload it as it is; that is the release. <b>Single file</b> instead puts everything into one executable per platform, with a <code>.sha256</code> file next to it.</p>
+<p>A single file build is the player with the compiled project appended, together with a <code>.sha256</code> file.</p>
 
-<h2>What goes into game.pak</h2>
+<h2>Players</h2>
+<p>The player is the <code>ascdii</code> program itself: started with game data, it plays the game. The editor takes the player for its own platform from the <code>ascdii</code> next to it, and the player for another platform from a file named <code>ascdii-&lt;os&gt;-&lt;arch&gt;</code> in the same folder, for example <code>ascdii-windows-amd64.exe</code> next to a Linux editor. The release archives contain both; platforms without a player cannot be selected in the build dialog.</p>
+
+<h2>game.pak</h2>
 <ul>
-<li>Only what the game needs: the manifest, scenes, prefabs, materials, animator controllers, scripts, sprites, textures, models and sounds. Readmes, notes, <code>.gitignore</code> and the <code>build</code> folder stay out.</li>
-<li>No <code>.meta</code> files: their ids and import settings are compiled into one index inside the pak.</li>
-<li>The pak is compressed and encrypted, so a build cannot be browsed or opened as a project in the editor.</li>
+<li>It contains only what the game uses: the manifest, scenes, prefabs, materials, animator controllers, scripts, sprites, textures, models and sounds. Notes, other files, <code>.gitignore</code> and the <code>build</code> folder are left out.</li>
+<li><code>.meta</code> files are not included; their ids and import settings are compiled into one index inside the pak.</li>
+<li>The pak is compressed and encrypted, so the build cannot be browsed or opened as a project.</li>
 </ul>
-<div class="note"><b>How safe is it?</b>The key has to travel with the player, so someone who takes the player apart can still get at the files, as with every engine. The pak keeps a game's files from being copied by anyone who simply opens the folder.</div>
+<div class="note"><b>Protection</b>The key is part of the player, so a determined person who analyzes the player can extract the files, as with any engine. The encryption prevents copying the project's files from the build folder.</div>
 
 <h2>From the command line</h2>
-<pre><code><span class="c"># a folder build for this machine, in build/Quest</span>
+<pre><code><span class="c"># a folder build for this platform, in build/Quest</span>
 ascdii build ~/games/quest
-<span class="c"># one executable instead</span>
+<span class="c"># one executable</span>
 ascdii build ~/games/quest -single
-<span class="c"># for another platform, with that platform's player</span>
-ascdii build ~/games/quest -player bin/players/ascdii-windows-amd64.exe -out build/Quest-win</code></pre>
+<span class="c"># another platform, with that platform's player</span>
+ascdii build ~/games/quest -player bin/ascdii-windows-amd64.exe -out build/Quest-win</code></pre>
 
-<h2>Publish on GitHub</h2>
-<pre><code>cd build/linux && tar czf Quest-0.2.0-linux.tar.gz Quest
-git tag v0.2.0 && git push --tags
-gh release create v0.2.0 build/linux/Quest-0.2.0-linux.tar.gz --title "Quest 0.2.0"</code></pre>
-
-<h2>Running a built game</h2>
-<pre><code>./Quest/Quest
-Quest\Quest.exe
-<span class="c"># check the download</span>
-cd Quest && sha256sum -c SHA256SUMS
-<span class="c"># a still frame without a terminal, for screenshots or CI</span>
-./Quest/Quest --preview -size 160x50 -time 2</code></pre>
-<p>The player looks for data packed into itself first, then for <code>data/game.pak</code> next to it. Keep the two together when you move a build.</p>
-<div class="note"><b>Versions</b>The engine is 0.0.1. Empty projects start at 0.0.1, projects from the Dragonfall template at 0.1.0. The manifest also records the engine version the project was last saved with.</div>
-<nav class="pager"><a class="prev" href="rendering.html"><small>Previous</small>Rendering</a><a class="next" href="lua-api.html"><small>Next</small>Lua API</a></nav>
+<h2>Running a build</h2>
+<pre><code>./Quest/Quest                         <span class="c"># Linux</span>
+Quest\Quest.exe                       <span class="c"># Windows</span>
+cd Quest && sha256sum -c SHA256SUMS   <span class="c"># verify the files</span>
+./Quest/Quest --preview -size 160x50 -time 2   <span class="c"># one frame as text, without a terminal</span></code></pre>
+<p>The player first looks for data appended to itself, then for <code>data/game.pak</code> next to it; the two must stay together when a folder build is moved.</p>
+<div class="note"><b>Versions</b>The engine version is 0.0.1. Empty projects start at version 0.0.1, projects from the Dragonfall template at 0.1.0. The manifest also records the engine version the project was last saved with.</div>
+<nav class="pager"><a class="prev" href="rendering.html"><small>Previous</small>Rendering</a><a class="next" href="components.html"><small>Next</small>Component reference</a></nav>
 </main>
 </div>
 </body>

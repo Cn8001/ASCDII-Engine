@@ -6,6 +6,7 @@
 <title>Animation | ASCDII Engine</title>
 <link rel="icon" href="img/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
+<script src="zoom.js" defer></script>
 </head>
 <body>
 <div class="layout">
@@ -21,7 +22,7 @@
 <a href="scenes.html">Scenes and prefabs</a>
 <a href="assets.html">Assets and import</a>
 <a href="packages.html">Packages</a>
-<a href="textures.html">Textures and materials</a>
+<a href="textures.html">Textures, materials, sprites</a>
 <a href="models.html">Models</a>
 <a href="animation.html" class="on">Animation</a>
 <a href="particles.html">Particles</a>
@@ -31,6 +32,8 @@
 <a href="rendering.html">Rendering</a>
 <a href="building.html">Build</a>
 <h4>Reference</h4>
+<a href="components.html">Component reference</a>
+<a href="dragonfall.html">Dragonfall module</a>
 <a href="lua-api.html">Lua API</a>
 <a href="cli.html">CLI reference</a>
 <a href="go-api.html">Go API</a>
@@ -39,44 +42,44 @@
 <main>
 <div class="kicker">Guides</div>
 <h1>Animation</h1>
-<p class="lead">Any property you can edit in the Inspector can be animated. Clips are sampled from scene time, so scrubbing is exact and playback never drifts.</p>
+<p class="lead">Every property that the Inspector edits can be animated. Clips are sampled from scene time, so scrubbing is exact and playback does not drift. Animator controllers switch between clips as states.</p>
 <figure><img src="img/editor-animation.png" alt="Animation window"><figcaption>The Animation tab with the crystal's bob clip: one track for pos.z with two keys, playing back and forth.</figcaption></figure>
 
 <h2>Concepts</h2>
 <ul>
-<li>A <b>clip</b> belongs to an object and has a play mode: <code>once</code>, <code>loop</code> or <code>pingpong</code>.</li>
-<li>A <b>track</b> animates one property, such as <code>pos.z</code>, <code>color</code> or <code>glow</code>. Numbers, vectors and colors blend smoothly; switches change at the key.</li>
+<li>A <b>clip</b> belongs to an object and has a name and a play mode: <code>once</code>, <code>loop</code> or <code>pingpong</code>. An object can have several clips.</li>
+<li>A <b>track</b> animates one property, such as <code>pos.z</code>, <code>blob.color</code> or <code>light.intensity</code>. Numbers, vectors and colors are interpolated; true or false values change at the key.</li>
 <li>A <b>key</b> is a value at a time, with an <b>ease</b> toward the next key: <code>linear</code>, <code>in</code>, <code>out</code>, <code>inout</code>, <code>step</code>, <code>back</code> or <code>elastic</code>.</li>
 </ul>
 
-<h2>Tutorial: a floating lantern</h2>
+<h2>Recording a clip</h2>
 <ol class="steps">
 <li>Select a lantern and open the <b>Animation</b> tab (<kbd>Ctrl</kbd>+<kbd>6</kbd>).</li>
-<li>Press <b>REC</b>. While it is red, every change you make in the Inspector becomes a key at the playhead.</li>
-<li>Click the ruler at <b>0</b> to move the playhead there, then nudge <code>pos</code> z to 0. A clip appears with its first key.</li>
+<li>Press <b>REC</b>. While it is red, every change made in the Inspector is recorded as a key at the playhead.</li>
+<li>Click the ruler at <b>0</b> to move the playhead there and set <code>pos</code> z to 0. A clip is created with its first key.</li>
 <li>Click the ruler at <b>1.5</b> and set <code>pos</code> z to 2.</li>
-<li>Press REC again to stop recording, and press the play button in the Animation tab to preview. Switch the clip to <code>pingpong</code> so it bobs up and down.</li>
-<li>Click a key to select it and pick an ease, for example <code>inout</code>. Drag keys sideways to retime them; they snap to 0.05 seconds. The trash button deletes the selected key.</li>
+<li>Press REC again to stop recording and the play button in the Animation tab to preview. Set the clip to <code>pingpong</code> to move up and down continuously.</li>
+<li>Click a key to select it and choose an ease, for example <code>inout</code>. Dragging keys sideways retimes them in steps of 0.05 seconds. The trash button deletes the selected key.</li>
 </ol>
-<div class="tip"><b>Without REC</b>Hover a property in the Inspector and click the diamond at the end of its row to key just that property. Double click a track lane to add a key at that time.</div>
+<div class="tip"><b>Without REC</b>The diamond at the end of a property row in the Inspector records a key for that property only. A double click on a track lane adds a key at that time.</div>
 
-<h2>A window of its own</h2>
-<p>Press the float button at the right of the Animation header to turn it into a window you can move and resize over the view. The editor remembers where you left it. The arrow in its title bar docks it back.</p>
+<h2>Floating window</h2>
+<p>The float button at the right of the Animation header detaches the panel into a window that can be moved and resized; its position is remembered. The arrow in its title bar docks it again.</p>
 <figure><img src="img/editor-floating.png" alt="Floating Animation window"></figure>
 
 <h2>Several clips per object</h2>
-<p>Press <b>+ Clip</b> in the Animation tab to give the selection another clip, for example <code>walk</code> next to <code>idle</code>. Click a clip's header to make it the one new keys go to; it is highlighted. Double click the header to rename it.</p>
+<p><b>+ Clip</b> in the Animation tab adds another clip to the selection, for example <code>walk</code> next to <code>idle</code>. A click on a clip's header makes it the clip that receives new keys; it is highlighted. A double click renames it.</p>
 
 <h2 id="animator">Animator</h2>
-<p>An <b>Animator</b> component plays its object's clips as the states of a controller and switches between them when conditions hold.</p>
+<p>An <b>Animator</b> component plays its object's clips as the states of a controller asset and switches between states when the conditions of a transition hold.</p>
 <ol class="steps">
-<li>In the Project window choose <b>Create</b>, <b>Animator Controller</b>. The Animator window opens.</li>
-<li>Add parameters on the left: <code>float</code>, <code>bool</code> or <code>trigger</code> (true for one transition, then reset).</li>
-<li>Add states with <b>+ State</b>; pick each state's clip on the right. The start state has an amber border; any state can be made the start.</li>
-<li>Shift drag from one state to another to add a transition, then give it conditions such as <code>speed &gt; 0.1</code>, or tick <b>After the clip ends</b>. A transition from <b>any state</b> leaves every state, for hits and deaths.</li>
-<li>Add an <b>Animator</b> to the object and drag the controller onto its <b>controller</b> slot. The graph button on its card opens the controller.</li>
+<li>In the Project window, choose <b>Create</b>, <b>Animator Controller</b>. The controller is created in the open folder and the Animator window opens.</li>
+<li>Add parameters on the left: <code>float</code>, <code>bool</code> or <code>trigger</code>. A trigger is true for one transition and then resets.</li>
+<li>Add states with <b>+ State</b> and select each state's clip and speed on the right. The start state has an amber border; any state can be made the start state.</li>
+<li>Shift drag from one state to another to add a transition, and give it conditions such as <code>speed &gt; 0.1</code>, or enable <b>After the clip ends</b>. A transition from <b>any state</b> can leave every state, for example for hits.</li>
+<li>Add an <b>Animator</b> component to the object and drag the controller onto its <b>controller</b> slot. The graph button on the card opens the controller.</li>
 </ol>
-<p>While the game runs, the selected object's active state glows in the Animator window. With an animator running, the object's clips play only as its states; the timeline still previews them while you edit.</p>
+<p>While the game runs, the selected object's active state is highlighted in the Animator window. An object with an animator plays its clips only as states; the timeline still previews them while editing. Condition operators are <code>&gt;</code>, <code>&lt;</code>, <code>==</code> and <code>!=</code>.</p>
 <pre><code><span class="k">local</span> anim = self:component(<span class="s">"animator"</span>)
 anim:set(<span class="s">"speed"</span>, 3)
 anim:trigger(<span class="s">"jump"</span>)
@@ -84,8 +87,10 @@ log(anim.state)
 anim:play(<span class="s">"idle"</span>)   <span class="c">-- jump to a state</span></code></pre>
 
 <h2>Animation from scripts</h2>
-<p>Scripts can start tweens at runtime, for doors, pickups and UI. They use the same easing and are never saved into the scene.</p>
-<pre><code>tween(self, "pos.z", 4, 0.6, "out")</code></pre>
+<p>Scripts start tweens at run time, for doors, pickups and interface elements. Tweens use the same eases as keys and are not saved in the scene.</p>
+<pre><code>self:tween(<span class="s">"pos.z"</span>, 4, 0.6, <span class="s">"out"</span>)   <span class="c">-- property, target, seconds, ease</span>
+self:play(<span class="s">"bob"</span>)                    <span class="c">-- start or stop a clip by name</span>
+self:stop(<span class="s">"bob"</span>)</code></pre>
 <nav class="pager"><a class="prev" href="models.html"><small>Previous</small>Models</a><a class="next" href="particles.html"><small>Next</small>Particles</a></nav>
 </main>
 </div>

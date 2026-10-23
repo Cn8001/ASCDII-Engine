@@ -8,6 +8,8 @@ import (
 	"image"
 	stdcolor "image/color"
 	"image/png"
+	"io/fs"
+	"math"
 	"os"
 	"path/filepath"
 	"slices"
@@ -52,7 +54,7 @@ func newSession(t *testing.T, template string) (*Session, *recorder, string) {
 		Modules:   []project.Module{dragonfall.Module()},
 		Templates: []Template{{Name: "empty"}, {Name: "dragonfall", FS: dragonfall.Template()}},
 		Packages:  []pack.Source{dragonfall.Package()},
-		Players:   players.Source{FS: fstest.MapFS{"ascdii-linux-amd64": {Data: []byte("PLAYER")}}},
+		Players:   players.Source{Dirs: []fs.FS{fstest.MapFS{"ascdii-linux-amd64": {Data: []byte("PLAYER")}}}},
 		Emit:      rec,
 	})
 	dir := filepath.Join(t.TempDir(), "game")
@@ -1029,5 +1031,27 @@ func TestUnit_ParticlesPresetAndBurstInEditor(t *testing.T) {
 	// Assert
 	if errPreset != nil || errEmit != nil || n < 120 || !errors.Is(errBad, ErrUnknownPreset) || !errors.Is(errKind, ErrNotParticles) {
 		t.Fatalf("preset %v emit %v n %d bad %v kind %v", errPreset, errEmit, n, errBad, errKind)
+	}
+}
+
+func TestUnit_ColliderHandlesShowAndDragResizesOneSide(t *testing.T) {
+	// Arrange
+	s, _, _ := newSession(t, "")
+	id, _ := s.Add(0, "box")
+	key, errAdd := s.AddComponent(id, "box_collider")
+	s.Select(id)
+	f := s.Snapshot()
+
+	// Act
+	err := s.DragCollider(id, key, "x+", 10, 10, 14, 10)
+	errBad := s.DragCollider(id, key, "w", 10, 10, 14, 10)
+
+	// Assert
+	col := find(s, "Cube").ComponentByKey(key).(*components.BoxCollider)
+	if errAdd != nil || err != nil || f.Gizmo == nil || len(f.Gizmo.Handles) != 5 || col.Size.X <= 2 || col.Offset.X <= 0 || !errors.Is(errBad, ErrBadAxis) {
+		t.Fatalf("add %v err %v handles %v collider %+v bad %v", errAdd, err, f.Gizmo, col, errBad)
+	}
+	if left := col.Offset.X - col.Size.X/2; math.Abs(left+1) > 1e-9 {
+		t.Fatalf("the left side moved to %f", left)
 	}
 }

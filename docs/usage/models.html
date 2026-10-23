@@ -6,6 +6,7 @@
 <title>Models | ASCDII Engine</title>
 <link rel="icon" href="img/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
+<script src="zoom.js" defer></script>
 </head>
 <body>
 <div class="layout">
@@ -21,7 +22,7 @@
 <a href="scenes.html">Scenes and prefabs</a>
 <a href="assets.html">Assets and import</a>
 <a href="packages.html">Packages</a>
-<a href="textures.html">Textures and materials</a>
+<a href="textures.html">Textures, materials, sprites</a>
 <a href="models.html" class="on">Models</a>
 <a href="animation.html">Animation</a>
 <a href="particles.html">Particles</a>
@@ -31,6 +32,8 @@
 <a href="rendering.html">Rendering</a>
 <a href="building.html">Build</a>
 <h4>Reference</h4>
+<a href="components.html">Component reference</a>
+<a href="dragonfall.html">Dragonfall module</a>
 <a href="lua-api.html">Lua API</a>
 <a href="cli.html">CLI reference</a>
 <a href="go-api.html">Go API</a>
@@ -39,47 +42,47 @@
 <main>
 <div class="kicker">Guides</div>
 <h1>Models</h1>
-<p class="lead">Wavefront <code>.obj</code> models from Blender or any other 3D tool drop straight into a scene and draw in Braille with lighting, shadows and fog, at any rotation.</p>
+<p class="lead">Wavefront <code>.obj</code> models from Blender or other 3D tools are drawn in Braille with lighting, shadows and fog, at any rotation.</p>
 <figure><img src="img/editor-model.png" alt="Imported house model"><figcaption>A small house exported from a 3D tool, rotated 35 degrees.</figcaption></figure>
 
 <h2>Importing</h2>
 <ol class="steps">
-<li>Export your model as <code>.obj</code>, with materials (<code>.mtl</code>) if it has any.</li>
-<li>Drag the <code>.obj</code> into the Scene view. It is copied to <code>models/</code> together with its <code>.mtl</code> files and the textures they name, and placed where you dropped it.</li>
-<li>Place more copies from <b>GameObject</b>, <b>Model</b>, by dragging the tile from the Project window, or by double clicking it.</li>
+<li>Export the model as <code>.obj</code>, with its materials as <code>.mtl</code> if it has any.</li>
+<li>Drag the <code>.obj</code> into the Scene view. It is copied into the open folder together with its <code>.mtl</code> files and the textures they name, keeping their relative paths, and placed where it was dropped.</li>
+<li>Further instances are created from <b>GameObject</b>, <b>Model</b>, by dragging the model tile from the Project window, or by a double click on it.</li>
 </ol>
 
 <h2>What is read</h2>
 <table>
 <tr><th>OBJ / MTL</th><th>Used for</th></tr>
 <tr><td><code>v</code>, <code>f</code></td><td>Positions and faces; faces with more than three corners are split into triangles.</td></tr>
-<tr><td><code>vt</code></td><td>Texture coordinates, so textured models look as they do in your 3D tool.</td></tr>
+<tr><td><code>vt</code></td><td>Texture coordinates.</td></tr>
 <tr><td><code>usemtl</code>, <code>mtllib</code></td><td>Which material each part uses.</td></tr>
 <tr><td><code>Kd</code></td><td>The part's color.</td></tr>
 <tr><td><code>map_Kd</code></td><td>The part's texture, imported as a texture asset.</td></tr>
 </table>
-<p>Normals in the file are not needed: faces are shaded flat, which reads best at Braille resolution. Keep models simple; a few hundred faces are plenty for a building.</p>
+<p>Normals in the file are ignored; faces are shaded flat, which reads best at Braille resolution. A few hundred faces are sufficient for a building.</p>
 
 <h2>Import settings</h2>
-<p>Click a model tile to see them in the Inspector:</p>
+<p>Selecting a model tile shows its import settings in the Inspector:</p>
 <table>
-<tr><th>Setting</th><th>Does</th></tr>
-<tr><td><code>upZ</code></td><td>Off for the usual Y up export. Turn it on for files that are already Z up, as some CAD tools write them.</td></tr>
+<tr><th>Setting</th><th>Meaning</th></tr>
+<tr><td><code>upZ</code></td><td>Off for the common Y up export; on for files that are already Z up, as some CAD tools write them.</td></tr>
 <tr><td><code>scale</code></td><td>World units per file unit. One world unit is one tile of ground; a door is about 2 units tall.</td></tr>
 </table>
-<p>The model is turned so that its front, as seen in your 3D tool's front view, faces the default camera.</p>
+<p>The model is turned so that its front, as seen in the 3D tool's front view, faces the default camera.</p>
 
 <h2>The Mesh component</h2>
 <table>
-<tr><th>Property</th><th>Does</th></tr>
-<tr><td><code>model</code></td><td>Which model to draw.</td></tr>
+<tr><th>Property</th><th>Meaning</th></tr>
+<tr><td><code>model</code></td><td>The model asset.</td></tr>
 <tr><td><code>material</code></td><td>Optional; replaces the model's own materials on every part.</td></tr>
 <tr><td><code>tint</code>, <code>emissive</code></td><td>Color multiplied over the model, and self lighting.</td></tr>
-<tr><td><code>twoSided</code></td><td>Draw back faces too, for open models or ones with mixed up face directions.</td></tr>
+<tr><td><code>twoSided</code></td><td>Draws back faces as well, for open models or models with inconsistent face directions.</td></tr>
 <tr><td><code>shadow</code></td><td>A soft contact shadow on the ground.</td></tr>
 </table>
-<p>The object's rotation, scale and flip all apply, and collision uses the rotated bounds when the object is solid.</p>
-<nav class="pager"><a class="prev" href="textures.html"><small>Previous</small>Textures and materials</a><a class="next" href="animation.html"><small>Next</small>Animation</a></nav>
+<p>The object's rotation, scale and flip apply to the model. A solid object blocks with its rotated bounds; a <b>Mesh Collider</b> blocks with the model's outline seen from above, see <a href="physics.html">Physics</a>.</p>
+<nav class="pager"><a class="prev" href="textures.html"><small>Previous</small>Textures, materials, sprites</a><a class="next" href="animation.html"><small>Next</small>Animation</a></nav>
 </main>
 </div>
 </body>

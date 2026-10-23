@@ -356,11 +356,28 @@ export namespace session {
 		    return a;
 		}
 	}
+	export class Handle {
+	    key: string;
+	    name: string;
+	    at: number[];
+	
+	    static createFrom(source: any = {}) {
+	        return new Handle(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.key = source["key"];
+	        this.name = source["name"];
+	        this.at = source["at"];
+	    }
+	}
 	export class Gizmo {
 	    id: number;
 	    corners: number[][];
 	    anchor: number[];
 	    axes: number[][];
+	    handles: Handle[];
 	
 	    static createFrom(source: any = {}) {
 	        return new Gizmo(source);
@@ -372,36 +389,7 @@ export namespace session {
 	        this.corners = source["corners"];
 	        this.anchor = source["anchor"];
 	        this.axes = source["axes"];
-	    }
-	}
-	export class Frame {
-	    cols: number;
-	    rows: number;
-	    cells?: string;
-	    seq: number;
-	    time: number;
-	    mode: string;
-	    millis: number;
-	    passes: pipeline.Info[];
-	    gizmo?: Gizmo;
-	    view: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new Frame(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.cols = source["cols"];
-	        this.rows = source["rows"];
-	        this.cells = source["cells"];
-	        this.seq = source["seq"];
-	        this.time = source["time"];
-	        this.mode = source["mode"];
-	        this.millis = source["millis"];
-	        this.passes = this.convertValues(source["passes"], pipeline.Info);
-	        this.gizmo = this.convertValues(source["gizmo"], Gizmo);
-	        this.view = source["view"];
+	        this.handles = this.convertValues(source["handles"], Handle);
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
@@ -422,6 +410,57 @@ export namespace session {
 		    return a;
 		}
 	}
+	export class Frame {
+	    cols: number;
+	    rows: number;
+	    cells?: string;
+	    seq: number;
+	    time: number;
+	    mode: string;
+	    millis: number;
+	    passes: pipeline.Info[];
+	    gizmo?: Gizmo;
+	    view: string;
+	    unsaved: boolean;
+	
+	    static createFrom(source: any = {}) {
+	        return new Frame(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.cols = source["cols"];
+	        this.rows = source["rows"];
+	        this.cells = source["cells"];
+	        this.seq = source["seq"];
+	        this.time = source["time"];
+	        this.mode = source["mode"];
+	        this.millis = source["millis"];
+	        this.passes = this.convertValues(source["passes"], pipeline.Info);
+	        this.gizmo = this.convertValues(source["gizmo"], Gizmo);
+	        this.view = source["view"];
+	        this.unsaved = source["unsaved"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	
 	
 	export class Info {
 	    open: boolean;

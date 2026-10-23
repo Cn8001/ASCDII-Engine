@@ -12,6 +12,7 @@ import (
 
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/guid"
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/version"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/world/components"
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/world/scene"
 )
 
@@ -137,5 +138,8 @@ func FileName(name string) string {
 func Starter(name string) *scene.Scene {
 	s := scene.New(name)
 	s.Camera.Span = 40
+	cam := components.NewCamera()
+	cam.Span = s.Camera.Span
+	s.Add("Main Camera", cam)
 	return s
 }

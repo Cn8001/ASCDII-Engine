@@ -167,6 +167,12 @@ func (v *ViewportService) Paint(id uint64, col, row float64, color string, radiu
 func (v *ViewportService) AudioEnded(voice uint64) { v.d.Session.AudioEnded(voice) }
 func (v *ViewportService) SetLive(on bool)         { v.d.Session.SetLive(on) }
 func (v *ViewportService) SetTime(t float64) error { return wrap(v.d.Session.SetTime(t)) }
+func (v *ViewportService) DragCollider(id uint64, key, handle string, fc, fr, tc, tr float64) error {
+	return wrap(v.d.Session.DragCollider(id, key, handle, fc, fr, tc, tr))
+}
+
+func (v *ViewportService) SetGizmos(on bool) { v.d.Session.SetGizmos(on) }
+
 func (v *ViewportService) Turn(id uint64, axis string, fc, fr, tc, tr float64) error {
 	return wrap(v.d.Session.Turn(id, axis, fc, fr, tc, tr))
 }

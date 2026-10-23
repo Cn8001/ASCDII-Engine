@@ -6,6 +6,7 @@
 <title>The editor | ASCDII Engine</title>
 <link rel="icon" href="img/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
+<script src="zoom.js" defer></script>
 </head>
 <body>
 <div class="layout">
@@ -21,7 +22,7 @@
 <a href="scenes.html">Scenes and prefabs</a>
 <a href="assets.html">Assets and import</a>
 <a href="packages.html">Packages</a>
-<a href="textures.html">Textures and materials</a>
+<a href="textures.html">Textures, materials, sprites</a>
 <a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
 <a href="particles.html">Particles</a>
@@ -31,6 +32,8 @@
 <a href="rendering.html">Rendering</a>
 <a href="building.html">Build</a>
 <h4>Reference</h4>
+<a href="components.html">Component reference</a>
+<a href="dragonfall.html">Dragonfall module</a>
 <a href="lua-api.html">Lua API</a>
 <a href="cli.html">CLI reference</a>
 <a href="go-api.html">Go API</a>
@@ -39,55 +42,83 @@
 <main>
 <div class="kicker">Guides</div>
 <h1>The editor</h1>
-<p class="lead">A reference for every panel of the editor. The editor is started from the <code>ascdii</code> launcher, see <a href="install.html">Install</a>.</p>
-<figure><img src="img/editor-main.png" alt="Editor layout"></figure>
+<p class="lead">A reference for every part of the editor window. The editor is started from the <code>ascdii</code> launcher; see <a href="install.html">Install</a>.</p>
+<figure><img src="img/editor-main.png" alt="Editor layout"><figcaption>Hierarchy on the left, the Scene view in the center, Inspector and Pipeline on the right, Project, Console and Animation below.</figcaption></figure>
+
+<h2>Window title</h2>
+<p>The title shows the open scene, the project and the engine version, for example <code>dragonfall.scene.json - Dragonfall - ASCDII Engine 0.0.1</code>. A leading <code>*</code> indicates that the scene has unsaved changes; it disappears when the scene is saved.</p>
 
 <h2>Toolbar</h2>
-<p>Left: the logo, the project name and version, buttons for a <b>new project</b> (<kbd>Ctrl</kbd>+<kbd>N</kbd>, without leaving the editor), to open another project or to close this one, the scene picker, and the <b>Package Manager</b>. The key next to it marks the open scene as the one a build starts with. <b>GameObject</b> opens the menu that creates objects, see <a href="gameobjects.html">GameObjects and components</a>. Center: <b>Play</b>, <b>Step</b> (one frame while paused) and <b>Stop</b>. Right: undo, redo, save (a dot means unsaved changes) and <b>Build</b>.</p>
+<table>
+<tr><th>Area</th><th>Controls</th></tr>
+<tr><td>Left</td><td>Project name and version; <b>New project</b> (<kbd>Ctrl</kbd>+<kbd>N</kbd>), <b>Open project</b> and <b>Close project</b>; the scene picker; the key, which marks the open scene as the start scene of builds; the <b>Package Manager</b>; the <b>GameObject</b> menu, see <a href="gameobjects.html">GameObjects and components</a>.</td></tr>
+<tr><td>Center</td><td><b>Play</b> or pause (<kbd>Space</kbd>), <b>Step</b>, which advances one frame while paused, and <b>Stop</b> (<kbd>Esc</kbd>).</td></tr>
+<tr><td>Right</td><td>Undo, redo, save (a dot indicates unsaved changes) and <b>Build</b> (<kbd>Ctrl</kbd>+<kbd>B</kbd>), see <a href="building.html">Build</a>.</td></tr>
+</table>
 
 <h2>Hierarchy</h2>
 <ul>
-<li>Every object of the scene in a tree. Drag rows onto each other to parent them; drop on empty space to move to the root.</li>
-<li>Double click a name to rename. The eye hides an object and its children.</li>
-<li>Right click for Create, Focus, Duplicate, Save prefab, Unpack and Delete. The + button opens the same Create menu.</li>
-<li>Drag rows onto object slots in the Inspector to fill references, and Project tiles or files from your file manager onto rows to add models, prefabs and scripts or to apply a material.</li>
-<li>Prefab instances show a package icon in amber; their inner objects are listed in italics.</li>
-<li>Select <b>Scene</b> at the top to edit the camera and the environment: time of day, sun, ambient light, sky and fog.</li>
+<li>Lists every object of the scene as a tree. Dragging a row onto another row makes it a child; dropping it on <b>Scene</b> moves it to the top level. The object keeps its place in the world, see <a href="gameobjects.html#parents">Parents and children</a>.</li>
+<li>A double click renames an object. The eye icon hides an object and its children.</li>
+<li>The context menu provides Create, Focus, Duplicate, Save as Prefab, Unpack and Delete. The <b>+</b> button opens the Create menu.</li>
+<li>Rows can be dragged onto object slots in the Inspector to fill references. Project tiles and files from the file manager can be dropped onto rows to add models, prefabs and scripts, or to apply a material.</li>
+<li>Prefab instances are marked with an amber package icon; their inner objects are listed in italics.</li>
+<li>Selecting <b>Scene</b> at the top shows the environment in the Inspector: time of day, sun, ambient light, sky and fog. Scenes without a camera object also show the scene camera there.</li>
 </ul>
 
 <h2>Scene and Game views</h2>
-<p>The <b>Scene</b> view has its own free camera, so looking around never changes your game. The <b>Game</b> view shows the scene camera, which is what players see. <b>Align</b> copies the Scene view into the game camera.</p>
+<p>The <b>Scene</b> view has an editor camera of its own; navigating it never changes the game. The <b>Game</b> view shows the game camera, which is what players see. <b>Align</b> moves the game camera to the current Scene view; in a scene with a camera object it moves that object.</p>
 <table>
 <tr><th>Action</th><th>Input</th></tr>
-<tr><td>Pan</td><td>Left drag, or middle drag</td></tr>
+<tr><td>Pan</td><td>Left drag on empty ground, or middle drag</td></tr>
 <tr><td>Orbit</td><td>Right drag</td></tr>
-<tr><td>Zoom</td><td>Wheel</td></tr>
-<tr><td>Select</td><td>Click</td></tr>
-<tr><td>Move, rotate, scale</td><td>Pick the tool in the view toolbar or press <kbd>W</kbd>, <kbd>E</kbd>, <kbd>R</kbd>, then drag a handle: the red (X), green (Y) or amber (height) one, the square in the middle, or for rotation the ring. See <a href="gameobjects.html">GameObjects and components</a>.</td></tr>
-<tr><td>Place an asset</td><td>Drop a prefab, model or sprite tile from the Project window, or a file from your file manager</td></tr>
-<tr><td>Apply a material</td><td>Drop a material tile on an object</td></tr>
+<tr><td>Zoom</td><td>Mouse wheel</td></tr>
+<tr><td>Select</td><td>Click an object</td></tr>
+<tr><td>Frame the selection</td><td><kbd>F</kbd></td></tr>
+<tr><td>Place an asset</td><td>Drop a prefab, model or sprite tile from the Project window, or a file from the file manager</td></tr>
+<tr><td>Apply a material</td><td>Drop a material tile onto an object</td></tr>
 </table>
-<p>In the Scene view an empty ground shows a grid with the X axis in red and the Y axis in green; it is an editor aid, listed as the <code>grid</code> pass in the Pipeline tab, and never appears in the Game view or in builds. The view always shows exactly what a terminal will show: the same Braille pattern and the same two colors in every cell. The toolbar only changes how those cells are drawn: <b>dots</b> draws the Braille dots with gaps, like a terminal font, and <b>pixels</b> draws the same dots without gaps, which is easier on the eyes but carries the same information. The toolbar also picks the cell size (smaller cells give more resolution) and toggles <b>Live</b>, which plays water, wind and animation clips while you edit; it starts off. The corner of the view shows the render and paint time of each frame.</p>
+
+<h3 id="view-toolbar">View toolbar</h3>
+<p>The toolbar in the top left corner of the view, from left to right:</p>
+<table>
+<tr><th>Control</th><th>Function</th></tr>
+<tr><td>Move, Rotate, Scale</td><td>The transform tool for the selected object, also on <kbd>W</kbd>, <kbd>E</kbd> and <kbd>R</kbd>. Move drags the red (X), green (Y) or amber (height) arrow, or the square in the middle along the ground. Rotate drags the amber ring around the up axis, or the red and green handles to tilt. Scale drags a handle to stretch one axis, or the square to scale evenly. Each drag is one undo step.</td></tr>
+<tr><td>Braille dots, Pixels</td><td>How cells are drawn on screen. <b>Braille dots</b> draws every Braille dot as a separate square with gaps between them, as a terminal font does; this is the most accurate preview of a terminal. <b>Pixels</b> draws the same dots without gaps, which is easier to read at small cell sizes. Both modes show identical information: the same dots and the same two colors per cell that a terminal receives.</td></tr>
+<tr><td>6, 8, 10, 12</td><td>The cell width in screen pixels; a cell is twice as tall as it is wide. Smaller cells fit more columns into the view, so the scene is rendered with more detail. At the default window size, <b>6</b> shows about 155 columns, close to the 160 columns a game is designed for; larger sizes show fewer columns and coarser detail, as a terminal with a larger font would.</td></tr>
+<tr><td>Live</td><td>Runs water, wind, particles and animation clips while editing. Scripts do not run in Live mode. Off by default.</td></tr>
+<tr><td>Gizmos</td><td>Shows or hides the collider outlines, collider handles and the camera frame described below. On by default.</td></tr>
+<tr><td>Braille brush</td><td>Paints or erases dots on the selected object, see <a href="#brush">Braille brush</a>.</td></tr>
+</table>
+<p>The corner of the view shows the grid size in cells, the render time and paint time of each frame, and the frame rate.</p>
+
+<h3 id="gizmos">Gizmos</h3>
+<p>Gizmos are drawn only in the Scene view and never appear in the Game view or in builds.</p>
+<ul>
+<li><b>Grid.</b> Empty ground shows a grid with the X axis in red and the Y axis in green, listed as the <code>grid</code> pass in the Pipeline tab.</li>
+<li><b>Colliders.</b> Every collider in the scene is outlined at its bottom and top: green for solid colliders and blue for triggers, bright on the selected object and dimmed elsewhere.</li>
+<li><b>Collider handles.</b> The colliders of the selected object have square handles. On a box collider, the handles on each side change the size along that axis while the opposite side stays in place, and the handle on top changes the height. On a circle collider, the side handle sets the radius and the top handle the height. Exact values remain editable in the Inspector. See <a href="physics.html">Physics</a>.</li>
+<li><b>Camera frame.</b> The area of the ground the game camera shows is outlined in amber, bright when the camera object is selected.</li>
+</ul>
 
 <h2>Inspector</h2>
-<p>The header holds the name, visibility, tag and Solid. Below it come <b>Transform</b> and one card per component, each with a checkbox and a ⋮ menu for Reset, Move Up, Move Down and Remove. <b>Add Component</b> searches every component kind and your Lua scripts, and can create a new script on the spot. Slots for objects, components, prefabs, textures and materials take drops, as described in <a href="gameobjects.html#references">References</a>. Clicking a texture, material or model in the Project window shows its settings here instead.</p>
-<p>Number labels are scrub handles: drag them sideways, hold <kbd>Shift</kbd> for fine steps. The diamond at the end of a row records an animation key for that property.</p>
+<p>The header contains the name, visibility, tag and Solid. Below it follow <b>Transform</b> and one card per component, each with a checkbox to disable it and a ⋮ menu with Reset, Move Up, Move Down and Remove Component. <b>Add Component</b> searches all component kinds and the project's Lua scripts, and can create a new script. Slots for objects, components, prefabs, textures and materials accept drops, see <a href="gameobjects.html#references">References</a>. Selecting a texture, material or model in the Project window shows its settings in the Inspector instead.</p>
+<p>Labels of numeric fields are scrub handles: dragging sideways changes the value, and holding <kbd>Shift</kbd> makes the steps finer. The diamond at the end of a row records an animation key for that property.</p>
 
 <h2 id="brush">Braille brush</h2>
-<p>For small fixes on a model or primitive without a 3D tool: select an object and turn on the brush in the view toolbar. Drag over the object to paint its dots in the chosen color, or switch to <b>erase</b> to hide them. The size slider sets the brush in world units. Strokes are stored in a <b>Paint</b> component in the object's own space, so they move, turn and scale with it, and the model file never changes; remove the component to undo all of it, or use undo for single strokes.</p>
+<p>The brush makes small corrections to a model or primitive without an external 3D tool. Select an object, enable the brush in the view toolbar, then drag over the object to paint its dots in the chosen color, or enable <b>erase</b> to hide them. The size slider sets the brush radius in world units. Strokes are stored in a <b>Paint</b> component in the object's local space, so they move, rotate and scale with the object; the model file is not changed. Removing the component reverts all strokes; undo reverts single strokes.</p>
 
 <h2>Pipeline</h2>
-<p>The second tab on the right lists the render passes by stage with a toggle, live timings and their settings. Drag passes to reorder them inside their stage. <a href="rendering.html">Rendering</a> covers what each one does.</p>
+<p>The second tab on the right lists the render passes by stage, each with a toggle, its timing and its settings. Passes can be reordered within their stage by dragging. <a href="rendering.html">Rendering</a> describes each pass.</p>
 
-<h2>Project, Console and Animation</h2>
-
+<h2>Panels and windows</h2>
 <ul>
-<li><b>Project</b>: the project folder with its folders. Double click opens a scene, places a prefab, model or sprite, or opens a script in your code editor. Drop files from your file manager to import them. See <a href="assets.html">Assets and import</a>.</li>
-<li><b>Console</b>: messages from scripts and the engine. Filter by level, see repeats collapsed with a count, double click a script error to jump to the line.</li>
-<li><b>Animation</b>: clips and keys of the selection. It can float as its own window. See <a href="animation.html">Animation</a>.</li>
-<li><b>Animator</b>: the state graph of an animator controller, in a window of its own. See <a href="animation.html#animator">Animator</a>.</li>
-<li><b>Particle Editor</b>: presets, a preview and every setting of the selected particle system, from the sparkle button on its card. See <a href="particles.html">Particles</a>.</li>
-<li><b>Packages</b>: the package manager, from the package button in the toolbar. See <a href="packages.html">Packages</a>.</li>
+<li><b>Project</b>: the project folder. A double click opens a scene, places a prefab, model or sprite, or opens a script in the code editor. Files dropped from the file manager are imported into the open folder. See <a href="assets.html">Assets and import</a>.</li>
+<li><b>Console</b>: messages from scripts and the engine, with a filter by level and repeated messages collapsed into a count. A double click on a script error opens the script at that line.</li>
+<li><b>Animation</b>: the clips and keys of the selection; it can be detached into a floating window. See <a href="animation.html">Animation</a>.</li>
+<li><b>Animator</b>: the state graph of an animator controller, in a floating window. See <a href="animation.html#animator">Animator</a>.</li>
+<li><b>Particle Editor</b>: presets, a preview and all settings of the selected particle system, opened from the sparkle button on its card. See <a href="particles.html">Particles</a>.</li>
+<li><b>Package Manager</b>: installs and removes packages. See <a href="packages.html">Packages</a>.</li>
 </ul>
 
 <h2>Shortcuts</h2>
@@ -95,17 +126,17 @@
 <tr><th>Keys</th><th>Action</th></tr>
 <tr><td><kbd>Space</kbd></td><td>Play or pause</td></tr>
 <tr><td><kbd>Esc</kbd></td><td>Stop</td></tr>
-<tr><td><kbd>Ctrl</kbd>+<kbd>S</kbd></td><td>Save scene</td></tr>
+<tr><td><kbd>Ctrl</kbd>+<kbd>S</kbd></td><td>Save the scene</td></tr>
 <tr><td><kbd>Ctrl</kbd>+<kbd>Z</kbd>, <kbd>Ctrl</kbd>+<kbd>Y</kbd></td><td>Undo, redo</td></tr>
-<tr><td><kbd>Ctrl</kbd>+<kbd>D</kbd></td><td>Duplicate selection</td></tr>
-<tr><td><kbd>Del</kbd></td><td>Delete selection</td></tr>
-<tr><td><kbd>F</kbd></td><td>Frame selection</td></tr>
-<tr><td><kbd>W</kbd>, <kbd>E</kbd>, <kbd>R</kbd></td><td>Move, rotate, scale tool</td></tr>
+<tr><td><kbd>Ctrl</kbd>+<kbd>D</kbd></td><td>Duplicate the selection</td></tr>
+<tr><td><kbd>Del</kbd></td><td>Delete the selection</td></tr>
+<tr><td><kbd>F</kbd></td><td>Frame the selection</td></tr>
+<tr><td><kbd>W</kbd>, <kbd>E</kbd>, <kbd>R</kbd></td><td>Move, rotate and scale tool</td></tr>
 <tr><td><kbd>Ctrl</kbd>+<kbd>6</kbd></td><td>Open the Animation tab</td></tr>
 <tr><td><kbd>Ctrl</kbd>+<kbd>B</kbd></td><td>Build</td></tr>
 <tr><td><kbd>Ctrl</kbd>+<kbd>N</kbd></td><td>New project</td></tr>
 </table>
-<div class="note"><b>Code editor</b>Scripts open in VS Code when the <code>code</code> command is available, otherwise in the system default program. Set <code>ASCDII_EDITOR</code> to use another one, for example <code>ASCDII_EDITOR="subl {file}:{line}"</code>.</div>
+<div class="note"><b>Code editor</b>Scripts open in Visual Studio Code when the <code>code</code> command is available, otherwise in the system's default program. The variable <code>ASCDII_EDITOR</code> selects another editor, for example <code>ASCDII_EDITOR="subl {file}:{line}"</code>.</div>
 <nav class="pager"><a class="prev" href="first-game.html"><small>Previous</small>Your first game</a><a class="next" href="gameobjects.html"><small>Next</small>GameObjects and components</a></nav>
 </main>
 </div>

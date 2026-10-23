@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dragonfall module | ASCDII Engine</title>
+<link rel="icon" href="img/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+<script src="zoom.js" defer></script>
+</head>
+<body>
+<div class="layout">
+<aside class="side">
+<a class="brand" href="index.html"><img src="img/logo.svg" alt=""><span>ASCDII Engine<small>0.0.1 docs</small></span></a>
+<h4>Start</h4>
+<a href="index.html">Welcome</a>
+<a href="install.html">Install</a>
+<a href="first-game.html">Your first game</a>
+<h4>Guides</h4>
+<a href="editor.html">The editor</a>
+<a href="gameobjects.html">GameObjects and components</a>
+<a href="scenes.html">Scenes and prefabs</a>
+<a href="assets.html">Assets and import</a>
+<a href="packages.html">Packages</a>
+<a href="textures.html">Textures, materials, sprites</a>
+<a href="models.html">Models</a>
+<a href="animation.html">Animation</a>
+<a href="particles.html">Particles</a>
+<a href="audio.html">Audio</a>
+<a href="physics.html">Physics</a>
+<a href="scripting.html">Lua scripting</a>
+<a href="rendering.html">Rendering</a>
+<a href="building.html">Build</a>
+<h4>Reference</h4>
+<a href="components.html">Component reference</a>
+<a href="dragonfall.html" class="on">Dragonfall module</a>
+<a href="lua-api.html">Lua API</a>
+<a href="cli.html">CLI reference</a>
+<a href="go-api.html">Go API</a>
+<a href="architecture.html">Architecture</a>
+</aside>
+<main>
+<div class="kicker">Reference</div>
+<h1>Dragonfall module</h1>
+<p class="lead">Dragonfall is the sample game shipped with the engine: a valley with a keep, a river, a sleeping dragon and a knight. It consists of a code module, which adds its components to the engine, a project template and a package.</p>
+
+<h2>Using the module</h2>
+<table>
+<tr><th>Form</th><th>Use</th></tr>
+<tr><td>Template</td><td>Selecting <b>Dragonfall</b> in <b>New project</b> creates a complete project with the sample scene. On the command line: <code>ascdii new &lt;dir&gt; -template dragonfall</code>.</td></tr>
+<tr><td>Package</td><td>The <b>Package Manager</b> installs the sample's assets and the module into an existing project, see <a href="packages.html">Packages</a>. On the command line: <code>ascdii pack install &lt;dir&gt; dragonfall</code>.</td></tr>
+<tr><td>Module</td><td>Projects that list <code>"dragonfall"</code> under <code>modules</code> in their manifest can use the components below; the template and the package add the entry. The GameObject menu shows them in a <b>Dragonfall</b> submenu.</td></tr>
+</table>
+
+<h2>The sample scene</h2>
+<table>
+<tr><th>Object</th><th>Contents</th></tr>
+<tr><td>Main Camera</td><td>The game camera, at the knight's start position.</td></tr>
+<tr><td>terrain, forest, grass</td><td>The valley, its trees and its grass, generated from seeds.</td></tr>
+<tr><td>bridge, castle</td><td>The bridge over the river and the keep.</td></tr>
+<tr><td>dragon</td><td>The dragon, with a toggle that wakes it on <kbd>E</kbd> and the script <code>scripts/dragon.lua</code>, which shows a hint while the knight is near.</td></tr>
+<tr><td>hero</td><td>The knight, moved by a Player component; the camera follows it.</td></tr>
+<tr><td>road</td><td>Four instances of the <code>prefabs/lantern.prefab.json</code> prefab: a post, a flame particle system and a light.</td></tr>
+<tr><td>crystal</td><td>A glowing sphere with a light, the animation clip <code>bob</code> and the script <code>scripts/crystal.lua</code>, which shows a message while the knight is near.</td></tr>
+<tr><td>hud</td><td>The title, area name, time of day, map and key help, with toggles for the map (<kbd>M</kbd>) and the help (<kbd>H</kbd>).</td></tr>
+<tr><td>rules</td><td>Day Night on <kbd>T</kbd> and Quit Key on <kbd>Q</kbd>.</td></tr>
+</table>
+
+<h2>Controls</h2>
+<table>
+<tr><th>Key</th><th>Action</th></tr>
+<tr><td><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd></td><td>Move the knight</td></tr>
+<tr><td><kbd>Space</kbd></td><td>Jump</td></tr>
+<tr><td><kbd>E</kbd></td><td>Wake the dragon or let it sleep</td></tr>
+<tr><td><kbd>T</kbd></td><td>Change between day and night</td></tr>
+<tr><td><kbd>M</kbd>, <kbd>H</kbd></td><td>Show or hide the map and the key help</td></tr>
+<tr><td><kbd>Q</kbd></td><td>Quit</td></tr>
+</table>
+
+<h2>Component reference</h2>
+<p>Property names are used as described in the engine's <a href="components.html">Component reference</a>; the kinds below carry the <code>df.</code> prefix.</p>
+<!-- docref:begin -->
+<h3 id="df.terrain">Terrain <code>df.terrain</code></h3>
+<p>The Dragonfall valley: hills, cliffs and a river, generated from a seed. <span class="dim">GameObject menu and Add Component.</span></p>
+<table>
+<tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>seed</code></td><td>int, 0 to 99999</td><td><code>2026</code></td><td>Varies the landscape.</td></tr>
+<tr><td><code>water</code></td><td>float, -3 to 0</td><td><code>-0.9</code></td><td>Height of the water level.</td></tr>
+</table>
+<h3 id="df.forest">Forest <code>df.forest</code></h3>
+<p>Trees placed over the Dragonfall terrain. <span class="dim">GameObject menu and Add Component.</span></p>
+<table>
+<tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>seed</code></td><td>int, 0 to 99999</td><td><code>2026</code></td><td>Varies the placement.</td></tr>
+<tr><td><code>density</code></td><td>float, 0 to 1</td><td><code>1</code></td><td>Share of possible spots that get a tree.</td></tr>
+<tr><td><code>sway</code></td><td>float, 0 to 2</td><td><code>0.35</code></td><td>How far the trees move in the wind.</td></tr>
+</table>
+<h3 id="df.grass">Grass <code>df.grass</code></h3>
+<p>Grass blades over the Dragonfall terrain. <span class="dim">GameObject menu and Add Component.</span></p>
+<table>
+<tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>seed</code></td><td>int, 0 to 99999</td><td><code>2026</code></td><td>Varies the placement.</td></tr>
+<tr><td><code>density</code></td><td>float, 0 to 1</td><td><code>0.85</code></td><td>Share of possible spots that get grass.</td></tr>
+<tr><td><code>detail</code></td><td>bool</td><td><code>false</code></td><td>Draws more blades near the camera.</td></tr>
+</table>
+<h3 id="df.castle">Castle <code>df.castle</code></h3>
+<p>The Dragonfall keep with towers, walls and a gate. <span class="dim">GameObject menu and Add Component.</span></p>
+<table>
+<tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>stone</code></td><td>color</td><td><code>#76787c</code></td><td>Wall color.</td></tr>
+<tr><td><code>roof</code></td><td>color</td><td><code>#3e5266</code></td><td>Roof color.</td></tr>
+<tr><td><code>banner</code></td><td>color</td><td><code>#b0383e</code></td><td>Banner color.</td></tr>
+<tr><td><code>torches</code></td><td>bool</td><td><code>true</code></td><td>Lights the torches.</td></tr>
+</table>
+<h3 id="df.bridge">Bridge <code>df.bridge</code></h3>
+<p>A wooden bridge. <span class="dim">GameObject menu and Add Component.</span></p>
+<table>
+<tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>length</code></td><td>float, 1 to 60</td><td><code>9</code></td><td>Length in world units.</td></tr>
+<tr><td><code>width</code></td><td>float, 1 to 30</td><td><code>6</code></td><td>Width in world units.</td></tr>
+<tr><td><code>wood</code></td><td>color</td><td><code>#846240</code></td><td>Wood color.</td></tr>
+</table>
+<h3 id="df.dragon">Dragon <code>df.dragon</code></h3>
+<p>The Dragonfall dragon. <span class="dim">GameObject menu and Add Component.</span></p>
+<table>
+<tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>awake</code></td><td>bool</td><td><code>false</code></td><td>Wakes the dragon: it flaps and looks around.</td></tr>
+<tr><td><code>fire</code></td><td>bool</td><td><code>true</code></td><td>Breathes fire while awake.</td></tr>
+</table>
+<h3 id="df.hero">Hero <code>df.hero</code></h3>
+<p>The Dragonfall knight. <span class="dim">GameObject menu and Add Component.</span></p>
+<table>
+<tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>walking</code></td><td>bool</td><td><code>false</code></td><td>Plays the walk cycle; set by the player component.</td></tr>
+<tr><td><code>speed</code></td><td>float, 0.1 to 4</td><td><code>1</code></td><td>Walk cycle speed multiplier.</td></tr>
+</table>
+<h3 id="df.hud">HUD <code>df.hud</code></h3>
+<p>The Dragonfall heads-up display: title, area name, time and a map. <span class="dim">GameObject menu and Add Component.</span></p>
+<table>
+<tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>title</code></td><td>string</td><td><code>DRAGONFALL</code></td><td>Title in the top left corner.</td></tr>
+<tr><td><code>showMap</code></td><td>bool</td><td><code>false</code></td><td>Shows the map.</td></tr>
+<tr><td><code>showHelp</code></td><td>bool</td><td><code>false</code></td><td>Shows the key help.</td></tr>
+<tr><td><code>seed</code></td><td>int, 0 to 99999</td><td><code>2026</code></td><td>Terrain seed the map is drawn from.</td></tr>
+</table>
+<!-- docref:end -->
+<nav class="pager"><a class="prev" href="components.html"><small>Previous</small>Component reference</a><a class="next" href="lua-api.html"><small>Next</small>Lua API</a></nav>
+</main>
+</div>
+</body>
+</html>

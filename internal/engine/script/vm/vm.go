@@ -23,6 +23,7 @@ const (
 // it, so scripts keep separate globals but can call into each other, which
 // separate states would not allow.
 type VM struct {
+	camera  *lua.LTable // the camera global, whose object field is the camera GameObject
 	L       *lua.LState
 	ctx     *scene.Ctx
 	lib     *asset.Library
@@ -96,7 +97,7 @@ func (v *VM) step(dt float64) {
 	if v.follow != 0 {
 		if o, err := s.ByID(v.follow); err == nil {
 			p := o.World().Pos
-			s.Camera.Follow(geom.V3(p.X, p.Y, 0), dt, v.rate)
+			s.FollowView(o, geom.V3(p.X, p.Y, 0), dt, v.rate)
 		}
 	}
 	kept := v.says[:0]

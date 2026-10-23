@@ -245,6 +245,11 @@ func (v *VM) proxy(get func() prop.Editable, extra map[string]lua.LGFunction) *l
 			L.Push(fn)
 			return 1
 		}
+		if k == "object" && t == v.camera {
+			o, _ := v.ctx.Scene.MainCamera()
+			L.Push(v.handle(o))
+			return 1
+		}
 		e := get()
 		if e == nil {
 			L.Push(lua.LNil)
@@ -283,7 +288,7 @@ func arg(L *lua.LState, self *lua.LTable) int {
 func (v *VM) installEngine() {
 	L := v.L
 	var cam *lua.LTable
-	cam = v.proxy(func() prop.Editable { return &v.ctx.Scene.Camera }, map[string]lua.LGFunction{
+	cam = v.proxy(func() prop.Editable { return v.ctx.Scene.CameraProps() }, map[string]lua.LGFunction{
 		"follow": func(L *lua.LState) int {
 			n := arg(L, cam)
 			v.follow, v.rate = 0, float64(L.OptNumber(n+1, 5))
@@ -295,6 +300,7 @@ func (v *VM) installEngine() {
 			return 0
 		},
 	})
+	v.camera = cam
 	L.SetGlobal("camera", cam)
 	L.SetGlobal("env", v.proxy(func() prop.Editable { return &v.ctx.Scene.Env }, nil))
 	pipe := L.NewTable()

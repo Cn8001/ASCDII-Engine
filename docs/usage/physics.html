@@ -6,6 +6,7 @@
 <title>Physics | ASCDII Engine</title>
 <link rel="icon" href="img/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
+<script src="zoom.js" defer></script>
 </head>
 <body>
 <div class="layout">
@@ -21,7 +22,7 @@
 <a href="scenes.html">Scenes and prefabs</a>
 <a href="assets.html">Assets and import</a>
 <a href="packages.html">Packages</a>
-<a href="textures.html">Textures and materials</a>
+<a href="textures.html">Textures, materials, sprites</a>
 <a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
 <a href="particles.html">Particles</a>
@@ -31,6 +32,8 @@
 <a href="rendering.html">Rendering</a>
 <a href="building.html">Build</a>
 <h4>Reference</h4>
+<a href="components.html">Component reference</a>
+<a href="dragonfall.html">Dragonfall module</a>
 <a href="lua-api.html">Lua API</a>
 <a href="cli.html">CLI reference</a>
 <a href="go-api.html">Go API</a>
@@ -39,7 +42,7 @@
 <main>
 <div class="kicker">Guides</div>
 <h1>Physics</h1>
-<p class="lead">Colliders give objects a footprint on the ground; a Rigidbody makes an object fall, slide and bounce off them. The model fits a 2.5D world: shapes live on the ground plane, and height is a range above it.</p>
+<p class="lead">Colliders give objects a shape on the ground plane with a height range above it; a Rigidbody makes an object fall, slide and bounce off them.</p>
 
 <h2>Colliders</h2>
 <table>
@@ -48,22 +51,34 @@
 <tr><td><b>Circle Collider</b></td><td>A circle.</td><td><code>radius</code>, <code>height</code>, <code>offset</code>, <code>trigger</code></td></tr>
 <tr><td><b>Mesh Collider</b></td><td>The footprint of the object's model, its outline seen from above.</td><td><code>trigger</code></td></tr>
 </table>
-<p>Select an object to see its colliders outlined in green in the Scene view, triggers in blue. A collider that is not a trigger blocks the player and rigidbodies; objects without colliders still block with their bounds when marked <b>Solid</b>.</p>
+<p>A collider that is not a trigger blocks the player and rigidbodies. Objects without colliders block with their bounds when marked <b>Solid</b>.</p>
+
+<h2>Editing colliders</h2>
+<figure><img src="img/editor-colliders.png" alt="Colliders in the Scene view"><figcaption>The selected crate's box collider with its handles, a circle collider on the boulder and a trigger zone in blue.</figcaption></figure>
+<p>The Scene view outlines every collider of the scene at its bottom and top: green for solid colliders and blue for triggers, bright on the selected object and dimmed on others. The <b>Gizmos</b> button in the view toolbar hides the outlines.</p>
+<p>The colliders of the selected object have square handles:</p>
+<table>
+<tr><th>Collider</th><th>Handles</th></tr>
+<tr><td>Box Collider</td><td>One on each of the four sides: dragging it changes the size along that axis, and the opposite side stays in place. One on top: dragging it up or down changes the height.</td></tr>
+<tr><td>Circle Collider</td><td>One on the side: dragging it sets the radius. One on top: dragging it changes the height.</td></tr>
+<tr><td>Mesh Collider</td><td>None; the shape follows the model.</td></tr>
+</table>
+<p>Each drag is one undo step. <code>offset</code> and exact values are edited in the Inspector.</p>
 
 <h2>Rigidbody</h2>
-<p>Add a <b>Rigidbody</b> next to a collider and the object moves on its own in play mode.</p>
+<p>A <b>Rigidbody</b> on an object with a collider moves the object in play mode.</p>
 <table>
-<tr><th>Property</th><th>Does</th></tr>
-<tr><td><code>mass</code></td><td>Heavier bodies push lighter ones further; forces move them less.</td></tr>
-<tr><td><code>gravity</code></td><td>Fall until the ground or the top of a collider below.</td></tr>
-<tr><td><code>drag</code></td><td>How quickly sliding slows down.</td></tr>
-<tr><td><code>bounce</code></td><td>0 stops dead at a wall, 1 bounces back at full speed.</td></tr>
-<tr><td><code>kinematic</code></td><td>Moved only by scripts and animation; others still bump into it.</td></tr>
-<tr><td><code>velocity</code></td><td>Current speed in world units per second; set it to throw things.</td></tr>
+<tr><th>Property</th><th>Meaning</th></tr>
+<tr><td><code>mass</code></td><td>Heavier bodies push lighter ones further, and forces move them less.</td></tr>
+<tr><td><code>gravity</code></td><td>The body falls until it reaches the ground or the top of a collider below it.</td></tr>
+<tr><td><code>drag</code></td><td>How quickly a sliding body slows down.</td></tr>
+<tr><td><code>bounce</code></td><td>0 stops at a wall; 1 bounces back at full speed.</td></tr>
+<tr><td><code>kinematic</code></td><td>The body is moved only by scripts and animation; other bodies still collide with it.</td></tr>
+<tr><td><code>velocity</code></td><td>Current velocity in world units per second; scripts set it to launch a body.</td></tr>
 </table>
 
 <h2>Triggers and hooks</h2>
-<p>A trigger collider reports contacts without pushing, for doors, pickups and zones. Scripts on either object hear about a contact when it begins:</p>
+<p>A trigger collider reports contacts without blocking, for doors, pickups and zones. Scripts on both objects are notified when a contact begins:</p>
 <pre><code><span class="k">function</span> on_trigger(self, other)
   <span class="k">if</span> other.name == <span class="s">"hero"</span> <span class="k">then</span>
     play_sound(<span class="s">"audio/coin.wav"</span>)
@@ -77,7 +92,7 @@
 <pre><code><span class="k">local</span> rb = self:component(<span class="s">"rigidbody"</span>)
 rb:add_force(vec3(0, 0, 9))   <span class="c">-- a jump: velocity changes by force / mass</span>
 rb.velocity = vec3(4, 0, 0)</code></pre>
-<div class="tip"><b>Keep it simple</b>Physics is deliberately small: no friction model, no stacking solver, no rotation from impacts. It is enough for crates, balls, pickups and walls; for anything more, move objects from a script.</div>
+<div class="note"><b>Scope</b>Physics covers falling, sliding, bouncing and pushing on the ground plane. There is no friction model, no stacking solver and no rotation from impacts; such behavior is implemented in scripts.</div>
 <nav class="pager"><a class="prev" href="audio.html"><small>Previous</small>Audio</a><a class="next" href="scripting.html"><small>Next</small>Lua scripting</a></nav>
 </main>
 </div>

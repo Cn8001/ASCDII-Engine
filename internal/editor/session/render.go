@@ -22,19 +22,28 @@ type Gizmo struct {
 	Corners [][2]float64 `json:"corners"` // 8 box corners in cell units, bit 0 x, bit 1 y, bit 2 z
 	Anchor  [2]float64   `json:"anchor"`
 	Axes    [][2]float64 `json:"axes"` // screen tips of the x, y and z move handles
+	Handles []Handle     `json:"handles"`
+}
+
+// Handle is a point on a collider the Scene view lets you drag.
+type Handle struct {
+	Key  string     `json:"key"`  // the collider component, as in "box_collider#2"
+	Name string     `json:"name"` // x+, x-, y+, y-, r or z+
+	At   [2]float64 `json:"at"`   // cell units
 }
 
 type Frame struct {
-	Cols   int             `json:"cols"`
-	Rows   int             `json:"rows"`
-	Cells  string          `json:"cells,omitempty"` // base64 of Raw's cell bytes when frames ride in events
-	Seq    uint64          `json:"seq"`
-	Time   float64         `json:"time"`
-	Mode   Mode            `json:"mode"`
-	Millis float64         `json:"millis"`
-	Passes []pipeline.Info `json:"passes"`
-	Gizmo  *Gizmo          `json:"gizmo,omitempty"`
-	View   string          `json:"view"`
+	Cols    int             `json:"cols"`
+	Rows    int             `json:"rows"`
+	Cells   string          `json:"cells,omitempty"` // base64 of Raw's cell bytes when frames ride in events
+	Seq     uint64          `json:"seq"`
+	Time    float64         `json:"time"`
+	Mode    Mode            `json:"mode"`
+	Millis  float64         `json:"millis"`
+	Passes  []pipeline.Info `json:"passes"`
+	Gizmo   *Gizmo          `json:"gizmo,omitempty"`
+	View    string          `json:"view"`
+	Unsaved bool            `json:"unsaved"` // so the title and save button follow every edit
 }
 
 // cellBytes is the wire format: 10 bytes per cell, rune u32 LE, fg rgb, bg rgb.
@@ -83,6 +92,13 @@ func (s *Session) gizmo(sc *scene.Scene) *Gizmo {
 	for _, c := range b.Corners() {
 		x, y, _ := v.Project(c)
 		g.Corners = append(g.Corners, toCell(x, y))
+	}
+	t := e.World()
+	for _, c := range e.Components {
+		for name, p := range colliderHandles(c) {
+			x, y, _ := v.Project(t.Apply(p))
+			g.Handles = append(g.Handles, Handle{Key: e.Key(c), Name: name, At: toCell(x, y)})
+		}
 	}
 	return g
 }
@@ -143,7 +159,7 @@ func (s *Session) render() *Frame {
 	return &Frame{
 		Seq: s.seq, Cols: s.frame.Cells.W, Rows: s.frame.Cells.H, Cells: cells,
 		Time: sc.Time, Mode: s.mode, Millis: float64(s.pipe.Total().Microseconds()) / 1000,
-		Passes: s.pipe.Infos(), Gizmo: gz, View: s.viewMode,
+		Passes: s.pipe.Infos(), Gizmo: gz, View: s.viewMode, Unsaved: s.unsaved,
 	}
 }
 

@@ -6,6 +6,7 @@
 <title>Lua scripting | ASCDII Engine</title>
 <link rel="icon" href="img/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
+<script src="zoom.js" defer></script>
 </head>
 <body>
 <div class="layout">
@@ -21,7 +22,7 @@
 <a href="scenes.html">Scenes and prefabs</a>
 <a href="assets.html">Assets and import</a>
 <a href="packages.html">Packages</a>
-<a href="textures.html">Textures and materials</a>
+<a href="textures.html">Textures, materials, sprites</a>
 <a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
 <a href="particles.html">Particles</a>
@@ -31,6 +32,8 @@
 <a href="rendering.html">Rendering</a>
 <a href="building.html">Build</a>
 <h4>Reference</h4>
+<a href="components.html">Component reference</a>
+<a href="dragonfall.html">Dragonfall module</a>
 <a href="lua-api.html">Lua API</a>
 <a href="cli.html">CLI reference</a>
 <a href="go-api.html">Go API</a>
@@ -39,16 +42,16 @@
 <main>
 <div class="kicker">Guides</div>
 <h1>Lua scripting</h1>
-<p class="lead">Game logic lives in Lua files in your project. Write them in your own code editor; the engine reloads a script the moment you save it. Scripts are components, so an object can have several, and they can find and call each other.</p>
+<p class="lead">Game logic is written in Lua files inside the project, in any code editor; the engine reloads a script when it is saved. Scripts are components: an object can carry several, and scripts can find and call each other.</p>
 
-<h2>Your first script</h2>
+<h2>Creating a script</h2>
 <ol class="steps">
-<li>Select an object, press <b>Add Component</b> and choose <b>New script</b>. Name it <code>door</code>. The editor creates <code>scripts/door.lua</code>, attaches it and opens it in your code editor.</li>
-<li>Replace the file with the code below and save.</li>
-<li>Back in the editor the script card shows the fields <b>hero</b>, <b>reach</b> and <b>lift</b>. Drag the hero from the Hierarchy onto <b>hero</b>.</li>
-<li>Press play, walk close to the door and press <kbd>E</kbd>.</li>
+<li>Select an object, press <b>Add Component</b> and choose <b>New script</b> with the name <code>door</code>. The editor creates <code>door.lua</code> in the folder open in the Project window, attaches it and opens it in the code editor.</li>
+<li>Replace the file's contents with the code below and save it.</li>
+<li>The script's card in the Inspector shows the fields <b>hero</b>, <b>reach</b> and <b>lift</b>. Drag the hero from the Hierarchy onto <b>hero</b>.</li>
+<li>Start play mode, walk to the door and press <kbd>E</kbd>.</li>
 </ol>
-<pre><code><span class="c">-- scripts/door.lua</span>
+<pre><code><span class="c">-- door.lua</span>
 fields = {
   hero  = object(),
   reach = range(3, 1, 10),
@@ -72,10 +75,10 @@ fields = {
     say(<span class="s">"press E"</span>, 0.3)
   <span class="k">end</span>
 <span class="k">end</span></code></pre>
-<p><code>self</code> is the object the script is on. Its built in fields and methods, such as <code>self.position</code> and <code>self:tween</code>, come from the engine; anything else you put on it, like <code>self.open</code>, is the script's own state.</p>
+<p><code>self</code> is the object the script belongs to. Its built in fields and methods, such as <code>self.position</code> and <code>self:tween</code>, are provided by the engine; any other value stored on it, such as <code>self.open</code>, is the script's own state.</p>
 
-<h2>Fields: variables you set in the editor</h2>
-<p>A global table named <code>fields</code> declares the variables the Inspector shows. Their values are saved with the scene and appear on <code>self</code> before <code>start</code> runs.</p>
+<h2>Fields</h2>
+<p>A global table named <code>fields</code> declares variables that the Inspector shows and edits. Their values are saved with the scene and are set on <code>self</code> before <code>start</code> runs.</p>
 <pre><code>fields = {
   speed  = 5,                    <span class="c">-- number</span>
   jumpy  = <span class="k">true</span>,                 <span class="c">-- checkbox</span>
@@ -89,11 +92,11 @@ fields = {
   lamp   = component(<span class="s">"light"</span>),    <span class="c">-- a component slot</span>
   enemy  = prefab(),             <span class="c">-- a prefab slot, for spawn()</span>
 }</code></pre>
-<p>While the game runs the Inspector shows the live values, and editing one there changes it in the running script. Fields are listed in the order you wrote them.</p>
+<p>While the game runs, the Inspector shows the current values, and editing a value changes it in the running script. Fields are listed in the order of their declaration.</p>
 
-<h2>Scripts talking to each other</h2>
-<p>Ask an object for a script by the script's file name and you get that script's <code>self</code>, functions included:</p>
-<pre><code><span class="c">-- scripts/lever.lua</span>
+<h2>Calling other scripts</h2>
+<p>Asking an object for a component by a script's file name returns that script's <code>self</code>, including its functions:</p>
+<pre><code><span class="c">-- lever.lua</span>
 fields = { door = object() }
 
 <span class="k">function</span> key(self, k)
@@ -102,24 +105,24 @@ fields = { door = object() }
     <span class="k">return true</span>
   <span class="k">end</span>
 <span class="k">end</span></code></pre>
-<p>Other components come back as handles whose fields are their Inspector properties: <code>find("lamp"):component("light").radius = 12</code>.</p>
+<p>Other components are returned as handles whose fields are their properties: <code>find("lamp"):component("light").radius = 12</code>.</p>
 
 <h2>Hooks</h2>
 <table>
 <tr><th>Hook</th><th>When</th></tr>
 <tr><td><code>start(self)</code></td><td>Once, before the first update, and again after a reload.</td></tr>
 <tr><td><code>update(self, dt)</code></td><td>Every simulation step; <code>dt</code> is in seconds and follows <code>time_scale</code>.</td></tr>
-<tr><td><code>key(self, k)</code></td><td>On a key press. Return <code>true</code> to stop other components from also handling it.</td></tr>
+<tr><td><code>key(self, k)</code></td><td>On a key press. Returning <code>true</code> stops other components from handling the key.</td></tr>
 <tr><td><code>on_destroy(self)</code></td><td>Before the object is removed with <code>destroy</code>.</td></tr>
 <tr><td><code>on_collision(self, other)</code></td><td>When a collider of this object starts touching another, see <a href="physics.html">Physics</a>.</td></tr>
 <tr><td><code>on_trigger(self, other)</code></td><td>When a trigger collider starts overlapping another object.</td></tr>
-<tr><td><code>draw(self, d)</code></td><td>Every frame, to draw extra shapes; see the <a href="lua-api.html#draw">draw API</a>.</td></tr>
+<tr><td><code>draw(self, d)</code></td><td>Every frame, to draw additional shapes; see <a href="lua-api.html#draw">Drawing from Lua</a>.</td></tr>
 </table>
-<p>The <a href="lua-api.html">Lua API</a> page lists every function, including the camera, the environment and the render pipeline, which scripts can change at run time.</p>
+<p>The <a href="lua-api.html">Lua API</a> lists every function and field, including the camera, the environment and the render pipeline.</p>
 
 <h2>Errors and hot reload</h2>
-<p>A runtime error stops only that script and appears in the Console with the file and line, for example <code>scripts/door.lua:12: attempt to index a nil value</code>. Double click it to jump to the line. Fix the file and save: the script reloads, keeps the state on <code>self</code> and runs <code>start</code> again.</p>
-<div class="note"><b>Scripts and play mode</b>Scripts run in play mode and in built games. In the editor's Live preview they do not run, so editing never moves things by logic. Scripts run in a sandbox with the standard <code>math</code>, <code>string</code> and <code>table</code> libraries and no file, network or OS access.</div>
+<p>A run time error stops only the script that raised it and appears in the Console with the file and line, for example <code>door.lua:12: attempt to index a nil value</code>. A double click on the message opens the file at that line. Saving the corrected file reloads the script; it keeps its state on <code>self</code> and runs <code>start</code> again.</p>
+<div class="note"><b>Where scripts run</b>Scripts run in play mode and in built games, not in the editor's Live preview. They run in a sandbox with the standard <code>math</code>, <code>string</code> and <code>table</code> libraries and have no file, network or operating system access.</div>
 <nav class="pager"><a class="prev" href="physics.html"><small>Previous</small>Physics</a><a class="next" href="rendering.html"><small>Next</small>Rendering</a></nav>
 </main>
 </div>

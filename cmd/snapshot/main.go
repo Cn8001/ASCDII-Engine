@@ -76,7 +76,7 @@ func apply(s *scene.Scene, kv string) error {
 		v = raw
 	}
 	if target == "camera" {
-		return s.Camera.Set(name, v)
+		return s.CameraProps().Set(name, v)
 	}
 	e := s.Find(target)
 	if e == nil {
