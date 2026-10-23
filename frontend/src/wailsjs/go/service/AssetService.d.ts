@@ -45,6 +45,8 @@ export function Rename(arg1:string,arg2:string):Promise<string>;
 
 export function RenameFolder(arg1:string,arg2:string):Promise<string>;
 
+export function Reveal(arg1:string):Promise<void>;
+
 export function SetController(arg1:string,arg2:animator.Controller):Promise<void>;
 
 export function SetProp(arg1:string,arg2:string,arg3:any):Promise<void>;

@@ -235,9 +235,9 @@ func TestUnit_BuildBundlesProject(t *testing.T) {
 	s, _, dir := newSession(t, "")
 
 	// Act
-	res, err := s.Build(context.Background(), "linux", false, "0.2.0")
-	one, errOne := s.Build(context.Background(), "linux", true, "")
-	_, errWin := s.Build(context.Background(), "windows", false, "")
+	res, err := s.Build(context.Background(), "linux", BuildOptions{Version: "0.2.0"})
+	one, errOne := s.Build(context.Background(), "linux", BuildOptions{Single: true})
+	_, errWin := s.Build(context.Background(), "windows", BuildOptions{})
 
 	// Assert
 	if err != nil || len(res.Files) != 1 || res.Dir != filepath.Join(dir, "build", "linux", "Game") {

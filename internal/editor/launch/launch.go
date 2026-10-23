@@ -60,10 +60,10 @@ func StartEditor(ctx context.Context, editor, manifest string) error {
 	return cmd.Process.Release()
 }
 
-// Relaunch starts ascdii, which starts the editor again with its mark, for
+// Relaunch runs ascdii run, which starts the editor again with its mark, for
 // an editor that was opened directly.
 func Relaunch(ctx context.Context, cli string) error {
-	cmd := exec.CommandContext(context.WithoutCancel(ctx), cli)
+	cmd := exec.CommandContext(context.WithoutCancel(ctx), cli, "run")
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("start %s: %w", CLI, err)
 	}

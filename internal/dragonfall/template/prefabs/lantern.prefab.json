@@ -15,6 +15,7 @@
         "props": {
           "color": "#5c4634",
           "height": 3,
+          "material": "",
           "radius": 0.14,
           "segments": 14
         }

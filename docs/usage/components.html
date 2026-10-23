@@ -58,21 +58,23 @@
 <tr><td><code>material</code></td><td>material</td><td><code>none</code></td><td>A material asset; replaces both colors when set.</td></tr>
 </table>
 <h3 id="blob">Sphere <code>blob</code></h3>
-<p>A sphere shaded per dot, for canopies, bushes and rocks. <span class="dim">GameObject menu and Add Component.</span></p>
+<p>A sphere shaded per dot, for canopies, bushes and rocks, in a color or a material. <span class="dim">GameObject menu and Add Component.</span></p>
 <table>
 <tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
 <tr><td><code>radius</code></td><td>float, 0.05 to 50</td><td><code>1.2</code></td><td>Radius in world units.</td></tr>
 <tr><td><code>color</code></td><td>color</td><td><code>#4e8a5c</code></td><td>Surface color.</td></tr>
 <tr><td><code>glow</code></td><td>float, 0 to 1</td><td><code>0</code></td><td>Glow independent of light, 0 to 1.</td></tr>
+<tr><td><code>material</code></td><td>material</td><td><code>none</code></td><td>A material asset; replaces the color and glow when set. Its texture wraps once around the sphere, bottom to top.</td></tr>
 </table>
 <h3 id="cylinder">Cylinder <code>cylinder</code></h3>
-<p>An upright faceted cylinder standing on its position. <span class="dim">GameObject menu and Add Component.</span></p>
+<p>An upright faceted cylinder standing on its position, in a color or a material. <span class="dim">GameObject menu and Add Component.</span></p>
 <table>
 <tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
 <tr><td><code>radius</code></td><td>float, 0.05 to 100</td><td><code>1</code></td><td>Radius in world units.</td></tr>
 <tr><td><code>height</code></td><td>float, 0.05 to 200</td><td><code>3</code></td><td>Height in world units.</td></tr>
 <tr><td><code>color</code></td><td>color</td><td><code>#8c9296</code></td><td>Surface color.</td></tr>
 <tr><td><code>segments</code></td><td>int, 6 to 48</td><td><code>14</code></td><td>Number of side faces.</td></tr>
+<tr><td><code>material</code></td><td>material</td><td><code>none</code></td><td>A material asset; replaces the color when set. Its texture wraps once around the side, bottom to top, and spans the top.</td></tr>
 </table>
 <h3 id="cone">Cone <code>cone</code></h3>
 <p>An upright cone standing on its position; its tip can sway in the wind. <span class="dim">GameObject menu and Add Component.</span></p>
@@ -82,6 +84,7 @@
 <tr><td><code>height</code></td><td>float, 0.05 to 200</td><td><code>3</code></td><td>Height in world units.</td></tr>
 <tr><td><code>color</code></td><td>color</td><td><code>#407854</code></td><td>Surface color.</td></tr>
 <tr><td><code>sway</code></td><td>float, 0 to 2</td><td><code>0</code></td><td>How far the tip moves in the wind, in world units.</td></tr>
+<tr><td><code>material</code></td><td>material</td><td><code>none</code></td><td>A material asset; replaces the color when set. Its texture wraps once around the cone, base to tip.</td></tr>
 </table>
 <h3 id="plane">Plane <code>plane</code></h3>
 <p>A flat rectangle on the ground. <span class="dim">GameObject menu and Add Component.</span></p>
@@ -122,6 +125,7 @@
 <tr><td><code>color</code></td><td>color</td><td><code>#405c3c</code></td><td>Base color.</td></tr>
 <tr><td><code>grain</code></td><td>float, 0 to 1</td><td><code>0.08</code></td><td>Strength of the color variation, 0 to 1.</td></tr>
 <tr><td><code>seed</code></td><td>int, 0 to 9999</td><td><code>1</code></td><td>Varies the grain pattern.</td></tr>
+<tr><td><code>material</code></td><td>material</td><td><code>none</code></td><td>A material asset; replaces the color when set. Its texture repeats once per world unit; a tiling below 1 enlarges it.</td></tr>
 </table>
 <h3 id="water">Water <code>water</code></h3>
 <p>A water surface with animated glints and reflections of the sky. <span class="dim">GameObject menu and Add Component.</span></p>
@@ -130,6 +134,7 @@
 <tr><td><code>width</code></td><td>float, 1 to 2000</td><td><code>12</code></td><td>Size along X.</td></tr>
 <tr><td><code>depth</code></td><td>float, 1 to 2000</td><td><code>6</code></td><td>Size along Y.</td></tr>
 <tr><td><code>color</code></td><td>color</td><td><code>#245c70</code></td><td>Base color.</td></tr>
+<tr><td><code>material</code></td><td>material</td><td><code>none</code></td><td>A material asset; replaces the color when set and keeps the glints and reflections. Its texture repeats once per world unit.</td></tr>
 </table>
 <h3 id="paint">Paint <code>paint</code></h3>
 <p>Strokes made with the Braille brush in the editor, stored in the object&#39;s local space. <span class="dim">Add Component.</span></p>
@@ -142,7 +147,7 @@
 <p>Makes its object the game camera. The object&#39;s position is the point the camera looks at and its rotation around Z turns the view; as a child of another object the camera moves with it. The first enabled camera on a visible object is used; a scene without one shows No camera. <span class="dim">GameObject menu and Add Component.</span></p>
 <table>
 <tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
-<tr><td><code>span</code></td><td>float, 4 to 400</td><td><code>64</code></td><td>World units across the width of the view; smaller values zoom in.</td></tr>
+<tr><td><code>span</code></td><td>float, 4 to 400</td><td><code>36</code></td><td>World units across the width of the view; smaller values zoom in.</td></tr>
 <tr><td><code>pitch</code></td><td>float, 15 to 89</td><td><code>55</code></td><td>Angle above the ground in degrees; 90 looks straight down.</td></tr>
 <tr><td><code>anchorX</code></td><td>float, 0 to 1</td><td><code>0.5</code></td><td>Horizontal screen position of the target, 0 left to 1 right.</td></tr>
 <tr><td><code>anchorY</code></td><td>float, 0 to 1</td><td><code>0.6</code></td><td>Vertical screen position of the target, 0 top to 1 bottom.</td></tr>

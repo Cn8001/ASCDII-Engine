@@ -298,6 +298,22 @@ export namespace prop {
 
 export namespace session {
 	
+	export class BuildOptions {
+	    single: boolean;
+	    version: string;
+	    icon: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new BuildOptions(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.single = source["single"];
+	        this.version = source["version"];
+	        this.icon = source["icon"];
+	    }
+	}
 	export class BuildResult {
 	    files: string[];
 	    dir: string;
@@ -707,6 +723,7 @@ export namespace session {
 	    fps: number;
 	    mods: boolean;
 	    modApi: string;
+	    icon: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new ProjectSettings(source);
@@ -722,6 +739,7 @@ export namespace session {
 	        this.fps = source["fps"];
 	        this.mods = source["mods"];
 	        this.modApi = source["modApi"];
+	        this.icon = source["icon"];
 	    }
 	}
 

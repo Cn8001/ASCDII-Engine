@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { Build } from '../lib/api'
-import { call, refreshInfo, store } from '../lib/store'
+import { computed, onMounted, ref } from 'vue'
+import { Build, Project } from '../lib/api'
+import { assetPath, call, refreshInfo, store } from '../lib/store'
 import type { session } from '../wailsjs/go/models'
 import Icon from './Icon.vue'
+import TexThumb from './TexThumb.vue'
 
 const all = [
   { id: 'windows', label: 'Windows' },
@@ -15,11 +16,17 @@ const version = ref(store.info?.version ?? '0.1.0')
 const result = ref<session.BuildResult | null>(null)
 const busy = ref(false)
 const single = ref(false) // one executable per platform instead of a folder with data
+const icon = ref('') // image asset for Windows executables; '' keeps the player's icon
+const canBrand = ref(true)
+const images = computed(() => store.assets.filter((a) => a.kind === 'texture' && !a.path.startsWith('mods/')))
 
 
 onMounted(async () => {
   available.value = (await call(() => Build.Targets())) ?? []
   chosen.value = [...available.value]
+  canBrand.value = await Build.CanBrand()
+  icon.value = (await call(() => Project.Settings()))?.icon ?? ''
+
 })
 
 function toggle(id: string) {
@@ -34,7 +41,7 @@ async function build() {
   result.value = null
   let r: session.BuildResult | undefined
   for (const t of chosen.value) {
-    r = await call(() => Build.Build(t, single.value, version.value))
+    r = await call(() => Build.Build(t, { single: single.value, version: version.value, icon: icon.value }))
     if (!r) break
   }
   if (r && chosen.value.length > 1) r = { ...r, dir: r.dir.replace(/[\\/][^\\/]+[\\/][^\\/]+$/, '') } as session.BuildResult
@@ -77,6 +84,21 @@ async function build() {
         <span class="text-ink-500">{{ single ? 'one executable' : 'executable + data folder' }}</span>
       </label>
 
+
+      <div class="mt-3 flex items-center gap-3">
+        <div class="grid size-12 shrink-0 place-items-center rounded-lg bg-ink-850 ring-1 ring-ink-700">
+          <TexThumb v-if="icon" :path="assetPath(icon)" :size="48" />
+          <Icon v-else name="image" :size="16" class="text-ink-600" />
+        </div>
+        <div class="min-w-0 flex-1">
+          <div class="mb-1 text-[11px] text-ink-500">Icon of the Windows executable</div>
+          <select v-model="icon" class="field" title="A square PNG of 256 pixels or more gives the sharpest result; other sizes are scaled and centred">
+            <option value="">Player icon</option>
+            <option v-for="a in images" :key="a.path" :value="a.guid || a.path">{{ a.path }}</option>
+          </select>
+        </div>
+      </div>
+      <p v-if="!canBrand && icon && chosen.includes('windows')" class="mt-2 text-[11px] leading-snug text-amber-soft">The Linux editor does not write icons into Windows builds; build on Windows to apply this icon. The choice is saved in the project.</p>
 
       <div class="mt-4 flex items-center gap-2">
         <label class="flex w-28 items-center gap-2 rounded-lg bg-ink-800 px-3 ring-1 ring-ink-700" title="Version of the game; stored in the manifest">

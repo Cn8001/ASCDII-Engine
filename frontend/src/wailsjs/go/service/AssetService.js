@@ -82,6 +82,10 @@ export function RenameFolder(arg1, arg2) {
   return window['go']['service']['AssetService']['RenameFolder'](arg1, arg2);
 }
 
+export function Reveal(arg1) {
+  return window['go']['service']['AssetService']['Reveal'](arg1);
+}
+
 export function SetController(arg1, arg2) {
   return window['go']['service']['AssetService']['SetController'](arg1, arg2);
 }

@@ -39,10 +39,10 @@ hello:
 	go run ./cmd/hello
 
 dragonfall:
-	go run ./cmd/ascdii run internal/dragonfall/template
+	go run ./cmd/ascdii play internal/dragonfall/template
 
 editor-dev: cli
-	cd $(EDITOR) && ASCDII_PLAYERS=$(CURDIR)/$(LINUX) WAILS_DEV_ALLOWED_HOSTS=wails.localhost $(WAILS) dev -tags $(LINUXTAG)
+	cd $(EDITOR) && ASCDII_PLAYERS=$(CURDIR)/$(BIN) WAILS_DEV_ALLOWED_HOSTS=wails.localhost $(WAILS) dev -tags $(LINUXTAG)
 
 # Wails always writes build/bin; the editor moves next to its ascdii, where the
 # launcher looks for it.

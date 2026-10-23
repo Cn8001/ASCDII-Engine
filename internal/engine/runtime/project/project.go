@@ -40,6 +40,7 @@ type Manifest struct {
 	FPS     int         `json:"fps,omitempty"`
 	Modules []string    `json:"modules,omitempty"` // compiled Go components the project uses
 	Legacy  []string    `json:"packs,omitempty"`   // the name modules had before packages existed
+	Icon    string      `json:"icon,omitempty"`    // image of the Windows executable, a guid or a path
 	Mods    ModSettings `json:"mods,omitzero"`
 }
 

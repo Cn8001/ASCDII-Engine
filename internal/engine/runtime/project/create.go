@@ -138,7 +138,6 @@ func FileName(name string) string {
 func Starter(name string) *scene.Scene {
 	s := scene.New(name)
 	cam := components.NewCamera()
-	cam.Span = 40
 	s.Add("Main Camera", cam)
 	return s
 }

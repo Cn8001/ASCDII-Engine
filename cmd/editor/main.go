@@ -182,9 +182,34 @@ func (dialogs) PickDir(ctx context.Context, title string) (string, error) {
 	return dir, nil
 }
 
-// reveal opens a folder in the system file manager; under WSL that is the
-// Windows Explorer, since a Linux one is rarely installed.
+// reveal shows path in the file manager: a folder opened, a file selected in
+// its folder. Under WSL that is the Windows Explorer, since a Linux one is
+// rarely installed.
 func reveal(ctx context.Context, path string) error {
+	if st, err := os.Stat(path); err != nil || st.IsDir() {
+		return open(ctx, path)
+	}
+	var cmd *exec.Cmd
+	switch {
+	case runtime.GOOS == "windows":
+		cmd = exec.CommandContext(ctx, "explorer", "/select,"+path)
+	case runtime.GOOS == "darwin":
+		cmd = exec.CommandContext(ctx, "open", "-R", path)
+	case isWSL():
+		win, err := exec.CommandContext(ctx, "wslpath", "-w", path).Output()
+		if err != nil {
+			return fmt.Errorf("reveal: %w", err)
+		}
+		cmd = exec.CommandContext(ctx, "explorer.exe", "/select,"+strings.TrimSpace(string(win)))
+	default:
+		return open(ctx, filepath.Dir(path)) // xdg-open cannot select a file
+	}
+	return detach(cmd)
+}
+
+// open hands path to the system: a folder to the file manager, a file to the
+// program its type is associated with.
+func open(ctx context.Context, path string) error {
 	var cmd *exec.Cmd
 	switch {
 	case runtime.GOOS == "windows":
@@ -200,7 +225,12 @@ func reveal(ctx context.Context, path string) error {
 	default:
 		cmd = exec.CommandContext(ctx, "xdg-open", path)
 	}
-	// Explorer exits non zero even on success, so only a failed start is an error.
+	return detach(cmd)
+}
+
+// detach starts cmd without waiting. Explorer exits non zero even on
+// success, so only a failed start is an error.
+func detach(cmd *exec.Cmd) error {
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("reveal: %w", err)
 	}
@@ -220,7 +250,7 @@ func edit(ctx context.Context, path string, line int) error {
 	if code, err := exec.LookPath("code"); err == nil {
 		return start(exec.CommandContext(ctx, code, "-g", fmt.Sprintf("%s:%d", path, max(1, line))))
 	}
-	return reveal(ctx, path)
+	return open(ctx, path)
 }
 
 func start(cmd *exec.Cmd) error {

@@ -16,9 +16,10 @@ One Go module.
   pack, bundle, ...).
 - `internal/dragonfall/...` example game content built on the engine.
 - `internal/editor/...` editor backend (session, services, Wails adapters).
-- `ascdii` without arguments starts the editor (`internal/editor/launch`); an
-  editor started directly restarts itself through `ascdii`, except in `wails dev`.
-- `cmd/ascdii` CLI (opens the editor without arguments), `cmd/player`
+- `ascdii run` starts the editor (`internal/editor/launch`); an editor started
+  directly restarts itself through `ascdii run`, except in `wails dev`.
+  `ascdii` alone prints the commands; `ascdii play` runs a project.
+- `cmd/ascdii` CLI, `cmd/player`
   ascdii-player that games run on (`internal/player`), `cmd/brand` icons and
   Windows resources, `cmd/hello` minimal example, `cmd/snapshot`
   PNG renders for review, `cmd/editor` Wails app (built only with Wails tags).

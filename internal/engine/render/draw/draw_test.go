@@ -180,3 +180,46 @@ func TestUnit_SmoothTerrainBlendsAcrossTiles(t *testing.T) {
 		t.Fatalf("edge not blended: %+v", mid)
 	}
 }
+
+// stripes is a texture of two colors alternating around u.
+type stripes struct{}
+
+func (stripes) Sample(_, u, _ float64) (color.Color, bool) {
+	if int(math.Floor(u*8))%2 == 0 {
+		return color.RGB(255, 0, 0), true
+	}
+	return color.RGB(0, 0, 255), true
+}
+func (stripes) Size() (int, int) { return 8, 8 }
+
+func TestUnit_RoundSolidsWrapTextures(t *testing.T) {
+	// Arrange
+	m := Material{Albedo: color.RGB(255, 255, 255), Texture: stripes{}}
+	draws := map[string]func(c *Context){
+		"cylinder": func(c *Context) { c.Cylinder(geom.V3(0, 0, 0), 3, 4, m, m, 16) },
+		"cone":     func(c *Context) { c.Cone(geom.V3(0, 0, 0), 3, 4, m, 16, geom.Vec2{}) },
+		"sphere":   func(c *Context) { c.Blob(geom.V3(0, 0, 3), 3, m) },
+	}
+	for name, d := range draws {
+		c := newContext(60, 30)
+
+		// Act
+		d(c)
+
+		// Assert
+		red, blue := 0, 0
+		for y := 0; y < c.Buf.H; y++ {
+			for x := 0; x < c.Buf.W; x++ {
+				switch c.Buf.At(x, y).Albedo {
+				case color.RGB(255, 0, 0):
+					red++
+				case color.RGB(0, 0, 255):
+					blue++
+				}
+			}
+		}
+		if red < 10 || blue < 10 {
+			t.Fatalf("%s: red %d blue %d", name, red, blue)
+		}
+	}
+}

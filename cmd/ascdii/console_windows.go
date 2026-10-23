@@ -7,15 +7,21 @@ import (
 	"unsafe"
 )
 
-// hideConsole closes the console Windows opened for a double click; one
-// shared with a terminal (more than this process attached) stays.
-func hideConsole() {
-	kernel32, user32 := syscall.NewLazyDLL("kernel32.dll"), syscall.NewLazyDLL("user32.dll")
+// ownConsole reports whether Windows opened the console for this process
+// alone, as for a double click; a terminal's console has the shell attached.
+func ownConsole() bool {
 	var pids [2]uint32
-	n, _, _ := kernel32.NewProc("GetConsoleProcessList").Call(uintptr(unsafe.Pointer(&pids[0])), 2)
-	if n != 1 {
+	n, _, _ := syscall.NewLazyDLL("kernel32.dll").NewProc("GetConsoleProcessList").Call(uintptr(unsafe.Pointer(&pids[0])), 2)
+	return n == 1
+}
+
+// hideConsole closes a console of our own, so starting the editor leaves no
+// empty window behind.
+func hideConsole() {
+	if !ownConsole() {
 		return
 	}
+	kernel32, user32 := syscall.NewLazyDLL("kernel32.dll"), syscall.NewLazyDLL("user32.dll")
 	const swHide = 0
 	if w, _, _ := kernel32.NewProc("GetConsoleWindow").Call(); w != 0 {
 		_, _, _ = user32.NewProc("ShowWindow").Call(w, swHide)

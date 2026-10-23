@@ -122,13 +122,13 @@ end</code></pre>
 <h2 id="logs">Messages</h2>
 <table>
 <tr><th>Where the game runs</th><th>Mod messages and errors</th></tr>
-<tr><td>Built game, <code>ascdii run</code></td><td><code>mods/log.txt</code>, rewritten at the first message of each run; the terminal shows the game.</td></tr>
+<tr><td>Built game, <code>ascdii play</code></td><td><code>mods/log.txt</code>, rewritten at the first message of each run; the terminal shows the game.</td></tr>
 <tr><td><code>ascdii preview</code>, <code>--preview</code></td><td>Standard error.</td></tr>
 <tr><td>Editor play mode</td><td>The Console, with the source <code>mod:&lt;name&gt;</code>.</td></tr>
 </table>
 
 <h2 id="testing">Testing mods</h2>
-<p>Play mode in the editor and <code>ascdii run</code> load the project's own <code>mods/</code> folder, so the API can be tested with real mods. Builds leave the project's <code>mods/</code> folder out of the game data; a folder build of a game with mods enabled contains an empty <code>mods/</code> folder for players.</p>
+<p>Play mode in the editor and <code>ascdii play</code> load the project's own <code>mods/</code> folder, so the API can be tested with real mods. Builds leave the project's <code>mods/</code> folder out of the game data; a folder build of a game with mods enabled contains an empty <code>mods/</code> folder for players.</p>
 
 <h2 id="example">Example</h2>
 <p>The developer exposes spawning, the hero's position and key presses:</p>

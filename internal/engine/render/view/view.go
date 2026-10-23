@@ -20,7 +20,7 @@ type Camera struct {
 }
 
 func Default() Camera {
-	return Camera{Span: 64, Pitch: 55, AnchorX: .5, AnchorY: .6}
+	return Camera{Span: 36, Pitch: 55, AnchorX: .5, AnchorY: .6}
 }
 
 func (c *Camera) bind() *prop.Binder {

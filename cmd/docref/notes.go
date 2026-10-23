@@ -13,14 +13,17 @@ func notes() map[string]note {
 			"size": "Width, depth and height in world units.", "top": "Color of the top face.", "side": "Color of the side faces.",
 			"emissive": "Glow independent of light, 0 to 1.", "material": "A material asset; replaces both colors when set.",
 		}},
-		"blob": {"A sphere shaded per dot, for canopies, bushes and rocks.", map[string]string{
+		"blob": {"A sphere shaded per dot, for canopies, bushes and rocks, in a color or a material.", map[string]string{
 			"radius": "Radius in world units.", "color": "Surface color.", "glow": "Glow independent of light, 0 to 1.",
+			"material": "A material asset; replaces the color and glow when set. Its texture wraps once around the sphere, bottom to top.",
 		}},
-		"cylinder": {"An upright faceted cylinder standing on its position.", map[string]string{
+		"cylinder": {"An upright faceted cylinder standing on its position, in a color or a material.", map[string]string{
 			"radius": "Radius in world units.", "height": "Height in world units.", "color": "Surface color.", "segments": "Number of side faces.",
+			"material": "A material asset; replaces the color when set. Its texture wraps once around the side, bottom to top, and spans the top.",
 		}},
 		"cone": {"An upright cone standing on its position; its tip can sway in the wind.", map[string]string{
 			"radius": "Base radius in world units.", "height": "Height in world units.", "color": "Surface color.", "sway": "How far the tip moves in the wind, in world units.",
+			"material": "A material asset; replaces the color when set. Its texture wraps once around the cone, base to tip.",
 		}},
 		"plane": {"A flat rectangle on the ground.", map[string]string{
 			"width": "Size along X.", "depth": "Size along Y.", "color": "Surface color.", "material": "A material asset; replaces the color when set.",
@@ -34,9 +37,11 @@ func notes() map[string]note {
 		}},
 		"ground": {"A flat terrain patch with a grain pattern.", map[string]string{
 			"width": "Size along X.", "depth": "Size along Y.", "color": "Base color.", "grain": "Strength of the color variation, 0 to 1.", "seed": "Varies the grain pattern.",
+			"material": "A material asset; replaces the color when set. Its texture repeats once per world unit; a tiling below 1 enlarges it.",
 		}},
 		"water": {"A water surface with animated glints and reflections of the sky.", map[string]string{
 			"width": "Size along X.", "depth": "Size along Y.", "color": "Base color.",
+			"material": "A material asset; replaces the color when set and keeps the glints and reflections. Its texture repeats once per world unit.",
 		}},
 		"camera": {"Makes its object the game camera. The object's position is the point the camera looks at and its rotation around Z turns the view; as a child of another object the camera moves with it. The first enabled camera on a visible object is used; a scene without one shows No camera.", map[string]string{
 			"span": "World units across the width of the view; smaller values zoom in.", "pitch": "Angle above the ground in degrees; 90 looks straight down.",

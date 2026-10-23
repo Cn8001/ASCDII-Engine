@@ -46,7 +46,7 @@ func BuildFolder(ctx context.Context, dir, exe, player string, fsys fs.FS, skip 
 		return "", fmt.Errorf("open player: %w", err)
 	}
 	defer src.Close()
-	size, err := playerSize(ctx, src) // a player carrying a bundle copies without it
+	size, err := PlayerSize(ctx, src) // a player carrying a bundle copies without it
 	if err != nil {
 		return "", err
 	}

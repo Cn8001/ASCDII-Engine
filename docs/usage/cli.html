@@ -46,13 +46,14 @@
 <p class="lead"><code>ascdii</code> starts the editor and provides the command line tools. Games run on <code>ascdii-player</code>.</p>
 
 <h2>Starting the editor</h2>
-<p><code>ascdii</code> without arguments opens the editor at its start screen, see <a href="install.html#starting">Install</a>; <code>ascdii edit &lt;manifest&gt;</code> opens it with a project. The editor is always started this way; started directly, it is restarted through <code>ascdii</code>.</p>
+<p><code>ascdii run</code> opens the editor at its start screen, see <a href="install.html#starting">Install</a>; <code>ascdii run &lt;project&gt;</code> opens it with a project, given as its folder or its manifest. The editor is always started this way; started directly, it is restarted through <code>ascdii run</code>. <code>ascdii</code> without arguments prints the list of commands.</p>
 
 <h2>Commands</h2>
 <table>
 <tr><th>Command</th><th>Function</th></tr>
 <tr><td><code>ascdii new &lt;dir&gt; [-name N] [-template dragonfall]</code></td><td>Creates a project. Without a template, the project contains a manifest and a start scene with a camera.</td></tr>
-<tr><td><code>ascdii run &lt;dir&gt; [--blocks]</code></td><td>Plays a project folder in the terminal; <code>--blocks</code> draws half blocks instead of Braille, see <a href="rendering.html#output-modes">Output modes</a>. With mods enabled, the mods in the project's <code>mods/</code> folder load and write their messages to <code>mods/log.txt</code>.</td></tr>
+<tr><td><code>ascdii run [project]</code></td><td>Opens the editor, with the project when one is given.</td></tr>
+<tr><td><code>ascdii play &lt;dir&gt; [--blocks]</code></td><td>Plays a project folder in the terminal; <code>--blocks</code> draws half blocks instead of Braille, see <a href="rendering.html#output-modes">Output modes</a>. With mods enabled, the mods in the project's <code>mods/</code> folder load and write their messages to <code>mods/log.txt</code>.</td></tr>
 <tr><td><code>ascdii preview &lt;dir&gt; [-size 160x50] [-time 2] [-hour 22] [-plain] [-blocks]</code></td><td>Prints one frame after simulating <code>-time</code> seconds, at an optional time of day; <code>-plain</code> omits colors, <code>-blocks</code> uses half blocks. Mod messages go to standard error.</td></tr>
 <tr><td><code>ascdii build &lt;dir&gt; [-out path] [-player path] [-single]</code></td><td>Builds a game folder with the player, <code>data/game.pak</code> and <code>SHA256SUMS</code>; <code>-single</code> builds one executable. The player defaults to the <code>ascdii-player</code> next to <code>ascdii</code>. See <a href="building.html">Build</a>.</td></tr>
 <tr><td><code>ascdii pack list &lt;dir&gt;</code></td><td>Lists installed packages and the built in packages that are not installed.</td></tr>
