@@ -11,7 +11,7 @@ export function ApplyMaterial(arg1:number,arg2:string):Promise<void>;
 
 export function Controller(arg1:string):Promise<animator.Controller>;
 
-export function ConvertToArt(arg1:string,arg2:number):Promise<string>;
+export function ConvertToSprite(arg1:string,arg2:number):Promise<string>;
 
 export function CreateController(arg1:string):Promise<string>;
 

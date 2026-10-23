@@ -228,7 +228,7 @@ func (s *Session) spawnPoint() geom.Vec3 {
 }
 
 // object builds what the GameObject menu and drops create: "empty",
-// "prefab:<ref>", "art:<ref>", "model:<ref>" or a registered component kind.
+// "prefab:<ref>", "sprite:<ref>", "model:<ref>" or a registered component kind.
 func (s *Session) object(kind string) (*scene.GameObject, error) {
 	base := func(ref string) string {
 		p := s.lib.Resolve(ref)
@@ -241,9 +241,9 @@ func (s *Session) object(kind string) (*scene.GameObject, error) {
 		e := scene.NewGameObject("")
 		e.Prefab = s.lib.Ref(strings.TrimPrefix(kind, "prefab:"))
 		return e, nil
-	case strings.HasPrefix(kind, "art:"):
-		ref := strings.TrimPrefix(kind, "art:")
-		if _, err := s.lib.Art(ref); err != nil {
+	case strings.HasPrefix(kind, "sprite:"):
+		ref := strings.TrimPrefix(kind, "sprite:")
+		if _, err := s.lib.Sprite(ref); err != nil {
 			return nil, err
 		}
 		return scene.NewGameObject(base(ref), components.NewSprite(s.lib, s.lib.Ref(ref))), nil

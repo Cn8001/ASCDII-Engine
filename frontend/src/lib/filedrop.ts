@@ -1,5 +1,5 @@
 import { Assets, OnFileDrop } from './api'
-import { call, refreshAssets, toast } from './store'
+import { call, refreshAssets, store, toast } from './store'
 
 export interface FileDrop {
   x: number
@@ -16,7 +16,7 @@ export function assetKind(p: string): string {
   if (l.endsWith('.obj')) return 'model'
   if (l.endsWith('.material.json')) return 'material'
   if (/\.(png|jpe?g|gif)$/.test(l)) return 'texture'
-  if (l.endsWith('.json') || l.endsWith('.xp')) return 'art'
+  if (l.endsWith('.sprite.json') || l.endsWith('.xp')) return 'sprite'
   return '' // a folder or a file the engine does not use
 }
 
@@ -28,7 +28,7 @@ export function listenFileDrops() {
     const files = raw.filter(Boolean) // drags inside the page arrive with no files
     if (!files.length) return
     const zone = document.elementFromPoint(x, y)?.closest<HTMLElement>('[data-drop]')
-    const folder = zone?.dataset.folder ?? ''
+    const folder = zone?.dataset.folder ?? store.folder
     const paths = await call(() => Assets.Import(files, folder))
     if (!paths?.length) return
     toast(paths.length === 1 ? paths[0] : `${paths.length} files imported`, 'ok')

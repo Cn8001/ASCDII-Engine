@@ -17,6 +17,7 @@ import (
 
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/cmd/ascdii/menu"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/dragonfall"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/editor/launch"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/editor/recent"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/guid"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/platform/speaker"
@@ -62,7 +63,7 @@ func run(ctx context.Context, args []string) error {
 		return play(ctx, fsys, args)
 	}
 	if len(args) == 0 {
-		return launch(ctx)
+		return mainMenu(ctx)
 	}
 	switch args[0] {
 	case "help", "-h", "--help":
@@ -73,6 +74,9 @@ func run(ctx context.Context, args []string) error {
 	case "run":
 		if len(args) < 2 {
 			return errors.New(usage)
+		}
+		if _, err := project.RenameSprites(ctx, args[1]); err != nil {
+			return err
 		}
 		return play(ctx, os.DirFS(args[1]), args[2:])
 	case "preview":
@@ -88,20 +92,32 @@ func run(ctx context.Context, args []string) error {
 	return errors.New(usage)
 }
 
-// launch is what a double click on the binary opens.
-func launch(ctx context.Context) error {
+// mainMenu is what a double click on the binary opens.
+func mainMenu(ctx context.Context) error {
 	store, err := recent.Default()
 	if err != nil {
 		return err
 	}
 	return menu.Run(ctx, os.Stdin, os.Stdout, menu.Deps{
 		Version:   "v" + version.Engine,
-		Demo:      dragonfall.Template(),
 		Templates: map[string]fs.FS{"dragonfall": dragonfall.Template(), "empty": nil},
 		Recent:    store,
 		Help:      usage,
-		Play:      func(ctx context.Context, fsys fs.FS) error { return play(ctx, fsys, nil) },
+		Edit:      edit,
 	})
+}
+
+// edit starts the editor on a project; the editor only opens from here.
+func edit(ctx context.Context, manifest string) error {
+	self, err := os.Executable()
+	if err != nil {
+		return fmt.Errorf("locate executable: %w", err)
+	}
+	editor, err := launch.Find(self, launch.Editor)
+	if err != nil {
+		return err
+	}
+	return launch.StartEditor(ctx, editor, manifest)
 }
 
 func play(ctx context.Context, fsys fs.FS, args []string) error {
@@ -152,6 +168,9 @@ func cmdPreview(ctx context.Context, args []string) error {
 	if dir == "" {
 		return errors.New(usage)
 	}
+	if _, err := project.RenameSprites(ctx, dir); err != nil {
+		return err
+	}
 	return preview(ctx, os.DirFS(dir), rest)
 }
 
@@ -197,6 +216,9 @@ func cmdBuild(ctx context.Context, self string, args []string) error {
 	single := fl.Bool("single", false, "one executable with the project inside, instead of a folder")
 	if err := fl.Parse(rest); err != nil || dir == "" {
 		return errors.New(usage)
+	}
+	if _, err := project.RenameSprites(ctx, dir); err != nil {
+		return err
 	}
 	if _, err := project.EnsureMeta(ctx, dir, guid.Default()); err != nil {
 		return err

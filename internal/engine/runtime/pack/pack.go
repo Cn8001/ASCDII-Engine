@@ -1,5 +1,5 @@
 // Package pack handles packages: sets of assets with their .meta files and
-// a pack.json, shared as one .ascdiipack file, like Unity packages. They are
+// a pack.json, shared as one .ascdiipack file. They are
 // installed into a project's packages folder and are read only there; the
 // only operations are install and remove.
 package pack

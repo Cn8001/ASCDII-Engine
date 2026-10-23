@@ -200,6 +200,7 @@ function icon(c: Card) {
           <input v-if="c.enabled" type="checkbox" class="accent-[var(--color-amber-glow)]" :checked="!!c.enabled.value" :disabled="c.enabled.locked" @change="set(c.enabled.name, ($event.target as HTMLInputElement).checked)" />
           <Icon :name="icon(c)" :size="12" class="text-ink-400" />
           <button class="flex-1 truncate text-left text-[12px] font-medium" :class="c.enabled && !c.enabled.value ? 'text-ink-500 line-through' : 'text-ink-200'" @click="collapsed[c.key] = !collapsed[c.key]">{{ title(c) }}</button>
+          <button v-if="c.kind === 'emitter'" class="icon-btn size-6" title="Particle Editor" @click="store.particles = true"><Icon name="sparkle" :size="13" /></button>
           <button v-if="c.kind === 'animator' && controllerOf(c)" class="icon-btn size-6" title="Open Animator" @click="store.animator = controllerOf(c)"><Icon name="graph" :size="13" /></button>
           <button v-if="c.index >= 0 && own" class="icon-btn size-6" title="More" @click="(e) => cardMenu(e, c)"><Icon name="more" :size="14" /></button>
         </div>

@@ -38,11 +38,14 @@ dragonfall:
 editor-dev: players
 	cd $(EDITOR) && WAILS_DEV_ALLOWED_HOSTS=wails.localhost $(WAILS) dev -tags $(LINUXTAG)
 
+# The editor lands next to bin/ascdii, where the launcher looks for it.
 editor-linux: players
 	cd $(EDITOR) && $(WAILS) build -tags $(LINUXTAG)
+	cp $(EDITOR)/build/bin/ascdii-editor $(BIN)/
 
 editor-windows: players
 	cd $(EDITOR) && $(WAILS) build -platform windows/amd64
+	cp $(EDITOR)/build/bin/ascdii-editor.exe $(BIN)/
 
 # dist packs what someone without the source needs: the editor and the
 # ascdii command, one archive per platform.

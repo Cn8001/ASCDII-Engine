@@ -32,9 +32,6 @@ func (s *Session) CreateMaterial(ctx context.Context, name string) (string, erro
 		return "", err
 	}
 	rel := strings.TrimSuffix(filepath.ToSlash(name), material.Ext)
-	if !strings.Contains(rel, "/") {
-		rel = "materials/" + rel
-	}
 	if locked(rel) {
 		return "", lockedErr(rel)
 	}
@@ -200,8 +197,8 @@ func (s *Session) Thumb(ref string, size int) (string, error) {
 	return "data:image/png;base64," + base64.StdEncoding.EncodeToString(buf.Bytes()), nil
 }
 
-// ConvertToArt writes a texture as glyph art cols cells wide into art/.
-func (s *Session) ConvertToArt(ctx context.Context, ref string, cols int) (string, error) {
+// ConvertToSprite writes a texture as a sprite cols cells wide next to it.
+func (s *Session) ConvertToSprite(ctx context.Context, ref string, cols int) (string, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if err := s.need(); err != nil {
@@ -217,7 +214,7 @@ func (s *Session) ConvertToArt(ctx context.Context, ref string, cols int) (strin
 	if err != nil {
 		return "", fmt.Errorf("convert %s: %w", src, err)
 	}
-	art, err := asset.ArtFromImage(img, cols)
+	art, err := asset.SpriteFromImage(img, cols)
 	if err != nil {
 		return "", err
 	}
@@ -226,11 +223,11 @@ func (s *Session) ConvertToArt(ctx context.Context, ref string, cols int) (strin
 	if err := asset.EncodeJSON(&b, name, art); err != nil {
 		return "", err
 	}
-	rel := s.freeName("art/" + name + ".json")
+	rel := s.freeName(path.Join(path.Dir(src), name+asset.SpriteExt))
 	if err := s.writeAsset(ctx, rel, b.Bytes()); err != nil {
 		return "", err
 	}
-	s.lib.PutArt(rel, art)
+	s.lib.PutSprite(rel, art)
 	return rel, nil
 }
 
@@ -277,9 +274,6 @@ func (s *Session) CreateController(ctx context.Context, name string) (string, er
 		return "", err
 	}
 	rel := strings.TrimSuffix(filepath.ToSlash(name), animator.Ext)
-	if !strings.Contains(rel, "/") {
-		rel = "animators/" + rel
-	}
 	if locked(rel) {
 		return "", lockedErr(rel)
 	}

@@ -24,7 +24,7 @@ type stashed struct {
 	active  int
 }
 
-// OpenPrefab edits a prefab alone, as Unity's prefab mode does. The open
+// OpenPrefab edits a prefab alone. The open
 // scene, its history and unsaved edits wait until ClosePrefab.
 func (s *Session) OpenPrefab(ref string) error {
 	s.mu.Lock()

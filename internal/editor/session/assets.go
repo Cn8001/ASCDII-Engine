@@ -48,7 +48,7 @@ func (s *Session) Reload(ctx context.Context) error {
 func (s *Session) ArtPreview(name string) (Preview, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	art, err := s.lib.Art(name)
+	art, err := s.lib.Sprite(name)
 	if err != nil {
 		return Preview{}, err
 	}
@@ -67,7 +67,7 @@ func (s *Session) ArtPreview(name string) (Preview, error) {
 func (s *Session) AddSprite(name string) (uint64, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if _, err := s.lib.Art(name); err != nil {
+	if _, err := s.lib.Sprite(name); err != nil {
 		return 0, err
 	}
 	if s.play == nil {

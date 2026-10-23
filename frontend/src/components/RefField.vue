@@ -6,7 +6,7 @@ import { allNodes, assetPath, store } from '../lib/store'
 import type { prop } from '../wailsjs/go/models'
 import Icon from './Icon.vue'
 
-// RefField is a reference slot, as in Unity: drop an object from the
+// RefField is a reference slot: drop an object from the
 // hierarchy, a component card or a prefab from the Project window on it.
 const props = defineProps<{ p: prop.Prop }>()
 const emit = defineEmits<{ ref: [name: string, target: number, key: string]; set: [name: string, value: unknown] }>()

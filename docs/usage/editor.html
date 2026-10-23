@@ -24,6 +24,7 @@
 <a href="textures.html">Textures and materials</a>
 <a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
+<a href="particles.html">Particles</a>
 <a href="audio.html">Audio</a>
 <a href="physics.html">Physics</a>
 <a href="scripting.html">Lua scripting</a>
@@ -38,11 +39,11 @@
 <main>
 <div class="kicker">Guides</div>
 <h1>The editor</h1>
-<p class="lead">A guided tour of every panel. The layout follows Unity on purpose, so most of it should feel familiar.</p>
+<p class="lead">A reference for every panel of the editor. The editor is started from the <code>ascdii</code> launcher, see <a href="install.html">Install</a>.</p>
 <figure><img src="img/editor-main.png" alt="Editor layout"></figure>
 
 <h2>Toolbar</h2>
-<p>Left: the logo, the project name and version, buttons for a <b>new project</b> (<kbd>Ctrl</kbd>+<kbd>N</kbd>, without leaving the editor), to open another project or to close this one and return to the start screen, the scene picker, and the <b>Package Manager</b>. The key next to it marks the open scene as the one a build starts with. <b>GameObject</b> opens the menu that creates objects, see <a href="gameobjects.html">GameObjects and components</a>. Center: <b>Play</b>, <b>Step</b> (one frame while paused) and <b>Stop</b>. Right: undo, redo, save (a dot means unsaved changes) and <b>Build</b>.</p>
+<p>Left: the logo, the project name and version, buttons for a <b>new project</b> (<kbd>Ctrl</kbd>+<kbd>N</kbd>, without leaving the editor), to open another project or to close this one, the scene picker, and the <b>Package Manager</b>. The key next to it marks the open scene as the one a build starts with. <b>GameObject</b> opens the menu that creates objects, see <a href="gameobjects.html">GameObjects and components</a>. Center: <b>Play</b>, <b>Step</b> (one frame while paused) and <b>Stop</b>. Right: undo, redo, save (a dot means unsaved changes) and <b>Build</b>.</p>
 
 <h2>Hierarchy</h2>
 <ul>
@@ -62,9 +63,8 @@
 <tr><td>Orbit</td><td>Right drag</td></tr>
 <tr><td>Zoom</td><td>Wheel</td></tr>
 <tr><td>Select</td><td>Click</td></tr>
-<tr><td>Move on one axis</td><td>Drag the red (X), green (Y) or amber (height) arrow</td></tr>
-<tr><td>Move freely</td><td>Drag the square handle</td></tr>
-<tr><td>Place an asset</td><td>Drop a prefab, model or art tile from the Project window, or a file from your file manager</td></tr>
+<tr><td>Move, rotate, scale</td><td>Pick the tool in the view toolbar or press <kbd>W</kbd>, <kbd>E</kbd>, <kbd>R</kbd>, then drag a handle: the red (X), green (Y) or amber (height) one, the square in the middle, or for rotation the ring. See <a href="gameobjects.html">GameObjects and components</a>.</td></tr>
+<tr><td>Place an asset</td><td>Drop a prefab, model or sprite tile from the Project window, or a file from your file manager</td></tr>
 <tr><td>Apply a material</td><td>Drop a material tile on an object</td></tr>
 </table>
 <p>In the Scene view an empty ground shows a grid with the X axis in red and the Y axis in green; it is an editor aid, listed as the <code>grid</code> pass in the Pipeline tab, and never appears in the Game view or in builds. The view always shows exactly what a terminal will show: the same Braille pattern and the same two colors in every cell. The toolbar only changes how those cells are drawn: <b>dots</b> draws the Braille dots with gaps, like a terminal font, and <b>pixels</b> draws the same dots without gaps, which is easier on the eyes but carries the same information. The toolbar also picks the cell size (smaller cells give more resolution) and toggles <b>Live</b>, which plays water, wind and animation clips while you edit; it starts off. The corner of the view shows the render and paint time of each frame.</p>
@@ -86,6 +86,7 @@
 <li><b>Console</b>: messages from scripts and the engine. Filter by level, see repeats collapsed with a count, double click a script error to jump to the line.</li>
 <li><b>Animation</b>: clips and keys of the selection. It can float as its own window. See <a href="animation.html">Animation</a>.</li>
 <li><b>Animator</b>: the state graph of an animator controller, in a window of its own. See <a href="animation.html#animator">Animator</a>.</li>
+<li><b>Particle Editor</b>: presets, a preview and every setting of the selected particle system, from the sparkle button on its card. See <a href="particles.html">Particles</a>.</li>
 <li><b>Packages</b>: the package manager, from the package button in the toolbar. See <a href="packages.html">Packages</a>.</li>
 </ul>
 
@@ -99,6 +100,7 @@
 <tr><td><kbd>Ctrl</kbd>+<kbd>D</kbd></td><td>Duplicate selection</td></tr>
 <tr><td><kbd>Del</kbd></td><td>Delete selection</td></tr>
 <tr><td><kbd>F</kbd></td><td>Frame selection</td></tr>
+<tr><td><kbd>W</kbd>, <kbd>E</kbd>, <kbd>R</kbd></td><td>Move, rotate, scale tool</td></tr>
 <tr><td><kbd>Ctrl</kbd>+<kbd>6</kbd></td><td>Open the Animation tab</td></tr>
 <tr><td><kbd>Ctrl</kbd>+<kbd>B</kbd></td><td>Build</td></tr>
 <tr><td><kbd>Ctrl</kbd>+<kbd>N</kbd></td><td>New project</td></tr>

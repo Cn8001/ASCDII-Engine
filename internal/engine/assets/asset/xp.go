@@ -44,21 +44,21 @@ func (c Charset) Rune(code uint32) rune {
 func LoadXP(r io.Reader, cs Charset) ([]Surface, error) {
 	zipped, err := gzip.NewReader(r)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", ErrInvalidArt, err)
+		return nil, fmt.Errorf("%w: %w", ErrInvalidSprite, err)
 	}
 	defer zipped.Close()
 	// A tiny compressed file can expand without bound; cap it.
 	data, err := io.ReadAll(io.LimitReader(zipped, (8<<20)+1))
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", ErrInvalidArt, err)
+		return nil, fmt.Errorf("%w: %w", ErrInvalidSprite, err)
 	}
 	if len(data) > 8<<20 || len(data) < 8 {
-		return nil, fmt.Errorf("%w: xp size %d", ErrInvalidArt, len(data))
+		return nil, fmt.Errorf("%w: xp size %d", ErrInvalidSprite, len(data))
 	}
 	cursor := 0
 	take := func() (uint32, error) {
 		if len(data)-cursor < 4 {
-			return 0, fmt.Errorf("%w: %w", ErrInvalidArt, io.ErrUnexpectedEOF)
+			return 0, fmt.Errorf("%w: %w", ErrInvalidSprite, io.ErrUnexpectedEOF)
 		}
 		v := binary.LittleEndian.Uint32(data[cursor:])
 		cursor += 4
@@ -72,7 +72,7 @@ func LoadXP(r io.Reader, cs Charset) ([]Surface, error) {
 		return nil, err
 	}
 	if count == 0 || count > 9 {
-		return nil, fmt.Errorf("%w: xp layer count %d", ErrInvalidArt, count)
+		return nil, fmt.Errorf("%w: xp layer count %d", ErrInvalidSprite, count)
 	}
 	out := make([]Surface, 0, count)
 	var firstW, firstH uint32
@@ -86,14 +86,14 @@ func LoadXP(r io.Reader, cs Charset) ([]Surface, error) {
 			return nil, err
 		}
 		if w == 0 || h == 0 || w > 128 || h > 128 || (layer > 0 && (w != firstW || h != firstH)) {
-			return nil, fmt.Errorf("%w: xp dimensions %dx%d", ErrInvalidArt, w, h)
+			return nil, fmt.Errorf("%w: xp dimensions %dx%d", ErrInvalidSprite, w, h)
 		}
 		firstW, firstH = w, h
 		s, _ := NewSurface(int(w), int(h), int(w/2), int(h-1))
 		for x := 0; x < int(w); x++ {
 			for y := 0; y < int(h); y++ {
 				if len(data)-cursor < 10 {
-					return nil, fmt.Errorf("%w: %w", ErrInvalidArt, io.ErrUnexpectedEOF)
+					return nil, fmt.Errorf("%w: %w", ErrInvalidSprite, io.ErrUnexpectedEOF)
 				}
 				b := data[cursor : cursor+10]
 				cursor += 10
@@ -107,7 +107,7 @@ func LoadXP(r io.Reader, cs Charset) ([]Surface, error) {
 		out = append(out, s)
 	}
 	if cursor != len(data) {
-		return nil, fmt.Errorf("%w: xp trailing bytes %d", ErrInvalidArt, len(data)-cursor)
+		return nil, fmt.Errorf("%w: xp trailing bytes %d", ErrInvalidSprite, len(data)-cursor)
 	}
 	return out, nil
 }

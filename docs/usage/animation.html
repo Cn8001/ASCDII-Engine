@@ -24,6 +24,7 @@
 <a href="textures.html">Textures and materials</a>
 <a href="models.html">Models</a>
 <a href="animation.html" class="on">Animation</a>
+<a href="particles.html">Particles</a>
 <a href="audio.html">Audio</a>
 <a href="physics.html">Physics</a>
 <a href="scripting.html">Lua scripting</a>
@@ -67,7 +68,7 @@
 <p>Press <b>+ Clip</b> in the Animation tab to give the selection another clip, for example <code>walk</code> next to <code>idle</code>. Click a clip's header to make it the one new keys go to; it is highlighted. Double click the header to rename it.</p>
 
 <h2 id="animator">Animator</h2>
-<p>An <b>Animator</b> component plays its object's clips as the states of a controller and switches between them when conditions hold, like Unity's Animator.</p>
+<p>An <b>Animator</b> component plays its object's clips as the states of a controller and switches between them when conditions hold.</p>
 <ol class="steps">
 <li>In the Project window choose <b>Create</b>, <b>Animator Controller</b>. The Animator window opens.</li>
 <li>Add parameters on the left: <code>float</code>, <code>bool</code> or <code>trigger</code> (true for one transition, then reset).</li>
@@ -85,7 +86,7 @@ anim:play(<span class="s">"idle"</span>)   <span class="c">-- jump to a state</s
 <h2>Animation from scripts</h2>
 <p>Scripts can start tweens at runtime, for doors, pickups and UI. They use the same easing and are never saved into the scene.</p>
 <pre><code>tween(self, "pos.z", 4, 0.6, "out")</code></pre>
-<nav class="pager"><a class="prev" href="models.html"><small>Previous</small>Models</a><a class="next" href="audio.html"><small>Next</small>Audio</a></nav>
+<nav class="pager"><a class="prev" href="models.html"><small>Previous</small>Models</a><a class="next" href="particles.html"><small>Next</small>Particles</a></nav>
 </main>
 </div>
 </body>

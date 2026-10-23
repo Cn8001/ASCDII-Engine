@@ -46,6 +46,9 @@ export const store = reactive({
   newProject: false,
   packagesOpen: false,
   animator: '', // the controller open in the animator window
+  particles: false, // the particle editor window
+  folder: '', // the folder open in the Project window, where new files go
+  tool: 'move' as 'move' | 'rotate' | 'scale',
   brush: { on: false, color: '#d8463a', radius: 0.4, erase: false },
   assetsVersion: 0, // bumped when packages change the project's files
   busy: '',

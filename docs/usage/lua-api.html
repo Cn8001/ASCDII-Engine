@@ -24,6 +24,7 @@
 <a href="textures.html">Textures and materials</a>
 <a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
+<a href="particles.html">Particles</a>
 <a href="audio.html">Audio</a>
 <a href="physics.html">Physics</a>
 <a href="scripting.html">Lua scripting</a>
@@ -54,7 +55,7 @@
 <table>
 <tr><th>Function</th><th>Does</th></tr>
 <tr><td><code>create(name, parent)</code></td><td>A new empty object; <code>parent</code> is optional.</td></tr>
-<tr><td><code>spawn(prefab, pos)</code></td><td>An instance of a prefab at <code>pos</code> (a vec3, or x, y, z).</td></tr>
+<tr><td><code>spawn(prefab, pos, parent)</code></td><td>An instance of a prefab at <code>pos</code> (a vec3, or x, y, z) in the world; with <code>parent</code> it becomes that object's child.</td></tr>
 <tr><td><code>destroy(obj)</code></td><td>Removes an object and its children, after their <code>on_destroy</code> hooks.</td></tr>
 </table>
 
@@ -65,13 +66,43 @@
 <tr><td><code>name</code>, <code>tag</code></td><td>both</td><td>Name and tag.</td></tr>
 <tr><td><code>active</code></td><td>both</td><td>Visible; hidden objects are not drawn.</td></tr>
 <tr><td><code>solid</code></td><td>both</td><td>Blocks players.</td></tr>
-<tr><td><code>position</code>, <code>rotation</code>, <code>scale</code></td><td>both</td><td>Local transform as vec3; rotation in degrees.</td></tr>
-<tr><td><code>world_position</code></td><td>read</td><td>Position after all parents.</td></tr>
-<tr><td><code>parent</code></td><td>both</td><td>Parent object or nil; setting it reparents.</td></tr>
+<tr><td><code>parent</code></td><td>both</td><td>Parent object or nil; setting it reparents and keeps the world position.</td></tr>
 <tr><td><code>children</code></td><td>read</td><td>List of child objects.</td></tr>
+<tr><td><code>root</code></td><td>read</td><td>The topmost parent, or the object itself.</td></tr>
 <tr><td><code>prefab</code></td><td>read</td><td>The prefab's path for an instance, else nil.</td></tr>
 <tr><td><code>id</code></td><td>read</td><td>Runtime id, unique while the game runs.</td></tr>
 </table>
+<h3 id="transform">Transform</h3>
+<p>World values are where the object ends up after all its parents; local values are relative to the parent, as the Inspector shows them. For objects at the top both are the same.</p>
+<table>
+<tr><th>Field</th><th>Read / write</th><th>Meaning</th></tr>
+<tr><td><code>position</code>, <code>local_position</code></td><td>both</td><td>Position in the world, or relative to the parent.</td></tr>
+<tr><td><code>rotation</code>, <code>local_rotation</code></td><td>both</td><td>Degrees around X, Y and Z, in the world or relative to the parent.</td></tr>
+<tr><td><code>scale</code>, <code>local_scale</code></td><td>both</td><td>Scale relative to the parent; both names mean the same.</td></tr>
+<tr><td><code>world_scale</code></td><td>read</td><td>Scale after all parents.</td></tr>
+<tr><td><code>forward</code>, <code>right</code>, <code>up</code></td><td>read</td><td>The object's X, Y and Z directions in the world, after rotation.</td></tr>
+</table>
+<table>
+<tr><th>Method</th><th>Does</th></tr>
+<tr><td><code>o:set_parent(p, keep_world)</code></td><td>Reparents; <code>p</code> nil moves it to the top. <code>keep_world</code> defaults to true; false keeps the local values, so the object jumps with its new parent.</td></tr>
+<tr><td><code>o:translate(v, space)</code></td><td>Moves along its own axes, or along the world's with <code>"world"</code>.</td></tr>
+<tr><td><code>o:rotate(degrees)</code></td><td>Adds a vec3 of degrees to the local rotation.</td></tr>
+<tr><td><code>o:look_at(target)</code></td><td>Turns around Z to face an object or a vec3 on the ground plane.</td></tr>
+<tr><td><code>o:transform_point(p)</code>, <code>o:inverse_transform_point(p)</code></td><td>A point from the object's space to the world, and back.</td></tr>
+<tr><td><code>o:move(delta)</code>, <code>o:move_to(pos)</code></td><td>Nudge or place in world units; a vec3 or x, y, z.</td></tr>
+</table>
+<pre><code><span class="k">function</span> update(self, dt)
+  self:rotate(vec3(0, 0, 90 * dt))            <span class="c">-- spin a quarter turn a second</span>
+  self:translate(vec3(2 * dt, 0, 0))          <span class="c">-- walk forward, wherever it faces</span>
+<span class="k">end</span>
+
+<span class="k">function</span> key(self, k)
+  <span class="k">if</span> k == <span class="s">"e"</span> <span class="k">then</span>
+    find(<span class="s">"sword"</span>):set_parent(self)         <span class="c">-- pick it up; it stays where it was</span>
+  <span class="k">end</span>
+<span class="k">end</span></code></pre>
+
+<h3>Other methods</h3>
 <table>
 <tr><th>Method</th><th>Does</th></tr>
 <tr><td><code>o:component(name)</code></td><td>A component by kind (<code>"light"</code>), by key (<code>"light#2"</code>) or a script by file name (<code>"door"</code>). Scripts return their <code>self</code>.</td></tr>
@@ -80,7 +111,6 @@
 <tr><td><code>o:remove_component(c)</code></td><td>Removes a component handle or script.</td></tr>
 <tr><td><code>o:child(path)</code></td><td>A descendant by name path, such as <code>"cage/flame"</code>.</td></tr>
 <tr><td><code>o:get(prop)</code>, <code>o:set(prop, value)</code></td><td>Any Inspector property by name: <code>"pos"</code>, <code>"light.radius"</code>, or a short name such as <code>"glow"</code>.</td></tr>
-<tr><td><code>o:move(delta)</code>, <code>o:move_to(pos)</code></td><td>Nudge or place; a vec3 or x, y, z.</td></tr>
 <tr><td><code>o:distance(other)</code></td><td>World distance between two objects.</td></tr>
 <tr><td><code>o:tween(prop, to, seconds, ease)</code></td><td>Animate a property from its current value. Eases: <code>linear</code>, <code>in</code>, <code>out</code>, <code>inout</code>, <code>step</code>, <code>back</code>, <code>elastic</code>.</td></tr>
 <tr><td><code>o:say(text, seconds)</code></td><td>A floating label over the object; repeating the same text keeps it up.</td></tr>
@@ -103,6 +133,7 @@
 <tr><td><code>animator</code></td><td><code>a:play(state)</code>, <code>a:set(param, value)</code>, <code>a:get(param)</code>, <code>a:trigger(name)</code>; <code>a.state</code> is the active state.</td></tr>
 <tr><td><code>audio_source</code></td><td><code>s:play()</code>, <code>s:stop()</code>, <code>s:playing()</code>; <code>s.volume</code>, <code>s.loop</code>, <code>s.clip</code>.</td></tr>
 <tr><td><code>rigidbody</code></td><td><code>rb:add_force(vec3)</code>; <code>rb.velocity</code>, <code>rb.mass</code>, <code>rb.gravity</code>, <code>rb.kinematic</code>.</td></tr>
+<tr><td><code>emitter</code></td><td><code>p:play()</code>, <code>p:stop()</code>, <code>p:emit(n)</code>, <code>p:clear()</code>, <code>p:count()</code>; every setting is a field, see <a href="particles.html">Particles</a>.</td></tr>
 <tr><td><code>light</code></td><td>Fields only: <code>type</code>, <code>radius</code>, <code>color</code>, <code>intensity</code>, <code>angle</code>.</td></tr>
 </table>
 

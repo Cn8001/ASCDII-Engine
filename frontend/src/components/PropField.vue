@@ -20,7 +20,7 @@ const hi = computed(() => props.p.max ?? 0)
 const slider = computed(() => props.p.type === 'float' && hi.value > lo.value && hi.value - lo.value <= 10)
 const vec = computed(() => (Array.isArray(props.p.value) ? (props.p.value as number[]) : [0, 0, 0]))
 const refs = (kind: string) => store.assets.filter((a) => a.kind === kind).map((a) => ({ value: a.guid || a.path, label: a.path }))
-const arts = computed(() => refs('art'))
+const arts = computed(() => refs('sprite'))
 const scripts = computed(() => refs('script'))
 const models = computed(() => refs('model'))
 

@@ -159,8 +159,8 @@ func (v *VM) installGlobals() {
 			if err != nil {
 				L.RaiseError("%v", err)
 			}
-			if L.GetTop() >= 3 {
-				v.setParent(L, o, L.Get(3), true)
+			if last, ok := L.Get(L.GetTop()).(*lua.LTable); ok && L.GetTop() >= 3 && v.objectOf(last) != nil {
+				v.setParent(L, o, last, true)
 			}
 			L.Push(v.handle(o))
 			return 1

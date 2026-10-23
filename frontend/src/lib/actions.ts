@@ -50,7 +50,7 @@ export async function savePrefab(id: number) {
   if (!n) return
   const name = await ask('Save prefab', n.name.replace(/\s+/g, '-').toLowerCase(), { hint: 'Every instance updates when the prefab changes.', suffix: '.prefab.json', ok: 'Save' })
   if (!name) return
-  const rel = name.includes('/') ? name : 'prefabs/' + name
+  const rel = name.includes('/') || !store.folder ? name : `${store.folder}/${name}`
   const ok = await call(() => Scene.SavePrefab(id, rel).then(() => true))
   if (ok) {
     toast(rel, 'ok')
@@ -132,7 +132,7 @@ export function entityMenu(id: number): MenuItem[] {
 }
 
 // dropAsset handles a Project window tile dropped on the hierarchy: prefabs
-// and art become children of parent, scripts attach to it.
+// and sprites become children of parent, scripts attach to it.
 export async function dropAsset(e: DragEvent, parent: number): Promise<boolean> {
   const data = e.dataTransfer?.getData('text/asset')
   if (!data) return false
@@ -149,7 +149,7 @@ export async function dropAsset(e: DragEvent, parent: number): Promise<boolean> 
     if (key) await call(() => Scene.SetProp(parent, key + '.file', path))
     await refresh()
     await select(parent)
-  } else if (kind === 'art') {
+  } else if (kind === 'sprite') {
     const id = await call(() => Assets.AddSprite(path))
     if (id !== undefined) {
       if (parent) await call(() => Scene.Reparent(id, parent, -1))

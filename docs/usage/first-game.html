@@ -24,6 +24,7 @@
 <a href="textures.html">Textures and materials</a>
 <a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
+<a href="particles.html">Particles</a>
 <a href="audio.html">Audio</a>
 <a href="physics.html">Physics</a>
 <a href="scripting.html">Lua scripting</a>
@@ -38,15 +39,14 @@
 <main>
 <div class="kicker">Start</div>
 <h1>Your first game</h1>
-<p class="lead">Fifteen minutes from nothing to a knight walking past a castle at sunset. You will create a project, look around, change things, play, save and commit.</p>
+<p class="lead">This guide creates a project from the Dragonfall template and covers the editor, changing objects, play mode, saving and version control.</p>
 <h2>1. Create a project</h2>
 <ol class="steps">
-<li>Start the editor. After the splash you see the start screen.</li>
-<li>Pick <b>Dragonfall</b> as the template (the default, <b>Empty</b>, starts with nothing), type a name, choose a <b>Location</b> with the folder dialog and press <b>Create</b>. Later you can make more projects from the toolbar without closing the editor.</li>
-<li>The editor creates <code>&lt;location&gt;/&lt;name&gt;/</code> with a <code>.ascdiiproj</code> manifest, scenes, prefabs, art and scripts, and opens it.</li>
+<li>Run <code>ascdii</code> and select <b>New project</b>.</li>
+<li>Enter a name and a location, then select the <b>Dragonfall</b> template. <b>Empty</b> creates a project with only a manifest and a start scene.</li>
+<li><code>ascdii</code> creates <code>&lt;location&gt;/&lt;name&gt;/</code> with a <code>.ascdiiproj</code> manifest and the template's scenes, prefabs, sprites and scripts, then opens it in the editor.</li>
 </ol>
-<figure><img src="img/editor-start.png" alt="Start screen"><figcaption>Start screen: templates on the left, recent projects on the right.</figcaption></figure>
-<p>Prefer the terminal? The same thing:</p>
+<p>Further projects can be created from the editor toolbar (<kbd>Ctrl</kbd>+<kbd>N</kbd>). A project can also be created without the launcher:</p>
 <pre><code>ascdii new ~/games/quest -name "Quest" -template dragonfall</code></pre>
 
 <h2>2. Look around</h2>

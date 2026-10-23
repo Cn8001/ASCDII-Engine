@@ -93,8 +93,10 @@ func Lantern() *scene.GameObject {
 	s.UseFIDs(scene.CountingFIDs())
 	root := s.Add("lantern", components.NewCylinder(.14, 3, color.RGB(92, 70, 52))).Blocking()
 	flame := components.NewEmitter()
-	flame.FX = fx.Emitter{Rate: 18, Life: .6, Speed: 1.1, Dir: geom.V3(0, 0, 1), Spread: .3, Gravity: -1.5, Size: .5,
-		Start: color.RGB(255, 220, 140), End: color.RGB(200, 70, 30), Emissive: 1, Seed: 11}
+	flame.FX, _ = fx.Preset("fire")
+	flame.FX.Rate, flame.FX.Life, flame.FX.Speed, flame.FX.Spread, flame.FX.Gravity = 18, .6, 1.1, .3, -1.5
+	flame.FX.Shape, flame.FX.Size, flame.FX.SizeEnd, flame.FX.Seed, flame.FX.Turbulence = fx.Point, .5, .2, 11, 0
+	flame.FX.Start, flame.FX.End = color.RGB(255, 220, 140), color.RGB(200, 70, 30)
 	cage := components.NewBox(geom.V3(.55, .55, .7), color.RGB(255, 196, 110))
 	cage.Emissive = .85
 	root.Add("cage", cage).At(0, 0, 2.6)

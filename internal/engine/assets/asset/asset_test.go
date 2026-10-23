@@ -48,7 +48,7 @@ func TestUnit_JSONRejectsUndefinedKey(t *testing.T) {
 	_, err := LoadJSON(r)
 
 	// Assert
-	if !errors.Is(err, ErrInvalidArt) {
+	if !errors.Is(err, ErrInvalidSprite) {
 		t.Fatalf("got %v", err)
 	}
 }
@@ -94,7 +94,7 @@ func TestUnit_XPIsColumnMajorWithMagentaKey(t *testing.T) {
 func TestUnit_ListClassifiesAndSkips(t *testing.T) {
 	// Arrange
 	fsys := fstest.MapFS{
-		"art/tree.json":             {Data: []byte(tree)},
+		"sprites/tree.sprite.json":  {Data: []byte(tree)},
 		"prefabs/tower.prefab.json": {Data: []byte(`{}`)},
 		"scenes/main.scene.json":    {Data: []byte(`{}`)},
 		"build/game":                {Data: []byte("bin")},
@@ -109,7 +109,7 @@ func TestUnit_ListClassifiesAndSkips(t *testing.T) {
 	if err != nil || len(got) != 3 {
 		t.Fatalf("err %v got %+v", err, got)
 	}
-	if got[0].Kind != Art || got[1].Kind != Prefab || got[2].Kind != Scene {
+	if got[0].Kind != Prefab || got[1].Kind != Scene || got[2].Kind != Sprite {
 		t.Fatalf("kinds %+v", got)
 	}
 }
@@ -117,16 +117,16 @@ func TestUnit_ListClassifiesAndSkips(t *testing.T) {
 func TestUnit_LibraryServesArtAndPrefabs(t *testing.T) {
 	// Arrange
 	fsys := fstest.MapFS{
-		"art/tree.json":             {Data: []byte(tree)},
+		"sprites/tree.sprite.json":  {Data: []byte(tree)},
 		"prefabs/empty.prefab.json": {Data: []byte(`{"version":1,"root":{"name":"e","pos":[0,0,0]}}`)},
 	}
 	l := NewLibrary(scene.NewRegistry())
 
 	// Act
 	err := l.Load(context.Background(), fsys)
-	art, artErr := l.Art("art/tree.json")
+	art, artErr := l.Sprite("sprites/tree.sprite.json")
 	pf, pfErr := l.Prefab("prefabs/empty.prefab.json")
-	_, missing := l.Art("nope.json")
+	_, missing := l.Sprite("nope.json")
 
 	// Assert
 	if err != nil || artErr != nil || pfErr != nil || art.Width != 3 || pf.Name != "e" {
@@ -207,8 +207,8 @@ func TestUnit_WatchReportsChangedFiles(t *testing.T) {
 func TestUnit_EnsureMetaThenResolveByGUID(t *testing.T) {
 	// Arrange
 	dir := t.TempDir()
-	_ = os.MkdirAll(filepath.Join(dir, "art"), 0o755)
-	_ = os.WriteFile(filepath.Join(dir, "art", "tree.json"), []byte(tree), 0o644)
+	_ = os.MkdirAll(filepath.Join(dir, "sprites"), 0o755)
+	_ = os.WriteFile(filepath.Join(dir, "sprites", "tree.sprite.json"), []byte(tree), 0o644)
 	ctx := context.Background()
 
 	// Act
@@ -216,8 +216,8 @@ func TestUnit_EnsureMetaThenResolveByGUID(t *testing.T) {
 	again, _ := EnsureMeta(ctx, dir, guid.Default())
 	l := NewLibrary(scene.NewRegistry())
 	errLoad := l.Load(ctx, os.DirFS(dir))
-	id := l.Ref("art/tree.json")
-	_, errArt := l.Art(id)
+	id := l.Ref("sprites/tree.sprite.json")
+	_, errArt := l.Sprite(id)
 
 	// Assert
 	if err != nil || errLoad != nil || errArt != nil || len(made) != 1 || len(again) != 0 || !guid.Valid(id) {
@@ -258,7 +258,7 @@ func TestUnit_ImageBecomesGlyphArtAndLoadsBack(t *testing.T) {
 	}
 
 	// Act
-	s, err := ArtFromImage(img, 8)
+	s, err := SpriteFromImage(img, 8)
 	var b bytes.Buffer
 	errEnc := EncodeJSON(&b, "half", s)
 	back, errLoad := LoadJSON(&b)

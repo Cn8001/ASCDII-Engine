@@ -35,9 +35,6 @@ func (s *Session) NewScript(ctx context.Context, name string) (string, error) {
 		return "", err
 	}
 	rel := strings.TrimSuffix(filepath.ToSlash(name), ".lua") + ".lua"
-	if !strings.Contains(rel, "/") {
-		rel = "scripts/" + rel
-	}
 	if locked(rel) {
 		return "", lockedErr(rel)
 	}

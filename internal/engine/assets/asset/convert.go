@@ -10,13 +10,13 @@ import (
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/color"
 )
 
-// ArtFromImage turns a picture into glyph art cols cells wide. Each cell
+// SpriteFromImage turns a picture into glyph art cols cells wide. Each cell
 // shows two pixels stacked with a half block, which matches the roughly
 // 1:2 shape of a terminal cell, so the picture keeps its proportions.
-func ArtFromImage(img image.Image, cols int) (Surface, error) {
+func SpriteFromImage(img image.Image, cols int) (Surface, error) {
 	b := img.Bounds()
 	if b.Dx() == 0 || b.Dy() == 0 {
-		return Surface{}, fmt.Errorf("%w: empty image", ErrInvalidArt)
+		return Surface{}, fmt.Errorf("%w: empty image", ErrInvalidSprite)
 	}
 	cols = max(1, min(cols, 256))
 	px := max(2, int(float64(cols)*float64(b.Dy())/float64(b.Dx())+.5))

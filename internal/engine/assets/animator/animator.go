@@ -1,6 +1,6 @@
 // Package animator is the animator controller asset, a .animator.json file:
 // parameters, states that each play a clip, and transitions between them
-// with conditions on the parameters, as in Unity's Animator.
+// with conditions on the parameters.
 package animator
 
 import (

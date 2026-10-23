@@ -17,7 +17,7 @@ const MetaExt = ".meta"
 
 var ErrExists = errors.New("asset already exists")
 
-// Meta sits next to every asset, like Unity's .meta files. The id survives
+// Meta sits next to every asset. The id survives
 // renames and moves, so references never break; keep both files in git.
 type Meta struct {
 	Format int             `json:"format"`

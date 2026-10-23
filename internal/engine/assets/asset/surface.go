@@ -10,8 +10,8 @@ import (
 )
 
 var (
-	ErrInvalidArt = errors.New("invalid art")
-	ErrNotFound   = errors.New("asset not found")
+	ErrInvalidSprite = errors.New("invalid sprite")
+	ErrNotFound      = errors.New("asset not found")
 )
 
 // Pixel is one terminal cell of art; a space that is not transparent is an
@@ -30,7 +30,7 @@ type Surface struct {
 
 func NewSurface(w, h, px, py int) (Surface, error) {
 	if w <= 0 || h <= 0 || w > 256 || h > 256 || px < 0 || px >= w || py < 0 || py >= h {
-		return Surface{}, fmt.Errorf("%w: size %dx%d pivot %d,%d", ErrInvalidArt, w, h, px, py)
+		return Surface{}, fmt.Errorf("%w: size %dx%d pivot %d,%d", ErrInvalidSprite, w, h, px, py)
 	}
 	s := Surface{Width: w, Height: h, PivotX: px, PivotY: py, pixels: make([]Pixel, w*h)}
 	for i := range s.pixels {
@@ -41,7 +41,7 @@ func NewSurface(w, h, px, py int) (Surface, error) {
 
 func (s *Surface) Set(x, y int, p Pixel) error {
 	if x < 0 || y < 0 || x >= s.Width || y >= s.Height {
-		return fmt.Errorf("%w: pixel %d,%d outside", ErrInvalidArt, x, y)
+		return fmt.Errorf("%w: pixel %d,%d outside", ErrInvalidSprite, x, y)
 	}
 	if !p.Transparent && p.Rune == 0 {
 		p.Rune = ' '
@@ -65,12 +65,12 @@ func (s Surface) Clone() Surface {
 
 func Flatten(layers []Surface) (Surface, error) {
 	if len(layers) == 0 {
-		return Surface{}, fmt.Errorf("%w: no layers", ErrInvalidArt)
+		return Surface{}, fmt.Errorf("%w: no layers", ErrInvalidSprite)
 	}
 	out := layers[0].Clone()
 	for _, s := range layers[1:] {
 		if s.Width != out.Width || s.Height != out.Height {
-			return out, fmt.Errorf("%w: mismatched layer dimensions", ErrInvalidArt)
+			return out, fmt.Errorf("%w: mismatched layer dimensions", ErrInvalidSprite)
 		}
 		for y := 0; y < s.Height; y++ {
 			for x := 0; x < s.Width; x++ {

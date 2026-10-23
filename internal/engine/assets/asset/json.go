@@ -30,10 +30,10 @@ func LoadJSON(r io.Reader) (Surface, error) {
 	d.DisallowUnknownFields()
 	var file surfaceFile
 	if err := d.Decode(&file); err != nil {
-		return Surface{}, fmt.Errorf("%w: %w", ErrInvalidArt, err)
+		return Surface{}, fmt.Errorf("%w: %w", ErrInvalidSprite, err)
 	}
 	if len(file.Rows) == 0 {
-		return Surface{}, fmt.Errorf("%w: empty artwork", ErrInvalidArt)
+		return Surface{}, fmt.Errorf("%w: empty artwork", ErrInvalidSprite)
 	}
 	width := utf8.RuneCountInString(file.Rows[0])
 	s, err := NewSurface(width, len(file.Rows), file.Pivot[0], file.Pivot[1])
@@ -43,13 +43,13 @@ func LoadJSON(r io.Reader) (Surface, error) {
 	palette := map[rune]Pixel{}
 	for key, sw := range file.Palette {
 		if utf8.RuneCountInString(key) != 1 {
-			return s, fmt.Errorf("%w: palette key must be one rune: %q", ErrInvalidArt, key)
+			return s, fmt.Errorf("%w: palette key must be one rune: %q", ErrInvalidSprite, key)
 		}
 		k, _ := utf8.DecodeRuneInString(key)
 		p := Pixel{Transparent: sw.Transparent}
 		if !p.Transparent {
 			if utf8.RuneCountInString(sw.Glyph) != 1 {
-				return s, fmt.Errorf("%w: glyph must be one rune: %q", ErrInvalidArt, sw.Glyph)
+				return s, fmt.Errorf("%w: glyph must be one rune: %q", ErrInvalidSprite, sw.Glyph)
 			}
 			p.Rune, _ = utf8.DecodeRuneInString(sw.Glyph)
 			if p.FG, err = color.ParseHex(sw.FG); err != nil {
@@ -63,12 +63,12 @@ func LoadJSON(r io.Reader) (Surface, error) {
 	}
 	for y, row := range file.Rows {
 		if utf8.RuneCountInString(row) != width {
-			return s, fmt.Errorf("%w: row %d width mismatch", ErrInvalidArt, y)
+			return s, fmt.Errorf("%w: row %d width mismatch", ErrInvalidSprite, y)
 		}
 		for x, k := range []rune(row) {
 			p, ok := palette[k]
 			if !ok {
-				return s, fmt.Errorf("%w: row %d undefined palette key %q", ErrInvalidArt, y, string(k))
+				return s, fmt.Errorf("%w: row %d undefined palette key %q", ErrInvalidSprite, y, string(k))
 			}
 			if err := s.Set(x, y, p); err != nil {
 				return s, err
@@ -77,7 +77,7 @@ func LoadJSON(r io.Reader) (Surface, error) {
 	}
 	var tail json.RawMessage
 	if err := d.Decode(&tail); err != io.EOF {
-		return s, fmt.Errorf("%w: unexpected trailing JSON", ErrInvalidArt)
+		return s, fmt.Errorf("%w: unexpected trailing JSON", ErrInvalidSprite)
 	}
 	return s, nil
 }

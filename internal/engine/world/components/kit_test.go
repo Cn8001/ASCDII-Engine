@@ -18,9 +18,12 @@ import (
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/geom"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/input"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/prop"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/draw"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/light"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/pipeline"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/raster"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/texture"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/view"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/anim"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/scene"
 )
@@ -398,5 +401,20 @@ func TestUnit_PaintRecolorsAndErasesOwnDots(t *testing.T) {
 	}
 	if err != nil || len(loaded.Find("box").Component("paint").(*Paint).Strokes) != 2 {
 		t.Fatalf("strokes lost on save: %v", err)
+	}
+}
+
+func TestUnit_PrewarmedEmitterDrawsWithoutTicking(t *testing.T) {
+	// Arrange
+	e := NewEmitter()
+	b := raster.New(40, 20)
+	c := &draw.Context{Buf: b, View: view.Default().View(b.W, b.H)}
+
+	// Act
+	e.Draw(c, scene.Identity())
+
+	// Assert
+	if e.sim == nil || e.sim.Count() == 0 {
+		t.Fatal("a prewarmed emitter drew nothing before its first tick")
 	}
 }

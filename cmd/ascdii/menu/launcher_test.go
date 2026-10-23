@@ -47,7 +47,7 @@ func TestUnit_PromptEditsText(t *testing.T) {
 func TestUnit_RenderShowsTitleAndSelection(t *testing.T) {
 	// Arrange
 	g := cell.New(100, 34)
-	m := &Menu{Title: "MAIN MENU", Items: []Item{{Label: "Play Dragonfall"}, {Label: "Quit"}}}
+	m := &Menu{Title: "PROJECTS", Items: []Item{{Label: "Open project"}, {Label: "Quit"}}}
 
 	// Act
 	Render(g, m, "0.0.1", "", 2)
@@ -60,7 +60,7 @@ func TestUnit_RenderShowsTitleAndSelection(t *testing.T) {
 			c, _ := g.At(x, y)
 			row += string(c.Rune)
 		}
-		for _, want := range []string{"A S C D I I", "> Play Dragonfall", "MAIN MENU"} {
+		for _, want := range []string{"A S C D I I", "> Open project", "PROJECTS"} {
 			if contains(row, want) {
 				found[want] = true
 			}
@@ -82,14 +82,14 @@ func indexOf(s, sub string) int {
 	return -1
 }
 
-func TestUnit_NewProjectFlowCreatesAndPlays(t *testing.T) {
+func TestUnit_NewProjectFlowCreatesAndOpensEditor(t *testing.T) {
 	// Arrange
 	dir := t.TempDir()
-	var played fs.FS
+	var edited string
 	l := &launcher{d: Deps{
 		Templates: map[string]fs.FS{"empty": nil, "dragonfall": fstest.MapFS{}},
 		Recent:    recent.Store{Path: filepath.Join(dir, "recent.json")},
-		Play:      func(_ context.Context, f fs.FS) error { played = f; return nil },
+		Edit:      func(_ context.Context, m string) error { edited = m; return nil },
 	}}
 	ctx := context.Background()
 	l.push(home, l.homeMenu(ctx))
@@ -99,13 +99,12 @@ func TestUnit_NewProjectFlowCreatesAndPlays(t *testing.T) {
 	l.choose(ctx, newName, Item{Value: "Space Game"})
 	l.choose(ctx, newDir, Item{Value: filepath.Join(dir, "sg")})
 	action, _ := l.choose(ctx, newTemplate, Item{Value: "empty"})
-	err := action(ctx)
 
 	// Assert
-	if err != nil || played == nil || l.status != "" || len(l.stack) != 1 {
-		t.Fatalf("err %v status %q stack %d", err, l.status, len(l.stack))
+	if action != nil || filepath.Base(edited) != "Space-Game.ascdiiproj" || l.status != "editor opened" || len(l.stack) != 1 {
+		t.Fatalf("action %v edited %q status %q stack %d", action != nil, edited, l.status, len(l.stack))
 	}
-	if m := l.stack[0]; m.Items[0].Label != "Continue Space-Game" {
+	if m := l.stack[0]; m.Items[0].Label != "Space-Game" {
 		t.Fatalf("home %+v", m.Items[0])
 	}
 }

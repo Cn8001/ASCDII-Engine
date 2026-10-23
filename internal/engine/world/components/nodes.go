@@ -40,7 +40,7 @@ func Register(r *scene.Registry, lib *asset.Library) {
 	r.Register("ground", func() scene.Component { return NewGround(40, 40, color.RGB(64, 92, 60)) }, obj("3d", "Ground"))
 	r.Register("water", func() scene.Component { return NewWater(12, 6, color.RGB(36, 92, 112)) }, obj("3d", "Water"))
 	r.Register("light", func() scene.Component { return NewLight(8, color.RGB(255, 190, 110)) }, obj("light", "Point Light"))
-	r.Register("emitter", func() scene.Component { return NewEmitter() }, obj("effects", "Particles"))
+	r.Register("emitter", func() scene.Component { return NewEmitter() }, obj("effects", "Particle System"))
 	r.Register("label", func() scene.Component { return NewLabel("label") }, obj("ui", "Text"))
 	r.Register("sprite", func() scene.Component { return NewSprite(lib, "") }, obj("ui", "Sprite"))
 	r.Register("audio_source", func() scene.Component { return NewAudioSource() }, scene.Meta{Category: "audio", Label: "Audio Source"})

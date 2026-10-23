@@ -28,8 +28,8 @@ async function set(name: string, value: unknown) {
   await load()
 }
 
-async function toArt() {
-  const rel = await call(() => Assets.ConvertToArt(store.asset, 48))
+async function toSprite() {
+  const rel = await call(() => Assets.ConvertToSprite(store.asset, 48))
   if (rel) {
     toast(rel, 'ok')
     await refreshAssets()
@@ -64,7 +64,7 @@ async function toArt() {
       </section>
       <div v-if="kind === 'texture'" class="flex flex-col gap-2 px-1">
         <div class="grid place-items-center rounded-lg border border-ink-800 bg-ink-950/60 p-3"><TexThumb :path="store.asset" :size="200" /></div>
-        <button class="btn h-8 justify-center border border-ink-700 text-ink-300" @click="toArt"><Icon name="image" :size="13" /> Convert to Art</button>
+        <button class="btn h-8 justify-center border border-ink-700 text-ink-300" @click="toSprite"><Icon name="image" :size="13" /> Convert to Sprite</button>
       </div>
       <div v-if="!props.length && kind !== 'texture'" class="px-2 py-6 text-center text-[12px] text-ink-500">Nothing to edit</div>
     </div>
