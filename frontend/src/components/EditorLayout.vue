@@ -8,6 +8,7 @@ import { typing } from '../lib/keys'
 import { call, refresh, refreshAssets, store, toast } from '../lib/store'
 import AnimationPanel from './AnimationPanel.vue'
 import BuildDialog from './BuildDialog.vue'
+import ProjectSettings from './ProjectSettings.vue'
 import ConsolePanel from './ConsolePanel.vue'
 import AnimatorWindow from './AnimatorWindow.vue'
 import ParticleWindow from './ParticleWindow.vue'
@@ -174,6 +175,7 @@ function tab(active: boolean) {
       <AnimationPanel floating />
     </FloatingWindow>
     <BuildDialog v-if="store.buildOpen" />
+    <ProjectSettings v-if="store.settingsOpen" />
     <NewProjectDialog />
   <PackageManager />
 </div>

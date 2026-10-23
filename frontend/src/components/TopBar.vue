@@ -18,13 +18,19 @@ async function save() {
   }
 }
 
+// play toggles play mode: pressed while the game runs or is paused, it stops.
 async function play() {
-  if (mode.value === 'play') {
-    Viewport.Pause()
+  if (mode.value !== 'edit') {
+    await stop()
     return
   }
   await call(() => Viewport.Play())
   document.querySelector<HTMLElement>('[tabindex="0"]')?.focus()
+}
+
+async function pause() {
+  if (mode.value === 'play') Viewport.Pause()
+  else if (mode.value === 'paused') await call(() => Viewport.Play())
 }
 
 async function stop() {
@@ -127,11 +133,11 @@ defineExpose({ save, undo, redo, play, stop })
 
     <div class="flex flex-1 justify-center">
       <div class="flex items-center gap-1 rounded-lg border border-ink-750 bg-ink-850 p-1">
-        <button class="icon-btn" :class="mode === 'play' ? 'bg-amber-glow text-ink-950 hover:bg-amber-glow hover:text-ink-950' : 'text-amber-glow'" title="Play  Space" @click="play">
-          <Icon :name="mode === 'play' ? 'pause' : 'play'" :size="14" />
+        <button class="icon-btn" :class="mode !== 'edit' ? 'bg-amber-glow text-ink-950 hover:bg-amber-glow hover:text-ink-950' : 'text-amber-glow'" :title="mode === 'edit' ? 'Play  Space' : 'Stop  Space'" @click="play">
+          <Icon name="play" :size="14" />
         </button>
+        <button class="icon-btn" :class="mode === 'paused' ? 'bg-ink-700 text-amber-glow' : ''" :disabled="mode === 'edit'" :title="mode === 'paused' ? 'Resume' : 'Pause'" @click="pause"><Icon name="pause" :size="14" /></button>
         <button class="icon-btn" :disabled="mode !== 'paused'" title="Step" @click="Viewport.Step()"><Icon name="chevright" :size="14" /></button>
-        <button class="icon-btn" :disabled="mode === 'edit'" title="Stop  Esc" @click="stop"><Icon name="stop" :size="14" /></button>
       </div>
     </div>
 
@@ -143,6 +149,7 @@ defineExpose({ save, undo, redo, play, stop })
         <span v-if="store.info?.unsaved" class="absolute right-1 top-1 size-1.5 rounded-full bg-amber-glow" />
       </button>
       <span class="mx-1 h-5 w-px bg-ink-700" />
+      <button class="icon-btn" title="Project Settings" @click="store.settingsOpen = true"><Icon name="sliders" :size="15" /></button>
       <button class="btn btn-accent" title="Ctrl+B" @click="store.buildOpen = true"><Icon name="hammer" :size="14" /> Build</button>
     </div>
   </header>

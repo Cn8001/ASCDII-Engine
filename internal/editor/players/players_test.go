@@ -11,7 +11,7 @@ import (
 
 func TestUnit_ExtractWritesExecutable(t *testing.T) {
 	// Arrange
-	s := Source{Dirs: []fs.FS{fstest.MapFS{}, fstest.MapFS{"ascdii-linux-amd64": {Data: []byte("bin")}}}}
+	s := Source{Dirs: []fs.FS{fstest.MapFS{}, fstest.MapFS{"ascdii-player-linux-amd64": {Data: []byte("bin")}}}}
 	dir := t.TempDir()
 
 	// Act

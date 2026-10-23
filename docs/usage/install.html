@@ -42,7 +42,13 @@
 <main>
 <div class="kicker">Start</div>
 <h1>Install</h1>
-<p class="lead">ASCDII Engine consists of two programs: <code>ascdii</code>, which starts the editor and provides the command line tools and the game player, and <code>ascdii-editor</code>, the desktop editor.</p>
+<p class="lead">ASCDII Engine consists of three programs, each with its own icon.</p>
+<table>
+<tr><th>Program</th><th>Function</th></tr>
+<tr><td><code>ascdii</code></td><td>Opens the editor when started without arguments, for example with a double click, and provides the command line tools otherwise. See <a href="cli.html">CLI reference</a>.</td></tr>
+<tr><td><code>ascdii-editor</code></td><td>The desktop editor. It is opened through <code>ascdii</code>.</td></tr>
+<tr><td><code>ascdii-player</code></td><td>Runs games in the terminal. Every build starts from a copy of it, see <a href="building.html">Build</a>.</td></tr>
+</table>
 
 <h2>Requirements</h2>
 <table>
@@ -56,8 +62,8 @@
 <h2>Installation</h2>
 <table>
 <tr><th>Platform</th><th>Archive</th><th>Contents</th></tr>
-<tr><td>Windows</td><td><code>ascdii-0.0.1-windows-amd64.zip</code></td><td><code>ascdii.exe</code> and <code>ascdii-editor.exe</code></td></tr>
-<tr><td>Linux</td><td><code>ascdii-0.0.1-linux-amd64.tar.gz</code></td><td><code>ascdii</code> and <code>ascdii-editor</code></td></tr>
+<tr><td>Windows</td><td><code>ascdii-0.0.1-windows-amd64.zip</code></td><td><code>ascdii.exe</code>, <code>ascdii-editor.exe</code> and <code>ascdii-player.exe</code></td></tr>
+<tr><td>Linux</td><td><code>ascdii-0.0.1-linux-amd64.tar.gz</code></td><td><code>ascdii</code>, <code>ascdii-editor</code> and <code>ascdii-player</code></td></tr>
 </table>
 <ol class="steps">
 <li>Extract the archive for the platform into any folder, for example <code>C:\Tools\ascdii</code> or <code>~/tools/ascdii</code>. The files must remain in the same folder.</li>
@@ -67,7 +73,7 @@
 <h2 id="starting">Starting the engine</h2>
 <figure><img src="img/editor-start.png" alt="Start screen"><figcaption>The start screen: templates for a new project on the left, recent projects on the right.</figcaption></figure>
 <ol class="steps">
-<li>Run <code>ascdii</code>, for example with a double click. The editor opens at its start screen.</li>
+<li>Run <code>ascdii</code>, for example with a double click. The editor opens at its start screen. On Windows, the console window that opens with <code>ascdii.exe</code> closes again immediately.</li>
 <li>To create a project, select a template, enter a name, choose the location with <b>Location</b> and press <b>Create</b>. To continue, select a recent project, or press <b>Open</b> to choose a <code>.ascdiiproj</code> file.</li>
 </ol>
 <p>The start screen returns when a project is closed. Starting <code>ascdii-editor</code> directly also works: it restarts itself through <code>ascdii</code>.</p>
@@ -94,11 +100,11 @@ Quest\Quest.exe --blocks</code></pre>
 </table>
 <pre><code>make test             <span class="c"># vet and tests for the whole module</span>
 make all              <span class="c"># bin/linux and bin/windows</span>
-make cli              <span class="c"># ascdii for both platforms only</span>
+make cli              <span class="c"># ascdii and ascdii-player for both platforms</span>
 make editor-linux     <span class="c"># ascdii-editor into bin/linux</span>
 make editor-windows   <span class="c"># ascdii-editor.exe into bin/windows</span>
 make dist             <span class="c"># the archives listed under Installation, in bin/dist</span></code></pre>
-<p><code>bin/linux</code> and <code>bin/windows</code> each hold one complete installation with the same files as the release archive of that platform: <code>ascdii</code> and the editor, both for that platform only. A folder runs from any location it is copied to; <code>ascdii</code> starts the editor next to it. Windows programs are cross compiled from Linux and WSL without additional toolchains. <code>make editor-dev</code> starts the editor with hot reload and without the launcher, and serves it at <code>http://localhost:34115</code> for browser developer tools.</p>
+<p><code>bin/linux</code> and <code>bin/windows</code> each hold one complete installation with the same files as the release archive of that platform: <code>ascdii</code>, <code>ascdii-editor</code> and <code>ascdii-player</code>, all for that platform only. A folder runs from any location it is copied to; <code>ascdii</code> starts the editor next to it. Every target first runs <code>make brand</code>, which draws the program icons and the Windows resources that embed them. Windows programs are cross compiled from Linux and WSL without additional toolchains. <code>make editor-dev</code> starts the editor with hot reload and without the launcher, and serves it at <code>http://localhost:34115</code> for browser developer tools.</p>
 <nav class="pager"><a class="prev" href="index.html"><small>Previous</small>Welcome</a><a class="next" href="first-game.html"><small>Next</small>Your first game</a></nav>
 </main>
 </div>

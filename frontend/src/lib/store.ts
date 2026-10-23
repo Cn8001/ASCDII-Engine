@@ -43,6 +43,7 @@ export const store = reactive({
   dots: 'dots' as DotStyle,
   cellPx: 6, // about the game's 160 columns at the default window size
   buildOpen: false,
+  settingsOpen: false,
   newProject: false,
   packagesOpen: false,
   animator: '', // the controller open in the animator window

@@ -11,7 +11,7 @@ desktop app.
 make test                       # go vet + go test -race
 make hello                      # smallest program, see cmd/hello
 make dragonfall                 # the sample game in the terminal
-make all                        # bin/linux and bin/windows, complete installs
+make all                        # bin/linux and bin/windows: ascdii, editor, player
 bin/linux/ascdii                # opens the editor at its start screen
 make editor-dev                 # editor with hot reload
 ```
@@ -61,7 +61,7 @@ ascdii pack export MyGame/props -name props  # share a folder as a .ascdiipack
 ascdii version
 ```
 
-A build is the `ascdii` binary as the player next to `data/game.pak`, the
+A build is the `ascdii-player` binary, renamed, next to `data/game.pak`, the
 project compiled into one encrypted file, plus checksums. The build is the
 release.
 
@@ -110,5 +110,5 @@ rendering, building and the Go API.
 `internal/engine/{core,render,world,assets,script,platform,runtime}`, the
 sample content in `internal/dragonfall`, the editor backend in
 `internal/editor`, the UI in `frontend/`, programs in `cmd/` (the editor
-is started by `cmd/ascdii`). `docs/usage/architecture.html` explains the modules
+is started by `cmd/ascdii`, games run on `cmd/player`). `docs/usage/architecture.html` explains the modules
 and the display backend contract. See `CLAUDE.md` for rules.

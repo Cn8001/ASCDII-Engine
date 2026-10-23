@@ -50,8 +50,16 @@ export function SaveAs(arg1) {
   return window['go']['service']['ProjectService']['SaveAs'](arg1);
 }
 
+export function SetSettings(arg1) {
+  return window['go']['service']['ProjectService']['SetSettings'](arg1);
+}
+
 export function SetStart() {
   return window['go']['service']['ProjectService']['SetStart']();
+}
+
+export function Settings() {
+  return window['go']['service']['ProjectService']['Settings']();
 }
 
 export function Undo() {

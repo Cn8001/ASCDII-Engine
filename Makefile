@@ -20,16 +20,20 @@ brand:
 
 # bin/linux and bin/windows are each a complete install holding only that
 # platform's programs: copied to a machine of the platform they run as they
-# are. ascdii is the CLI, the launcher and the player.
+# are. ascdii opens the editor (and is the CLI), ascdii-editor is the editor,
+# ascdii-player runs games and is what builds start from.
 LINUX   := $(BIN)/linux
 WINDOWS := $(BIN)/windows
 GOREL   := go build -trimpath -ldflags "-s -w"
 
 all: cli editor-linux editor-windows
 
-cli:
+# brand also writes the Windows icon resources go build links in.
+cli: brand
 	GOOS=linux GOARCH=amd64 $(GOREL) -o $(LINUX)/ascdii ./cmd/ascdii
+	GOOS=linux GOARCH=amd64 $(GOREL) -o $(LINUX)/ascdii-player ./cmd/player
 	GOOS=windows GOARCH=amd64 $(GOREL) -o $(WINDOWS)/ascdii.exe ./cmd/ascdii
+	GOOS=windows GOARCH=amd64 $(GOREL) -o $(WINDOWS)/ascdii-player.exe ./cmd/player
 
 hello:
 	go run ./cmd/hello
@@ -42,11 +46,11 @@ editor-dev: cli
 
 # Wails always writes build/bin; the editor moves next to its ascdii, where the
 # launcher looks for it.
-editor-linux:
+editor-linux: brand
 	cd $(EDITOR) && $(WAILS) build -tags $(LINUXTAG)
 	mkdir -p $(LINUX) && mv $(EDITOR)/build/bin/ascdii-editor $(LINUX)/
 
-editor-windows:
+editor-windows: brand
 	cd $(EDITOR) && $(WAILS) build -platform windows/amd64
 	mkdir -p $(WINDOWS) && mv $(EDITOR)/build/bin/ascdii-editor.exe $(WINDOWS)/
 

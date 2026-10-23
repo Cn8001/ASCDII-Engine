@@ -18,7 +18,9 @@ One Go module.
 - `internal/editor/...` editor backend (session, services, Wails adapters).
 - `ascdii` without arguments starts the editor (`internal/editor/launch`); an
   editor started directly restarts itself through `ascdii`, except in `wails dev`.
-- `cmd/ascdii` CLI and game player, `cmd/hello` minimal example, `cmd/snapshot`
+- `cmd/ascdii` CLI (opens the editor without arguments), `cmd/player`
+  ascdii-player that games run on (`internal/player`), `cmd/brand` icons and
+  Windows resources, `cmd/hello` minimal example, `cmd/snapshot`
   PNG renders for review, `cmd/editor` Wails app (built only with Wails tags).
 - `internal/dragonfall/template` is generated: `make template` after editing
   `internal/dragonfall/scene.go`.
@@ -76,6 +78,7 @@ at the feet) scaled by `Sprite.Scale` world units per pixel.
   description in `cmd/docref/notes.go`.
 - `make hello`, `make dragonfall` run the terminal examples.
 - `make all` builds `bin/linux` and `bin/windows`, each a complete install
-  of that platform only (ascdii and the editor) that runs where it is
-  copied. Parts: `make cli`, `make editor-linux`, `make editor-windows`;
+  of that platform only (ascdii, ascdii-editor, ascdii-player) that runs
+  where it is copied. Only these three are shipped; the other commands are
+  run with `go run`. Parts: `make cli`, `make editor-linux`, `make editor-windows`;
   `make editor-dev` for hot reload.

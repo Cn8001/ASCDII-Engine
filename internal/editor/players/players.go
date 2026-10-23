@@ -1,6 +1,6 @@
-// Package players finds the binaries a build starts from. ascdii is itself
-// the player, so the ascdii next to the editor serves its own platform and an
-// ascdii-<os>-<arch> beside it serves another one.
+// Package players finds the binaries a build starts from: the ascdii-player
+// next to the editor serves its own platform, and an
+// ascdii-player-<os>-<arch> beside it serves another one.
 package players
 
 import (
@@ -15,10 +15,11 @@ import (
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/editor/launch"
 )
 
-var ErrNoPlayer = errors.New("no player for this platform; place its ascdii next to the editor")
+var ErrNoPlayer = errors.New("no player for this platform; place its ascdii-player next to the editor")
 
+// Name is the file name of another platform's player.
 func Name(goos, arch string) string {
-	n := "ascdii-" + goos + "-" + arch
+	n := launch.Player + "-" + goos + "-" + arch
 	if goos == "windows" {
 		n += ".exe"
 	}
@@ -34,7 +35,7 @@ type Source struct {
 // folder such as wails dev.
 const Dir = "ASCDII_PLAYERS"
 
-// Default looks next to the editor, next to the ascdii that started it, and
+// Default looks next to the editor, next to the program that started it, and
 // in the folder named by ASCDII_PLAYERS.
 func Default() Source {
 	var dirs []fs.FS
@@ -54,11 +55,11 @@ func Default() Source {
 func names(goos, arch string) []string {
 	out := []string{Name(goos, arch)}
 	if goos == runtime.GOOS && arch == runtime.GOARCH {
-		self := launch.CLI
+		own := launch.Player
 		if goos == "windows" {
-			self += ".exe"
+			own += ".exe"
 		}
-		out = append(out, self)
+		out = append(out, own)
 	}
 	return out
 }

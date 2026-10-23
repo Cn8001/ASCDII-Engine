@@ -21,19 +21,32 @@ func lit(c, r int) bool {
 	return false
 }
 
-// Icon renders the mark at size px with 4x4 supersampling for clean edges.
-func Icon(size int) *image.RGBA {
+// Program picks the badge that tells the programs apart; they share the mark.
+// Launcher is ascdii, which opens the editor and is the CLI.
+type Program int
+
+const (
+	Launcher Program = iota
+	Editor
+	Player
+)
+
+func (p Program) String() string {
+	return [...]string{"launcher", "editor", "player"}[p]
+}
+
+// Programs lists every program that has an icon.
+func Programs() []Program { return []Program{Launcher, Editor, Player} }
+
+// Icon is the editor's icon, the one its window shows.
+func Icon(size int) *image.RGBA { return Draw(Editor, size) }
+
+// Draw renders the mark with p's badge at size px, with 4x4 supersampling
+// for clean edges.
+func Draw(p Program, size int) *image.RGBA {
 	img := image.NewRGBA(image.Rect(0, 0, size, size))
 	const ss = 4
 	s := float64(size)
-	radius := s * .22
-	amber := [3]float64{232, 176, 75}
-	dim := [3]float64{46, 44, 41}
-	deep := [3]float64{107, 72, 28}
-	dotR := s * .074
-	cx := []float64{s * .37, s * .6}
-	cy := []float64{s * .21, s * .4, s * .59, s * .78}
-	off := s * .028 // extrusion offset that gives each lit dot a little depth
 	for y := 0; y < size; y++ {
 		for x := 0; x < size; x++ {
 			var acc [4]float64
@@ -41,44 +54,105 @@ func Icon(size int) *image.RGBA {
 				for sx := 0; sx < ss; sx++ {
 					px := float64(x) + (float64(sx)+.5)/ss
 					py := float64(y) + (float64(sy)+.5)/ss
-					if !inRounded(px, py, s, radius) {
+					col, ok := sample(p, px/s, py/s)
+					if !ok {
 						continue
-					}
-					t := py / s
-					bg := [3]float64{geomLerp(26, 12, t), geomLerp(25, 12, t), geomLerp(24, 12, t)}
-					col := bg
-					for c := 0; c < 2; c++ {
-						for r := 0; r < 4; r++ {
-							d := math.Hypot(px-cx[c], py-cy[r])
-							if lit(c, r) {
-								if g := 1 - d/(dotR*2.4); g > 0 {
-									col = mix(col, amber, g*g*.3)
-								}
-								if math.Hypot(px-cx[c]-off, py-cy[r]-off) < dotR && d >= dotR {
-									col = deep
-								}
-							}
-							if d < dotR {
-								if lit(c, r) {
-									col = mix(amber, [3]float64{255, 226, 160}, math.Max(0, 1-d/dotR)*.35)
-								} else {
-									col = dim
-								}
-							}
-						}
 					}
 					acc[0], acc[1], acc[2], acc[3] = acc[0]+col[0], acc[1]+col[1], acc[2]+col[2], acc[3]+1
 				}
 			}
-			n := float64(ss * ss)
 			if acc[3] == 0 {
 				continue
 			}
-			a := acc[3] / n
+			a := acc[3] / (ss * ss)
 			img.SetRGBA(x, y, color.RGBA{uint8(acc[0] / acc[3] * a), uint8(acc[1] / acc[3] * a), uint8(acc[2] / acc[3] * a), uint8(a * 255)})
 		}
 	}
 	return img
+}
+
+var (
+	amber = [3]float64{232, 176, 75}
+	dim   = [3]float64{46, 44, 41}
+	deep  = [3]float64{107, 72, 28}
+	ink   = [3]float64{16, 15, 14}
+)
+
+// accent is each badge's color; the launcher shares the mark's amber.
+func (p Program) accent() [3]float64 {
+	return [...][3]float64{{240, 128, 88}, {84, 188, 200}, {112, 200, 120}}[p]
+}
+
+// sample is the color at x, y in units of the icon size, false outside it.
+func sample(p Program, x, y float64) ([3]float64, bool) {
+	const radius = .22
+	if !inRounded(x, y, 1, radius) {
+		return [3]float64{}, false
+	}
+	col := [3]float64{geomLerp(26, 12, y), geomLerp(25, 12, y), geomLerp(24, 12, y)}
+	const dotR, off = .074, .028 // off is the extrusion that gives each lit dot depth
+	cx := []float64{.37, .6}
+	cy := []float64{.21, .4, .59, .78}
+	for c := 0; c < 2; c++ {
+		for r := 0; r < 4; r++ {
+			d := math.Hypot(x-cx[c], y-cy[r])
+			if lit(c, r) {
+				if g := 1 - d/(dotR*2.4); g > 0 {
+					col = mix(col, amber, g*g*.3)
+				}
+				if math.Hypot(x-cx[c]-off, y-cy[r]-off) < dotR && d >= dotR {
+					col = deep
+				}
+			}
+			if d < dotR {
+				if lit(c, r) {
+					col = mix(amber, [3]float64{255, 226, 160}, math.Max(0, 1-d/dotR)*.35)
+				} else {
+					col = dim
+				}
+			}
+		}
+	}
+	// The badge sits in the lower right corner, cut out of the mark by a ring
+	// of the background so it reads at 16 px.
+	const bx, by, br, ring = .77, .77, .19, .035
+	d := math.Hypot(x-bx, y-by)
+	switch {
+	case d < br:
+		col = p.accent()
+		if glyph(p, (x-bx)/br, (y-by)/br) {
+			col = ink
+		}
+	case d < br+ring:
+		col = [3]float64{14, 14, 13}
+	}
+	return col, true
+}
+
+// glyph reports whether u, v (badge units, -1..1, y down) is on p's symbol:
+// a rising arrow to start things, a pencil, a play triangle.
+func glyph(p Program, u, v float64) bool {
+	const w = .14
+	switch p {
+	case Launcher:
+		return segment(u, v, -.38, .38, .38, -.38, w) || segment(u, v, .38, -.38, -.06, -.38, w) || segment(u, v, .38, -.38, .38, .06, w)
+	case Editor:
+		along, across := (u-v)/math.Sqrt2, math.Abs(u+v)/math.Sqrt2
+		const half = .17
+		body := along > -.2 && along < .52 && across < half && (along < .26 || along > .33)
+		tip := along > -.56 && along <= -.2 && across < half*(along+.56)/.36
+		return body || tip
+	case Player:
+		return u > -.3 && math.Abs(v) < (.42-u)*.66 && u < .5
+	}
+	return false
+}
+
+// segment is a capsule of half width w around the line from a to b.
+func segment(u, v, ax, ay, bx, by, w float64) bool {
+	dx, dy := bx-ax, by-ay
+	t := math.Max(0, math.Min(1, ((u-ax)*dx+(v-ay)*dy)/(dx*dx+dy*dy)))
+	return math.Hypot(u-ax-t*dx, v-ay-t*dy) < w
 }
 
 func inRounded(x, y, s, r float64) bool {

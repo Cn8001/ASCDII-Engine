@@ -26,6 +26,10 @@ export function Save():Promise<void>;
 
 export function SaveAs(arg1:string):Promise<void>;
 
+export function SetSettings(arg1:session.ProjectSettings):Promise<void>;
+
 export function SetStart():Promise<void>;
+
+export function Settings():Promise<session.ProjectSettings>;
 
 export function Undo():Promise<void>;

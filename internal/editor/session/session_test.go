@@ -55,7 +55,7 @@ func newSession(t *testing.T, template string) (*Session, *recorder, string) {
 		Modules:   []project.Module{dragonfall.Module()},
 		Templates: []Template{{Name: "empty"}, {Name: "dragonfall", FS: dragonfall.Template()}},
 		Packages:  []pack.Source{dragonfall.Package()},
-		Players:   players.Source{Dirs: []fs.FS{fstest.MapFS{"ascdii-linux-amd64": {Data: []byte("PLAYER")}}}},
+		Players:   players.Source{Dirs: []fs.FS{fstest.MapFS{"ascdii-player-linux-amd64": {Data: []byte("PLAYER")}}}},
 		Emit:      rec,
 	})
 	dir := filepath.Join(t.TempDir(), "game")

@@ -698,6 +698,32 @@ export namespace session {
 	        this.cells = source["cells"];
 	    }
 	}
+	export class ProjectSettings {
+	    name: string;
+	    version: string;
+	    start: string;
+	    cols: number;
+	    rows: number;
+	    fps: number;
+	    mods: boolean;
+	    modApi: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new ProjectSettings(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.name = source["name"];
+	        this.version = source["version"];
+	        this.start = source["start"];
+	        this.cols = source["cols"];
+	        this.rows = source["rows"];
+	        this.fps = source["fps"];
+	        this.mods = source["mods"];
+	        this.modApi = source["modApi"];
+	    }
+	}
 
 }
 
