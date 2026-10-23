@@ -23,6 +23,8 @@ type Hero struct {
 	weight  float64
 }
 
+const heroScale = 1.8
+
 func NewHero() *Hero { return &Hero{Speed: 1} }
 
 func (*Hero) Kind() string { return "df.hero" }
@@ -32,7 +34,7 @@ func (h *Hero) bind() *prop.Binder {
 func (h *Hero) Props() []prop.Prop        { return h.bind().Props() }
 func (h *Hero) Set(n string, v any) error { return h.bind().Set(n, v) }
 func (h *Hero) Bounds(t scene.Transform) geom.AABB {
-	return geom.Footprint(geom.V3(t.Pos.X, t.Pos.Y, 0), t.Size(geom.V3(1.6, 1, 4.3)))
+	return geom.Footprint(geom.V3(t.Pos.X, t.Pos.Y, 0), t.Size(geom.V3(1.8, 1.1, 5.8)))
 }
 
 func (h *Hero) Tick(_ *scene.Ctx, _ *scene.GameObject, dt float64) {
@@ -44,7 +46,9 @@ func (h *Hero) Tick(_ *scene.Ctx, _ *scene.GameObject, dt float64) {
 }
 
 func (h *Hero) Draw(c *draw.Context, t scene.Transform) {
-	k := t.Uniform()
+	// Chunky, big headed proportions: at the game's distance and pitch a
+	// realistic build collapses into a few columns of dots.
+	k := t.Uniform() * heroScale
 	dir := 1.0 // facing +X; flipped sprites face -X
 	if t.Flip {
 		dir = -1
@@ -55,57 +59,63 @@ func (h *Hero) Draw(c *draw.Context, t scene.Transform) {
 	}
 	w := h.weight
 	ph := c.Time * 7 * h.Speed
-	swing := math.Sin(ph) * .38 * w
-	bob := math.Abs(math.Sin(ph))*.09*w + .03*math.Sin(c.Time*2.6)*(1-w)
-	air := t.Pos.Z > .05
+	step := math.Sin(ph) * w
+	bob := math.Abs(step)*.06 + .025*math.Sin(c.Time*2.6)*(1-w)
 	tuck := 0.0
-	if air {
-		tuck, swing = .35, .25
+	if t.Pos.Z > .05 {
+		tuck, step = .2, 0
 	}
 
 	// Albedos stay dark: sun, lanterns and glow add up, and bright metal
 	// would wash out to white.
-	steel, dark, gold := rgb(104, 118, 132), rgb(52, 60, 72), rgb(196, 150, 70)
-	leather, teal, skin := rgb(84, 56, 40), rgb(30, 104, 110), rgb(176, 128, 100)
+	steel, dark, gold := rgb(66, 76, 90), rgb(36, 40, 50), rgb(170, 122, 50)
+	leather, teal, red := rgb(70, 44, 30), rgb(22, 92, 100), rgb(150, 36, 34)
+	visor := rgb(10, 12, 16)
 	ground := geom.V3(t.Pos.X, t.Pos.Y, 0)
-	c.Shadow(ground, 1*k*(1-math.Min(.5, t.Pos.Z*.08)), .65*k, .65)
+	c.Shadow(ground, 1.1*k*(1-math.Min(.5, t.Pos.Z*.08)), .75*k, .65)
 
-	// Legs swing along the facing, one in front of the other in depth.
-	for _, leg := range [2]struct{ y, s float64 }{{-.17, -swing}, {.17, swing}} {
-		c.Cylinder(at(leg.s, leg.y, tuck), .16*k, (1.45-tuck)*k, dark, dark, 10)
-		box(leg.s+.1, leg.y, tuck, .42, .26, .24, leather)
+	// He faces the camera three quarters and marches: legs lift in turn
+	// while the whole figure moves along X.
+	for i, x := range [2]float64{-.24, .24} {
+		lift := math.Max(0, step*float64(1-2*i)) * .22
+		c.Cylinder(at(x, 0, lift+tuck), .2*k, (.9-tuck)*k, dark, dark, 10)
+		box(x, .08, lift+tuck, .34, .5, .26, leather)
 	}
-	z := 1.45 + bob
-	box(0, 0, z, .66, .5, .2, leather)
-	c.Point(at(.2, .27, z+.1), .12*k, gold.Glow(.2))
-	c.Cylinder(at(0, 0, z+.18), .32*k, .95*k, steel.Tint(1.05), steel, 14)
-	box(.02, .31, z+.3, .4, .05, .72, teal)
-	c.Point(at(.02, .35, z+.78), .14*k, gold.Glow(.35))
-	for _, y := range [2]float64{-.34, .34} {
-		c.Blob(at(0, y, z+1.0), .17*k, steel)
-	}
+	z := .88 + bob
 
-	// Head, helmet with a visor slit, and a plume that sways.
-	c.Cylinder(at(0, 0, z+1.12), .1*k, .14*k, skin, skin, 8)
-	c.Blob(at(.03, 0, z+1.28), .23*k, skin)
-	c.Blob(at(0, 0, z+1.4), .26*k, steel.Tint(1.1))
-	box(.1, .22, z+1.36, .3, .05, .06, rgb(20, 22, 28))
-	c.Cone(at(-.04, 0, z+1.62), .07*k, .45*k, rgb(170, 52, 44), 8, geom.V2(-(.18+.22*w)*dir*k+.04*math.Sin(c.Time*3), 0))
-
-	// Shield on the camera side, sword in the far hand.
-	box(.42, .42, z+.2, .1, .52, .7, gold)
-	box(.47, .42, z+.25, .06, .42, .6, teal)
-	c.Point(at(.5, .42, z+.55), .15*k, gold.Glow(.3))
-	sx := .38 - swing*.6
-	c.Blob(at(sx, -.4, z+.42), .11*k, leather)
-	box(sx, -.4, z+.5, .34, .1, .07, gold)
-	box(sx, -.4, z+.57, .07, .07, 1.25, rgb(176, 192, 200).Glow(.1))
-
-	// Cape: from the shoulders down and back, streaming further when walking.
-	sway := .12*math.Sin(c.Time*2.2) + .45*w + tuck
+	sway := .1*math.Sin(c.Time*2.2) + .45*w + tuck
 	cape := rgb(26, 76, 84)
-	top0, top1 := at(-.24, -.3, z+.98), at(-.24, .3, z+.98)
-	low0, low1 := at(-.45-sway, -.36, .5+tuck), at(-.45-sway, .36, .5+tuck)
+	top0, top1 := at(-.42, -.3, z+.95), at(.42, -.3, z+.95)
+	low0, low1 := at(-.55-sway, -.5, .3+tuck), at(.55-sway, -.5, .3+tuck)
 	c.Tri(top0, top1, low1, cape)
 	c.Tri(top0, low1, low0, cape)
+
+	c.Cylinder(at(0, 0, z), .46*k, 1.0*k, steel.Tint(1.05), steel, 16)
+	box(0, 0, z, .98, .98, .2, leather)
+	c.Point(at(-.25, .46, z+.1), .14*k, gold.Glow(.25))
+	box(0, .44, z+.15, .64, .08, .9, teal)
+	box(0, .49, z+.5, .1, .04, .44, gold)
+	box(0, .49, z+.66, .34, .04, .1, gold)
+	for _, x := range [2]float64{-.5, .5} {
+		c.Blob(at(x, 0, z+.94), .27*k, steel.Tint(1.15))
+	}
+
+	// A closed great helm, larger than life so it reads as the head.
+	hz := z + 1.5
+	c.Blob(at(0, 0, hz), .44*k, steel.Tint(1.2))
+	box(0, 0, hz-.08, .9, .9, .1, gold)
+	box(0, .4, hz+.02, .56, .1, .12, visor)
+	box(0, .4, hz-.24, .1, .1, .3, visor)
+	c.Cone(at(0, -.05, hz+.4), .1*k, .62*k, red, 8, geom.V2(-(.24+.26*w)*dir*k+.05*math.Sin(c.Time*3), 0))
+
+	// Shield on the leading arm, facing the camera; sword in the other.
+	sy := .5 + .04*step
+	box(.62, sy, z+.05, .7, .1, .95, gold)
+	box(.62, sy+.04, z+.1, .58, .06, .83, red)
+	box(.62, sy+.08, z+.45, .5, .04, .1, gold)
+	box(.62, sy+.08, z+.18, .1, .04, .66, gold)
+	hx := -.62
+	c.Blob(at(hx, .2, z+.38), .15*k, leather)
+	box(hx, .2, z+.48, .1, .4, .08, gold)
+	box(hx, .2, z+.56, .1, .1, 1.35, rgb(176, 192, 200).Glow(.12))
 }

@@ -84,6 +84,27 @@ func (t Transform) Then(c Transform) Transform {
 	return Transform{Pos: t.Apply(c.Pos), Rot: t.Rot.Add(c.Rot), Scale: t.scale().Mul(c.scale()), Flip: t.Flip != c.Flip}
 }
 
+// Local is the child transform that Then places at world w, so an object
+// can change parents without moving. Rotations add like Then's, which is
+// exact for turns around one axis.
+func (t Transform) Local(w Transform) Transform {
+	k, ws := t.scale(), w.scale()
+	return Transform{
+		Pos:   t.Inward(w.Pos.Sub(t.Pos)),
+		Rot:   w.Rot.Sub(t.Rot),
+		Scale: geom.V3(inv(ws.X, k.X), inv(ws.Y, k.Y), inv(ws.Z, k.Z)),
+		Flip:  w.Flip != t.Flip,
+	}
+}
+
+// Dir turns a local direction into this transform's parent space.
+func (t Transform) Dir(d geom.Vec3) geom.Vec3 {
+	if t.Flip {
+		d.X = -d.X
+	}
+	return d.RotateEuler(t.Rot)
+}
+
 // Component is anything attached to a GameObject. What it can do comes from
 // the optional interfaces below, so one component may draw, collide and think.
 type Component interface {
@@ -234,6 +255,15 @@ func (o *GameObject) World() Transform {
 }
 
 // Bounds unites what every component reports, for culling, picking and gizmos.
+// SetWorld moves the object so its world transform becomes w.
+func (o *GameObject) SetWorld(w Transform) {
+	if o.parent == nil {
+		o.Local = w
+		return
+	}
+	o.Local = o.parent.World().Local(w)
+}
+
 func (o *GameObject) Bounds() geom.AABB {
 	var b geom.AABB
 	t := o.World()

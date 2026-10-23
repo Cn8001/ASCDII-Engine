@@ -96,7 +96,7 @@ func TestUnit_ReparentRefusesCycles(t *testing.T) {
 	b := a.Add("b", nil)
 
 	// Act
-	err := s.Reparent(a.ID, b.ID, 0)
+	err := s.Reparent(a.ID, b.ID, 0, false)
 
 	// Assert
 	if !errors.Is(err, ErrInvalidParent) {
@@ -104,6 +104,25 @@ func TestUnit_ReparentRefusesCycles(t *testing.T) {
 	}
 	if _, err := s.ByID(999); !errors.Is(err, ErrNodeNotFound) {
 		t.Fatalf("got %v", err)
+	}
+}
+
+func TestUnit_ReparentKeepsWorldTransform(t *testing.T) {
+	// Arrange
+	s := New("t")
+	p := s.Add("p", nil).At(10, 4, 0)
+	p.Local.Rot, p.Local.Scale = geom.V3(0, 0, 90), geom.V3(2, 2, 2)
+	c := s.Add("c", nil).At(3, 1, 2)
+	c.Local.Rot = geom.V3(0, 0, 30)
+	before := c.World()
+
+	// Act
+	err := s.Reparent(c.ID, p.ID, -1, true)
+	after := c.World()
+
+	// Assert
+	if err != nil || after.Pos.Sub(before.Pos).Len() > 1e-9 || after.Rot.Sub(before.Rot).Len() > 1e-9 || after.Scale.Sub(before.Scale).Len() > 1e-9 {
+		t.Fatalf("err %v before %+v after %+v local %+v", err, before, after, c.Local)
 	}
 }
 

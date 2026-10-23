@@ -102,8 +102,9 @@ func (s *Scene) Remove(id uint64) error {
 	return nil
 }
 
-// Reparent moves an entity under parent (0 for root) at index, refusing cycles.
-func (s *Scene) Reparent(id, parent uint64, index int) error {
+// Reparent moves an entity under parent (0 for root) at index, refusing
+// cycles. With keepWorld it stays where it is on screen.
+func (s *Scene) Reparent(id, parent uint64, index int, keepWorld bool) error {
 	e, err := s.ByID(id)
 	if err != nil {
 		return err
@@ -122,8 +123,12 @@ func (s *Scene) Reparent(id, parent uint64, index int) error {
 			return fmt.Errorf("reparent %s under %s: %w", e.Name, p.Name, ErrInvalidParent)
 		}
 	}
+	w := e.World()
 	e.detach()
 	p.attach(e, index)
+	if keepWorld {
+		e.SetWorld(w)
+	}
 	return nil
 }
 
