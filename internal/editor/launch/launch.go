@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	Env    = "ASCDII_LAUNCHER" // set by ascdii on the editor it starts
+	Env    = "ASCDII_LAUNCHER" // set by ascdii on the editor it starts, to its own path
 	Editor = "ascdii-editor"
 	CLI    = "ascdii"
 )
@@ -47,8 +47,12 @@ func StartEditor(ctx context.Context, editor, manifest string) error {
 	if manifest != "" {
 		args = append(args, manifest)
 	}
+	cli, err := os.Executable()
+	if err != nil {
+		return fmt.Errorf("start editor: %w", err)
+	}
 	cmd := exec.CommandContext(context.WithoutCancel(ctx), editor, args...)
-	cmd.Env = append(os.Environ(), Env+"=1")
+	cmd.Env = append(os.Environ(), Env+"="+cli) // also tells the editor where players are
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("start editor: %w", err)
 	}

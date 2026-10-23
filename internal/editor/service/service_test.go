@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/fs"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -30,7 +31,7 @@ func services(t *testing.T, d fakeDialogs) *Services {
 	s := session.New(session.Deps{
 		Modules:   []project.Module{dragonfall.Module()},
 		Templates: []session.Template{{Name: "empty"}, {Name: "dragonfall", FS: dragonfall.Template()}},
-		Players:   players.Source{FS: fstest.MapFS{}},
+		Players:   players.Source{Dirs: []fs.FS{fstest.MapFS{}}},
 	})
 	return New(Deps{Session: s, Ctx: &Context{}, Dialogs: d, Recent: recent.Store{Path: filepath.Join(t.TempDir(), "recent.json")},
 		Reveal: func(context.Context, string) error { return nil }, Edit: func(context.Context, string, int) error { return nil }})

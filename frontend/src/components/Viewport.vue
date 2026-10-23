@@ -105,6 +105,13 @@ const anchor = computed(() => {
 })
 
 const axisColor = ['#d06a52', '#8fb573', '#e8b04b']
+const handles = computed(() =>
+  store.gizmos ? (store.frame.gizmo?.handles ?? []).map((h) => ({ key: h.key, name: h.name, x: h.at[0] * cw.value, y: h.at[1] * ch.value })) : [],
+)
+function toggleGizmos() {
+  store.gizmos = !store.gizmos
+  Viewport.SetGizmos(store.gizmos)
+}
 const axes = computed(() => {
   const g = store.frame.gizmo
   const a = anchor.value
@@ -124,7 +131,7 @@ const hover = ref('')
 const selectedName = computed(() => findNode(store.selected)?.name ?? '')
 const playing = computed(() => store.frame.mode !== 'edit')
 
-type DragMode = 'none' | 'pan' | 'orbit' | 'move' | 'paint'
+type DragMode = 'none' | 'pan' | 'orbit' | 'move' | 'paint' | 'collider'
 const tools = [
   { name: 'move', icon: 'move', title: 'Move  W' },
   { name: 'rotate', icon: 'rotate', title: 'Rotate  E' },
@@ -133,6 +140,7 @@ const tools = [
 const ring = 40
 let mode: DragMode = 'none'
 let axis = 'free'
+let handle: { key: string; name: string } | null = null
 let prev = { x: 0, y: 0 }
 let moved = 0
 let pending: (() => void) | null = null
@@ -169,13 +177,24 @@ function down(e: PointerEvent) {
     return
   }
   const hit = hitAxis(p)
+  const grip = e.button === 0 && store.view === 'scene' ? hitHandle(p) : null
   if (e.button === 2) mode = 'orbit'
   else if (e.button === 1) mode = 'pan'
-  else if (hit && store.view === 'scene') {
+  else if (grip) {
+    mode = 'collider'
+    handle = grip
+  } else if (hit && store.view === 'scene') {
     mode = 'move'
     axis = hit
   } else mode = 'pan'
   ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+}
+
+// hitHandle finds a collider handle under p; they win over the move arrows
+// because they are smaller targets.
+function hitHandle(p: { x: number; y: number }) {
+  for (const h of handles.value) if (Math.abs(h.x - p.x) < 6 && Math.abs(h.y - p.y) < 6) return { key: h.key, name: h.name }
+  return null
 }
 
 // hitAxis returns which gizmo handle is under p: an arrow tip, the free
@@ -209,6 +228,11 @@ function move(e: PointerEvent) {
     queue(() => Viewport.Orbit(dx * 0.4, -dy * 0.25))
   } else if (mode === 'paint') {
     void paintAt(p)
+  } else if (mode === 'collider' && store.selected && handle) {
+    const from = prev
+    const id = store.selected
+    const h = handle
+    queue(() => Viewport.DragCollider(id, h.key, h.name, from.x / cw.value, from.y / ch.value, p.x / cw.value, p.y / ch.value))
   } else if (mode === 'move' && store.selected) {
     const from = prev
     const id = store.selected
@@ -227,7 +251,7 @@ async function up(e: PointerEvent) {
     const id = await call(() => Viewport.Pick(Math.floor(p.x / cw.value), Math.floor(p.y / ch.value)))
     await select(id ?? 0)
   }
-  if (was === 'move' || was === 'paint') await refreshProps()
+  if (was === 'move' || was === 'paint' || was === 'collider') await refreshProps()
 }
 
 function wheel(e: WheelEvent) {
@@ -336,6 +360,7 @@ function setLive() {
           <rect v-else :x="ax.tip.x - 4" :y="ax.tip.y - 4" width="8" height="8" :fill="ax.color" />
         </template>
       </g>
+      <rect v-for="h in handles" :key="h.key + h.name" :x="h.x - 3.5" :y="h.y - 3.5" width="7" height="7" rx="1" fill="#78dc78" stroke="var(--color-ink-950)" stroke-width="1" />
       <g v-if="anchor" :transform="`translate(${anchor.x} ${anchor.y})`">
         <rect x="-5" y="-5" width="10" height="10" rx="2" fill="var(--color-ink-950)" fill-opacity=".7" :stroke="hover === 'free' ? '#fff' : 'var(--color-ink-200)'" stroke-width="1.5" />
         <text x="14" y="-10" fill="var(--color-ink-100)" font-size="11" font-family="var(--font-mono)">{{ selectedName }}</text>
@@ -359,6 +384,7 @@ function setLive() {
       <button v-for="px in [6, 8, 10, 12]" :key="px" class="h-7 rounded-md px-1.5 font-mono text-[11px] transition" :class="store.cellPx === px ? 'bg-ink-750 text-amber-glow' : 'text-ink-400 hover:text-ink-100'" @click="store.cellPx = px">{{ px }}</button>
       <span class="mx-1 h-4 w-px bg-ink-700" />
       <button class="icon-btn" :class="store.info?.live ? 'text-amber-glow' : ''" title="Live" @click="setLive"><Icon name="sun" :size="14" /></button>
+      <button class="icon-btn" :class="store.gizmos ? 'text-amber-glow' : ''" title="Gizmos: collider and camera outlines" @click="toggleGizmos"><Icon name="eye" :size="14" /></button>
       <span class="mx-1 h-4 w-px bg-ink-700" />
       <button class="icon-btn" :class="store.brush.on ? 'text-amber-glow' : ''" title="Braille brush: paint or erase the selected object's dots" @click="store.brush.on = !store.brush.on"><Icon name="brush" :size="14" /></button>
       <template v-if="store.brush.on">

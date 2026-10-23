@@ -3,6 +3,7 @@ package draw
 import (
 	"math"
 
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/color"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/geom"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/raster"
 )
@@ -28,6 +29,15 @@ type Sprite struct {
 	layer  int
 	slopeD float64
 	slopeZ float64
+	ss     *smooth
+}
+
+// smooth is a supersampled sprite in progress: parts land in buf at k times
+// the frame's resolution, covering frame dots [x0,x1) by [y0,y1).
+type smooth struct {
+	buf            *raster.Buffer
+	x0, y0, x1, y1 int
+	k              int
 }
 
 func (c *Context) Sprite(anchor geom.Vec3, scale float64, flip bool) *Sprite {
@@ -69,6 +79,74 @@ func (s *Sprite) Visible(radius float64) bool {
 	return s.ax+r >= 0 && s.ay+r >= 0 && s.ax-r < float64(s.c.Buf.W) && s.ay-r*2 < float64(s.c.Buf.H)
 }
 
+// Smooth draws the sprite supersampled when its art is finer than the dots
+// it lands on: End then gives each dot the share of art it covers and its
+// average color, so small parts and edges read as shapes instead of
+// flickering in and out. radius bounds the art around the anchor, in art
+// pixels. A sprite drawn at least one dot per art pixel is left as it is.
+func (s *Sprite) Smooth(radius float64) *Sprite {
+	k := min(4, int(math.Ceil(1/s.unit)))
+	if k < 2 {
+		return s
+	}
+	r := radius * s.unit
+	x0, y0 := max(0, int(math.Floor(s.ax-r))), max(0, int(math.Floor(s.ay-r)))
+	x1, y1 := min(s.c.Buf.W, int(math.Ceil(s.ax+r))), min(s.c.Buf.H, int(math.Ceil(s.ay+r/4)))
+	if x1 <= x0 || y1 <= y0 {
+		return s
+	}
+	buf := s.c.Scratch
+	if buf == nil {
+		buf = raster.New(1, 1)
+	}
+	w, h := (x1-x0)*k, (y1-y0)*k
+	buf.Grow(w, h)
+	buf.ClearRect(0, 0, w, h)
+	s.ss = &smooth{buf: buf, x0: x0, y0: y0, x1: x1, y1: y1, k: k}
+	return s
+}
+
+// End resolves a smoothed sprite into the frame; other sprites need no End.
+func (s *Sprite) End() {
+	ss := s.ss
+	if ss == nil {
+		return
+	}
+	s.ss = nil
+	k := ss.k
+	need := int(math.Ceil(float64(k*k) * .4))
+	for y := ss.y0; y < ss.y1; y++ {
+		for x := ss.x0; x < ss.x1; x++ {
+			var n, em int
+			var r, g, b, wx, wy float64
+			var top *raster.Dot
+			for sy := 0; sy < k; sy++ {
+				for sx := 0; sx < k; sx++ {
+					d := ss.buf.At((x-ss.x0)*k+sx, (y-ss.y0)*k+sy)
+					if d == nil || d.Flags&raster.FlagEmpty != 0 {
+						continue
+					}
+					n++
+					cr, cg, cb := d.Albedo.Float()
+					r, g, b, em = r+cr, g+cg, b+cb, em+int(d.Emissive)
+					wx, wy = wx+float64(d.X), wy+float64(d.Y)
+					if top == nil || d.Depth > top.Depth {
+						top = d
+					}
+				}
+			}
+			if n < need {
+				continue
+			}
+			f := float64(n)
+			s.c.Buf.Plot(x, y, raster.Frag{
+				Albedo: color.FromFloat(r/f, g/f, b/f), Emissive: uint8(em / n), Flags: top.Flags, Normal: top.Normal,
+				Depth: float64(top.Depth), World: geom.V3(wx/f, wy/f, float64(top.Z)),
+			})
+		}
+	}
+}
+
 func (s *Sprite) Color(c Material) *Sprite { s.mat = c; return s }
 
 func (s *Sprite) Normal(n geom.Vec3) *Sprite { s.normal = n.Norm(); return s }
@@ -88,12 +166,33 @@ func (s *Sprite) Pop() *Sprite {
 
 func (s *Sprite) top() geom.Affine { return s.stack[len(s.stack)-1] }
 
+// target is where parts land: the frame, or a smoothed sprite's scratch.
+func (s *Sprite) target() *raster.Buffer {
+	if s.ss != nil {
+		return s.ss.buf
+	}
+	return s.c.Buf
+}
+
+// res is target dots per frame dot.
+func (s *Sprite) res() float64 {
+	if s.ss != nil {
+		return float64(s.ss.k)
+	}
+	return 1
+}
+
 func (s *Sprite) pt(x, y float64) raster.Point {
 	p := s.top().Apply(geom.V2(x, y))
 	if s.flip {
 		p.X = -p.X
 	}
-	return raster.Point{X: int(math.Round(s.ax + p.X*s.unit)), Y: int(math.Round(s.ay + p.Y*s.unit))}
+	px, py := s.ax+p.X*s.unit, s.ay+p.Y*s.unit
+	if s.ss != nil {
+		k := float64(s.ss.k)
+		return raster.Point{X: int(math.Round((px - float64(s.ss.x0)) * k)), Y: int(math.Round((py - float64(s.ss.y0)) * k))}
+	}
+	return raster.Point{X: int(math.Round(px)), Y: int(math.Round(py))}
 }
 
 func (s *Sprite) frag() raster.Frag {
@@ -102,15 +201,25 @@ func (s *Sprite) frag() raster.Frag {
 	f.World = s.anchor
 	f.Row0 = int(math.Round(s.ay))
 	f.RowDepth, f.RowZ = s.slopeD, s.slopeZ
+	if s.ss != nil {
+		k := float64(s.ss.k)
+		f.Row0 = int(math.Round((s.ay - float64(s.ss.y0)) * k))
+		f.RowDepth, f.RowZ = s.slopeD/k, s.slopeZ/k
+	}
 	s.layer++
 	return f
 }
 
-func (s *Sprite) px(w float64) int { return max(1, int(math.Round(w*s.unit*s.top().Scale()))) }
+// px is a stroke width in target dots; smoothed strokes keep a full frame
+// dot so thin lines such as a sword stay visible.
+func (s *Sprite) px(w float64) int {
+	k := s.res()
+	return max(int(k), int(math.Round(w*s.unit*s.top().Scale()*k)))
+}
 
 func (s *Sprite) Line(x0, y0, x1, y1, w float64) *Sprite {
 	a, b := s.pt(x0, y0), s.pt(x1, y1)
-	s.c.Buf.Line(a.X, a.Y, b.X, b.Y, s.px(w), s.frag())
+	s.target().Line(a.X, a.Y, b.X, b.Y, s.px(w), s.frag())
 	return s
 }
 
@@ -119,7 +228,7 @@ func (s *Sprite) Poly(pts ...geom.Vec2) *Sprite {
 	for i, p := range pts {
 		out[i] = s.pt(p.X, p.Y)
 	}
-	s.c.Buf.Polygon(out, s.frag())
+	s.target().Polygon(out, s.frag())
 	return s
 }
 
@@ -130,19 +239,19 @@ func (s *Sprite) Rect(x, y, w, h float64) *Sprite {
 func (s *Sprite) Curve(a, ctrl, e geom.Vec2, w float64) *Sprite {
 	pa, pc, pe := s.pt(a.X, a.Y), s.pt(ctrl.X, ctrl.Y), s.pt(e.X, e.Y)
 	seg := max(3, int(math.Hypot(float64(pe.X-pa.X), float64(pe.Y-pa.Y))/2))
-	s.c.Buf.QuadBezier(pa, pc, pe, seg, s.px(w), s.frag())
+	s.target().QuadBezier(pa, pc, pe, seg, s.px(w), s.frag())
 	return s
 }
 
 func (s *Sprite) Ellipse(x, y, rx, ry float64) *Sprite {
 	p := s.pt(x, y)
-	k := s.unit * s.top().Scale()
-	s.c.Buf.Ellipse(p.X, p.Y, int(math.Round(rx*k)), int(math.Round(ry*k)), s.frag())
+	k := s.unit * s.top().Scale() * s.res()
+	s.target().Ellipse(p.X, p.Y, int(math.Round(rx*k)), int(math.Round(ry*k)), s.frag())
 	return s
 }
 
 func (s *Sprite) Dot(x, y float64) *Sprite {
 	p := s.pt(x, y)
-	s.c.Buf.Plot(p.X, p.Y, s.frag())
+	s.target().Plot(p.X, p.Y, s.frag())
 	return s
 }

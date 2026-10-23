@@ -6,6 +6,7 @@
 <title>Go API | ASCDII Engine</title>
 <link rel="icon" href="img/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
+<script src="zoom.js" defer></script>
 </head>
 <body>
 <div class="layout">
@@ -21,7 +22,7 @@
 <a href="scenes.html">Scenes and prefabs</a>
 <a href="assets.html">Assets and import</a>
 <a href="packages.html">Packages</a>
-<a href="textures.html">Textures and materials</a>
+<a href="textures.html">Textures, materials, sprites</a>
 <a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
 <a href="particles.html">Particles</a>
@@ -31,6 +32,8 @@
 <a href="rendering.html">Rendering</a>
 <a href="building.html">Build</a>
 <h4>Reference</h4>
+<a href="components.html">Component reference</a>
+<a href="dragonfall.html">Dragonfall module</a>
 <a href="lua-api.html">Lua API</a>
 <a href="cli.html">CLI reference</a>
 <a href="go-api.html" class="on">Go API</a>
@@ -39,8 +42,8 @@
 <main>
 <div class="kicker">Reference</div>
 <h1>Go API</h1>
-<p class="lead">Everything the editor does is available from Go through one public package, gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/pkg/ascdii.</p>
-<h2>The smallest program</h2>
+<p class="lead">The engine is available to Go programs through one public package, <code>gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/pkg/ascdii</code>: scenes, components, the render pipeline and the game loop.</p>
+<h2>A minimal program</h2>
 <pre><code><span class="k">package</span> main
 
 <span class="k">import</span> (
@@ -55,15 +58,31 @@
   s := e.Scene()
   s.Add(<span class="s">"ground"</span>, ascdii.Ground(40, 40, ascdii.Hex(<span class="s">"#46623e"</span>)))
   s.Add(<span class="s">"crate"</span>, ascdii.Box(ascdii.V3(2, 2, 2), ascdii.Hex(<span class="s">"#b08050"</span>))).Blocking()
-  s.Add(<span class="s">"hero"</span>, ascdii.Blob(.8, ascdii.Hex(<span class="s">"#e8b04b"</span>))).At(0, 5, 0).With(ascdii.Player(), ascdii.Quit(<span class="s">"q"</span>))
+  hero := s.Add(<span class="s">"hero"</span>, ascdii.Blob(.8, ascdii.Hex(<span class="s">"#e8b04b"</span>))).At(0, 5, 0).With(ascdii.Player(), ascdii.Quit(<span class="s">"q"</span>))
+  hero.Add(<span class="s">"camera"</span>, ascdii.CameraComponent(30))      <span class="c">// the camera rides with the hero</span>
   s.Animate(<span class="s">"crate"</span>, ascdii.Tween(<span class="s">"pos.z"</span>, 0.0, 1.5, 1.2, ascdii.InOut).Bouncing())
   _ = e.Run(context.Background(), os.Stdin, os.Stdout)
 }</code></pre>
-<p>Load a project folder instead of building the scene in code:</p>
+<p>A project folder is loaded instead of building the scene in code:</p>
 <pre><code>e, err := ascdii.OpenDir(ctx, <span class="s">"~/games/quest"</span>, ascdii.Options{})</code></pre>
 
-<h2>Your own component</h2>
-<p>A component exposes its properties through a binder; to be seen it draws in world units and reports its bounds. Register it with a menu entry and it appears in the GameObject menu, Add Component and the Inspector. Other optional methods make it tick, update, take keys or block players.</p>
+<h2>Constructors</h2>
+<table>
+<tr><th>Function</th><th>Component</th></tr>
+<tr><td><code>Box</code>, <code>Cylinder</code>, <code>Cone</code>, <code>Blob</code>, <code>Plane</code>, <code>Quad</code></td><td>Solid shapes.</td></tr>
+<tr><td><code>Ground</code>, <code>Water</code></td><td>Terrain patches.</td></tr>
+<tr><td><code>CameraComponent(span)</code></td><td>The game camera; <code>Camera</code> is the view type of the scene camera.</td></tr>
+<tr><td><code>Light(radius, color)</code></td><td>A point light; its <code>type</code> property selects spot or directional.</td></tr>
+<tr><td><code>Emitter()</code>, <code>ParticlePreset(name)</code>, <code>Fire()</code>, <code>Embers()</code></td><td>A particle system and preset settings for its <code>FX</code> field.</td></tr>
+<tr><td><code>Label(text)</code></td><td>Text.</td></tr>
+<tr><td><code>BoxCollider()</code>, <code>CircleCollider()</code>, <code>Rigidbody()</code></td><td>Collision and physics.</td></tr>
+<tr><td><code>AudioSource()</code></td><td>Sound playback.</td></tr>
+<tr><td><code>Player()</code>, <code>Toggle(key, target, prop)</code>, <code>DayNight()</code>, <code>Quit(key)</code></td><td>Behaviors.</td></tr>
+</table>
+<p>Every component's properties are listed in the <a href="components.html">Component reference</a> and can be set with <code>obj.Set("kind.property", value)</code>.</p>
+
+<h2>Custom components</h2>
+<p>A component exposes its properties through a binder; to be drawn, it draws in world units and reports its bounds. Registered with a menu entry, it appears in the GameObject menu, in Add Component and in the Inspector. Further optional interfaces let a component tick, update in play mode, receive keys, block the player, collide, provide a camera view or offer methods to Lua.</p>
 <pre><code><span class="k">type</span> Totem <span class="k">struct</span> {
   Height <span class="k">float64</span>
   Tint   ascdii.Color
@@ -85,15 +104,16 @@
 
 e.Registry().Register(<span class="s">"totem"</span>, <span class="k">func</span>() ascdii.Component { <span class="k">return</span> &amp;Totem{Height: 4, Tint: ascdii.Hex(<span class="s">"#9a8a70"</span>)} },
   ascdii.ComponentMeta{Category: <span class="s">"3d"</span>, Label: <span class="s">"Totem"</span>, Object: <span class="k">true</span>})</code></pre>
-<p><code>Object: true</code> puts the kind in the GameObject menu as a ready made object; leave it false for logic that belongs in Add Component only. The drawing context has textured faces, boxes, prisms, cylinders, cones, gables, pyramids, blobs, terrain, sprites with bone transforms, particles, shadows and point lights. Depth and normals are always derived for you.</p>
+<p><code>Object: true</code> offers the kind in the GameObject menu as a ready object; kinds with <code>false</code> appear only in Add Component. The drawing context provides textured faces, boxes, prisms, cylinders, cones, gables, pyramids, blobs, terrain, sprites with bone transforms, particles, shadows and point lights; depth and normals are derived automatically.</p>
+<p>Sprites whose art is finer than the dots they cover can be supersampled: <code>s := c.Sprite(pos, scale, flip).Smooth(radius)</code> before drawing and <code>s.End()</code> afterwards, where <code>radius</code> bounds the art around the anchor in art pixels. Sprites drawn at one dot per art pixel or larger are drawn directly.</p>
 
 <h2>Code modules</h2>
-<p>To use your components in the editor and in built games, ship them as a module and add it where the editor and the <code>ascdii</code> player list their modules, next to the Dragonfall module. Projects that use it name it in their manifest, usually because a <a href="packages.html">package</a> with assets that need it was installed.</p>
+<p>Components used in the editor and in built games are shipped as a module, added where the editor and the <code>ascdii</code> player list their modules, next to the Dragonfall module. Projects that use a module name it in their manifest, usually because a <a href="packages.html">package</a> that requires it was installed.</p>
 <pre><code>ascdii.Module{Name: <span class="s">"mygame"</span>, Install: <span class="k">func</span>(r *ascdii.Registry, lib *ascdii.Library) {
   r.Register(<span class="s">"totem"</span>, <span class="k">func</span>() ascdii.Component { <span class="k">return</span> &amp;Totem{Height: 4} }, ascdii.ComponentMeta{Category: <span class="s">"mygame"</span>})
 }}</code></pre>
 
-<h2>Your own render pass</h2>
+<h2>Custom render passes</h2>
 <pre><code>e.Pipeline().Add(ascdii.Func(<span class="s">"scanlines"</span>, ascdii.Post, <span class="k">func</span>(f *ascdii.Frame) {
   <span class="c">// darken every other dot row in f.Buf</span>
 }))</code></pre>

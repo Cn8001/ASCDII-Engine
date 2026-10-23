@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Component reference | ASCDII Engine</title>
+<link rel="icon" href="img/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+<script src="zoom.js" defer></script>
+</head>
+<body>
+<div class="layout">
+<aside class="side">
+<a class="brand" href="index.html"><img src="img/logo.svg" alt=""><span>ASCDII Engine<small>0.0.1 docs</small></span></a>
+<h4>Start</h4>
+<a href="index.html">Welcome</a>
+<a href="install.html">Install</a>
+<a href="first-game.html">Your first game</a>
+<h4>Guides</h4>
+<a href="editor.html">The editor</a>
+<a href="gameobjects.html">GameObjects and components</a>
+<a href="scenes.html">Scenes and prefabs</a>
+<a href="assets.html">Assets and import</a>
+<a href="packages.html">Packages</a>
+<a href="textures.html">Textures, materials, sprites</a>
+<a href="models.html">Models</a>
+<a href="animation.html">Animation</a>
+<a href="particles.html">Particles</a>
+<a href="audio.html">Audio</a>
+<a href="physics.html">Physics</a>
+<a href="scripting.html">Lua scripting</a>
+<a href="rendering.html">Rendering</a>
+<a href="building.html">Build</a>
+<h4>Reference</h4>
+<a href="components.html" class="on">Component reference</a>
+<a href="dragonfall.html">Dragonfall module</a>
+<a href="lua-api.html">Lua API</a>
+<a href="cli.html">CLI reference</a>
+<a href="go-api.html">Go API</a>
+<a href="architecture.html">Architecture</a>
+</aside>
+<main>
+<div class="kicker">Reference</div>
+<h1>Component reference</h1>
+<p class="lead">Every built in component kind with all of its properties. Property names are used in the Inspector, in animation tracks, in prefab overrides and from Lua as <code>&lt;kind&gt;.&lt;property&gt;</code>, for example <code>light.radius</code>; see <a href="gameobjects.html#property-names">Property names</a>.</p>
+<p>Types: <code>float</code> and <code>int</code> are numbers, with the range the Inspector allows; <code>vec3</code> is three numbers <code>x, y, z</code>; <code>color</code> is a hex color; <code>enum</code> is one of the listed words; <code>object</code>, <code>material</code>, <code>model</code>, <code>asset</code>, <code>audio</code>, <code>controller</code> and <code>script</code> are references, see <a href="gameobjects.html#references">References</a>. Components of code modules are documented with the module, such as the <a href="dragonfall.html">Dragonfall module</a>.</p>
+<!-- docref:begin -->
+<h2>3D objects</h2>
+<h3 id="box">Cube <code>box</code></h3>
+<p>A box standing on its position, with separate colors for the top and the sides, or a material with a texture per face. <span class="dim">GameObject menu and Add Component.</span></p>
+<table>
+<tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>size</code></td><td>vec3</td><td><code>[2, 2, 2]</code></td><td>Width, depth and height in world units.</td></tr>
+<tr><td><code>top</code></td><td>color</td><td><code>#bc9467</code></td><td>Color of the top face.</td></tr>
+<tr><td><code>side</code></td><td>color</td><td><code>#a8845c</code></td><td>Color of the side faces.</td></tr>
+<tr><td><code>emissive</code></td><td>float, 0 to 1</td><td><code>0</code></td><td>Glow independent of light, 0 to 1.</td></tr>
+<tr><td><code>material</code></td><td>material</td><td><code>none</code></td><td>A material asset; replaces both colors when set.</td></tr>
+</table>
+<h3 id="blob">Sphere <code>blob</code></h3>
+<p>A sphere shaded per dot, for canopies, bushes and rocks. <span class="dim">GameObject menu and Add Component.</span></p>
+<table>
+<tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>radius</code></td><td>float, 0.05 to 50</td><td><code>1.2</code></td><td>Radius in world units.</td></tr>
+<tr><td><code>color</code></td><td>color</td><td><code>#4e8a5c</code></td><td>Surface color.</td></tr>
+<tr><td><code>glow</code></td><td>float, 0 to 1</td><td><code>0</code></td><td>Glow independent of light, 0 to 1.</td></tr>
+</table>
+<h3 id="cylinder">Cylinder <code>cylinder</code></h3>
+<p>An upright faceted cylinder standing on its position. <span class="dim">GameObject menu and Add Component.</span></p>
+<table>
+<tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>radius</code></td><td>float, 0.05 to 100</td><td><code>1</code></td><td>Radius in world units.</td></tr>
+<tr><td><code>height</code></td><td>float, 0.05 to 200</td><td><code>3</code></td><td>Height in world units.</td></tr>
+<tr><td><code>color</code></td><td>color</td><td><code>#8c9296</code></td><td>Surface color.</td></tr>
+<tr><td><code>segments</code></td><td>int, 6 to 48</td><td><code>14</code></td><td>Number of side faces.</td></tr>
+</table>
+<h3 id="cone">Cone <code>cone</code></h3>
+<p>An upright cone standing on its position; its tip can sway in the wind. <span class="dim">GameObject menu and Add Component.</span></p>
+<table>
+<tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>radius</code></td><td>float, 0.05 to 100</td><td><code>1.5</code></td><td>Base radius in world units.</td></tr>
+<tr><td><code>height</code></td><td>float, 0.05 to 200</td><td><code>3</code></td><td>Height in world units.</td></tr>
+<tr><td><code>color</code></td><td>color</td><td><code>#407854</code></td><td>Surface color.</td></tr>
+<tr><td><code>sway</code></td><td>float, 0 to 2</td><td><code>0</code></td><td>How far the tip moves in the wind, in world units.</td></tr>
+</table>
+<h3 id="plane">Plane <code>plane</code></h3>
+<p>A flat rectangle on the ground. <span class="dim">GameObject menu and Add Component.</span></p>
+<table>
+<tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>width</code></td><td>float, 0.1 to 2000</td><td><code>6</code></td><td>Size along X.</td></tr>
+<tr><td><code>depth</code></td><td>float, 0.1 to 2000</td><td><code>6</code></td><td>Size along Y.</td></tr>
+<tr><td><code>color</code></td><td>color</td><td><code>#96928a</code></td><td>Surface color.</td></tr>
+<tr><td><code>material</code></td><td>material</td><td><code>none</code></td><td>A material asset; replaces the color when set.</td></tr>
+</table>
+<h3 id="quad">Quad <code>quad</code></h3>
+<p>An upright rectangle facing the camera, for signs and billboards. <span class="dim">GameObject menu and Add Component.</span></p>
+<table>
+<tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>width</code></td><td>float, 0.1 to 500</td><td><code>2</code></td><td>Width in world units.</td></tr>
+<tr><td><code>height</code></td><td>float, 0.1 to 500</td><td><code>2</code></td><td>Height in world units.</td></tr>
+<tr><td><code>color</code></td><td>color</td><td><code>#dcd8d0</code></td><td>Surface color.</td></tr>
+<tr><td><code>material</code></td><td>material</td><td><code>none</code></td><td>A material asset; replaces the color when set.</td></tr>
+<tr><td><code>twoSided</code></td><td>bool</td><td><code>true</code></td><td>Draws the back face as well.</td></tr>
+</table>
+<h3 id="mesh">Mesh <code>mesh</code></h3>
+<p>An imported OBJ model, see Models. <span class="dim">Add Component.</span></p>
+<table>
+<tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>model</code></td><td>model</td><td><code>none</code></td><td>The model asset.</td></tr>
+<tr><td><code>material</code></td><td>material</td><td><code>none</code></td><td>A material asset; replaces the model&#39;s own materials when set.</td></tr>
+<tr><td><code>tint</code></td><td>color</td><td><code>#ffffff</code></td><td>Color multiplied into the model&#39;s colors.</td></tr>
+<tr><td><code>emissive</code></td><td>float, 0 to 1</td><td><code>0</code></td><td>Glow independent of light, 0 to 1.</td></tr>
+<tr><td><code>twoSided</code></td><td>bool</td><td><code>false</code></td><td>Draws back faces, for models with open surfaces.</td></tr>
+<tr><td><code>shadow</code></td><td>bool</td><td><code>true</code></td><td>Casts a shadow on the ground.</td></tr>
+</table>
+<h3 id="ground">Ground <code>ground</code></h3>
+<p>A flat terrain patch with a grain pattern. <span class="dim">GameObject menu and Add Component.</span></p>
+<table>
+<tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>width</code></td><td>float, 1 to 2000</td><td><code>40</code></td><td>Size along X.</td></tr>
+<tr><td><code>depth</code></td><td>float, 1 to 2000</td><td><code>40</code></td><td>Size along Y.</td></tr>
+<tr><td><code>color</code></td><td>color</td><td><code>#405c3c</code></td><td>Base color.</td></tr>
+<tr><td><code>grain</code></td><td>float, 0 to 1</td><td><code>0.08</code></td><td>Strength of the color variation, 0 to 1.</td></tr>
+<tr><td><code>seed</code></td><td>int, 0 to 9999</td><td><code>1</code></td><td>Varies the grain pattern.</td></tr>
+</table>
+<h3 id="water">Water <code>water</code></h3>
+<p>A water surface with animated glints and reflections of the sky. <span class="dim">GameObject menu and Add Component.</span></p>
+<table>
+<tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>width</code></td><td>float, 1 to 2000</td><td><code>12</code></td><td>Size along X.</td></tr>
+<tr><td><code>depth</code></td><td>float, 1 to 2000</td><td><code>6</code></td><td>Size along Y.</td></tr>
+<tr><td><code>color</code></td><td>color</td><td><code>#245c70</code></td><td>Base color.</td></tr>
+</table>
+<h3 id="paint">Paint <code>paint</code></h3>
+<p>Strokes made with the Braille brush in the editor, stored in the object&#39;s local space. <span class="dim">Add Component.</span></p>
+<table>
+<tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>strokes</code></td><td>data</td><td><code>null</code></td><td>The stroke data; edited with the brush.</td></tr>
+</table>
+<h2>Camera</h2>
+<h3 id="camera">Camera <code>camera</code></h3>
+<p>Makes its object the game camera. The object&#39;s position is the point the camera looks at and its rotation around Z turns the view; as a child of another object the camera moves with it. The first enabled camera on a visible object is used. <span class="dim">GameObject menu and Add Component.</span></p>
+<table>
+<tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>span</code></td><td>float, 4 to 400</td><td><code>64</code></td><td>World units across the width of the view; smaller values zoom in.</td></tr>
+<tr><td><code>pitch</code></td><td>float, 15 to 89</td><td><code>55</code></td><td>Angle above the ground in degrees; 90 looks straight down.</td></tr>
+<tr><td><code>anchorX</code></td><td>float, 0 to 1</td><td><code>0.5</code></td><td>Horizontal screen position of the target, 0 left to 1 right.</td></tr>
+<tr><td><code>anchorY</code></td><td>float, 0 to 1</td><td><code>0.6</code></td><td>Vertical screen position of the target, 0 top to 1 bottom.</td></tr>
+</table>
+<h2>Lights</h2>
+<h3 id="light">Point Light <code>light</code></h3>
+<p>A light source. Point lights light everything within their radius; spot lights a cone aimed by the object&#39;s rotation; directional lights replace the environment&#39;s sun. <span class="dim">GameObject menu and Add Component.</span></p>
+<table>
+<tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>type</code></td><td>enum: point, spot, directional</td><td><code>point</code></td><td>point, spot or directional.</td></tr>
+<tr><td><code>radius</code></td><td>float, 0.5 to 200</td><td><code>8</code></td><td>Reach in world units, for point and spot lights.</td></tr>
+<tr><td><code>color</code></td><td>color</td><td><code>#ffbe6e</code></td><td>Light color.</td></tr>
+<tr><td><code>intensity</code></td><td>float, 0 to 5</td><td><code>1.2</code></td><td>Brightness multiplier.</td></tr>
+<tr><td><code>flicker</code></td><td>float, 0 to 1</td><td><code>0.15</code></td><td>Random variation of the brightness over time, 0 to 1.</td></tr>
+<tr><td><code>angle</code></td><td>float, 1 to 170</td><td><code>50</code></td><td>Width of a spot light&#39;s cone in degrees.</td></tr>
+</table>
+<h2>Effects</h2>
+<h3 id="emitter">Particle System <code>emitter</code></h3>
+<p>A particle system, see Particles. <span class="dim">GameObject menu and Add Component.</span></p>
+<table>
+<tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>active</code></td><td>bool</td><td><code>true</code></td><td>Emits new particles; when off, live particles finish their life.</td></tr>
+<tr><td><code>glow</code></td><td>float, 0 to 60</td><td><code>0</code></td><td>Radius of a light that follows the effect, 0 for none.</td></tr>
+<tr><td><code>duration</code></td><td>float, 0.1 to 60</td><td><code>5</code></td><td>Length of one cycle in seconds.</td></tr>
+<tr><td><code>loop</code></td><td>bool</td><td><code>true</code></td><td>Repeats the cycle; without it the system stops after one.</td></tr>
+<tr><td><code>prewarm</code></td><td>bool</td><td><code>true</code></td><td>Starts as if it had been running for one particle lifetime.</td></tr>
+<tr><td><code>rate</code></td><td>float, 0 to 400</td><td><code>6</code></td><td>Particles per second.</td></tr>
+<tr><td><code>burst</code></td><td>int, 0 to 500</td><td><code>0</code></td><td>Particles emitted at once at the start of each cycle.</td></tr>
+<tr><td><code>max</code></td><td>int, 1 to 4000</td><td><code>600</code></td><td>Most particles alive at once.</td></tr>
+<tr><td><code>shape</code></td><td>enum: point, sphere, box, ring</td><td><code>point</code></td><td>Where particles are born: a point, inside a sphere, inside a box or on a flat ring.</td></tr>
+<tr><td><code>radius</code></td><td>float, 0 to 40</td><td><code>1</code></td><td>Radius of the sphere and ring shapes.</td></tr>
+<tr><td><code>box</code></td><td>vec3</td><td><code>[2, 2, 2]</code></td><td>Size of the box shape.</td></tr>
+<tr><td><code>life</code></td><td>float, 0.05 to 20</td><td><code>2.4</code></td><td>Lifetime in seconds; each particle varies by 30 percent.</td></tr>
+<tr><td><code>speed</code></td><td>float, 0 to 60</td><td><code>0.8</code></td><td>Initial speed.</td></tr>
+<tr><td><code>dir</code></td><td>vec3</td><td><code>[0, 0, 1]</code></td><td>Main direction of motion.</td></tr>
+<tr><td><code>spread</code></td><td>float, 0 to 1</td><td><code>0.6</code></td><td>Widens the direction from a beam (0) to all directions (1).</td></tr>
+<tr><td><code>size</code></td><td>float, 0.05 to 4</td><td><code>0.25</code></td><td>Size at birth.</td></tr>
+<tr><td><code>sizeEnd</code></td><td>float, 0 to 4</td><td><code>0.1</code></td><td>Size at the end of the life.</td></tr>
+<tr><td><code>start</code></td><td>color</td><td><code>#ffc460</code></td><td>Color at birth.</td></tr>
+<tr><td><code>end</code></td><td>color</td><td><code>#782814</code></td><td>Color at the end of the life.</td></tr>
+<tr><td><code>emissive</code></td><td>float, 0 to 1</td><td><code>1</code></td><td>Glow independent of light, 0 to 1.</td></tr>
+<tr><td><code>gravity</code></td><td>float, -40 to 40</td><td><code>-0.4</code></td><td>Downward acceleration; negative values make particles rise.</td></tr>
+<tr><td><code>drag</code></td><td>float, 0 to 10</td><td><code>0</code></td><td>Slows particles over time.</td></tr>
+<tr><td><code>wind</code></td><td>vec3</td><td><code>[0, 0, 0]</code></td><td>Constant acceleration as a vector.</td></tr>
+<tr><td><code>turbulence</code></td><td>float, 0 to 20</td><td><code>1.5</code></td><td>Strength of the swirling motion.</td></tr>
+<tr><td><code>collide</code></td><td>bool</td><td><code>false</code></td><td>Stops particles at the ground.</td></tr>
+<tr><td><code>bounce</code></td><td>float, 0 to 1</td><td><code>0.3</code></td><td>Share of the speed kept when bouncing off the ground; 0 removes the particle.</td></tr>
+<tr><td><code>space</code></td><td>enum: world, local</td><td><code>world</code></td><td>world keeps particles where they were born when the object moves; local moves them with the object.</td></tr>
+<tr><td><code>render</code></td><td>enum: dot, streak</td><td><code>dot</code></td><td>dot draws a single dot; streak draws a trail along the motion.</td></tr>
+<tr><td><code>seed</code></td><td>int, 0 to 9999</td><td><code>0</code></td><td>Varies the random pattern.</td></tr>
+</table>
+<h2>UI</h2>
+<h3 id="label">Text <code>label</code></h3>
+<p>Text drawn as whole terminal cells, in the world or anchored to the screen. <span class="dim">GameObject menu and Add Component.</span></p>
+<table>
+<tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>text</code></td><td>string</td><td><code>label</code></td><td>The text; \n starts a new line.</td></tr>
+<tr><td><code>color</code></td><td>color</td><td><code>#e8e2d2</code></td><td>Text color.</td></tr>
+<tr><td><code>back</code></td><td>color</td><td><code>#121212</code></td><td>Background color, used with solid.</td></tr>
+<tr><td><code>anchor</code></td><td>enum: world, top-left, top, top-right, bottom-left, bottom, bottom-right, center</td><td><code>world</code></td><td>world places the text at the object; the other values pin it to a corner, an edge or the center of the screen.</td></tr>
+<tr><td><code>solid</code></td><td>bool</td><td><code>false</code></td><td>Fills the background behind the text.</td></tr>
+</table>
+<h3 id="sprite">Sprite <code>sprite</code></h3>
+<p>A sprite asset drawn as whole terminal cells at the object&#39;s position, hidden behind nearer geometry. <span class="dim">GameObject menu and Add Component.</span></p>
+<table>
+<tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>asset</code></td><td>asset</td><td><code>none</code></td><td>The sprite asset, a .sprite.json or .xp file.</td></tr>
+</table>
+<h2>Audio</h2>
+<h3 id="audio_source">Audio Source <code>audio_source</code></h3>
+<p>Plays a sound, see Audio. <span class="dim">Add Component.</span></p>
+<table>
+<tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>clip</code></td><td>audio</td><td><code>none</code></td><td>The sound asset, WAV or MP3.</td></tr>
+<tr><td><code>volume</code></td><td>float, 0 to 1</td><td><code>1</code></td><td>Volume, 0 to 1.</td></tr>
+<tr><td><code>loop</code></td><td>bool</td><td><code>false</code></td><td>Repeats the sound.</td></tr>
+<tr><td><code>playOnStart</code></td><td>bool</td><td><code>true</code></td><td>Starts playing when the game starts.</td></tr>
+</table>
+<h2>Physics</h2>
+<h3 id="box_collider">Box Collider <code>box_collider</code></h3>
+<p>A box shaped collision area turned with the object around Z, see Physics. <span class="dim">Add Component.</span></p>
+<table>
+<tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>size</code></td><td>vec3</td><td><code>[2, 2, 2]</code></td><td>Width, depth and height of the box.</td></tr>
+<tr><td><code>offset</code></td><td>vec3</td><td><code>[0, 0, 0]</code></td><td>Position of the box&#39;s base relative to the object.</td></tr>
+<tr><td><code>trigger</code></td><td>bool</td><td><code>false</code></td><td>Reports overlaps to scripts without blocking.</td></tr>
+</table>
+<h3 id="circle_collider">Circle Collider <code>circle_collider</code></h3>
+<p>A circular collision area, see Physics. <span class="dim">Add Component.</span></p>
+<table>
+<tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>radius</code></td><td>float, 0.05 to 500</td><td><code>1</code></td><td>Radius in world units.</td></tr>
+<tr><td><code>height</code></td><td>float, 0 to 500</td><td><code>2</code></td><td>Height of the area.</td></tr>
+<tr><td><code>offset</code></td><td>vec3</td><td><code>[0, 0, 0]</code></td><td>Position of the base relative to the object.</td></tr>
+<tr><td><code>trigger</code></td><td>bool</td><td><code>false</code></td><td>Reports overlaps to scripts without blocking.</td></tr>
+</table>
+<h3 id="mesh_collider">Mesh Collider <code>mesh_collider</code></h3>
+<p>A collision area shaped like the outline of the object&#39;s mesh seen from above, see Physics. <span class="dim">Add Component.</span></p>
+<table>
+<tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>trigger</code></td><td>bool</td><td><code>false</code></td><td>Reports overlaps to scripts without blocking.</td></tr>
+</table>
+<h3 id="rigidbody">Rigidbody <code>rigidbody</code></h3>
+<p>Moves the object under gravity and collisions, see Physics. <span class="dim">Add Component.</span></p>
+<table>
+<tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>mass</code></td><td>float, 0.01 to 1000</td><td><code>1</code></td><td>Mass; heavier bodies push lighter ones.</td></tr>
+<tr><td><code>gravity</code></td><td>bool</td><td><code>true</code></td><td>Falls under gravity.</td></tr>
+<tr><td><code>drag</code></td><td>float, 0 to 20</td><td><code>0.5</code></td><td>Slows the body over time.</td></tr>
+<tr><td><code>bounce</code></td><td>float, 0 to 1</td><td><code>0.2</code></td><td>Share of the speed kept when hitting something, 0 to 1.</td></tr>
+<tr><td><code>kinematic</code></td><td>bool</td><td><code>false</code></td><td>Moved by scripts only; other bodies still collide with it.</td></tr>
+<tr><td><code>velocity</code></td><td>vec3</td><td><code>[0, 0, 0]</code></td><td>Current velocity in world units per second.</td></tr>
+</table>
+<h2>Logic</h2>
+<h3 id="animator">Animator <code>animator</code></h3>
+<p>Plays the object&#39;s animation clips as the states of a controller, see Animation. <span class="dim">Add Component.</span></p>
+<table>
+<tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>controller</code></td><td>controller</td><td><code>none</code></td><td>The animator controller asset.</td></tr>
+<tr><td><code>speed</code></td><td>float, 0 to 10</td><td><code>1</code></td><td>Playback speed multiplier.</td></tr>
+<tr><td><code>state</code></td><td>string</td><td><code>none</code></td><td>The active state; shown while the game runs.</td></tr>
+</table>
+<h3 id="player">Player <code>player</code></h3>
+<p>Moves its object with the keyboard: walking, jumping, sliding along walls, and optionally the camera following it. <span class="dim">Add Component.</span></p>
+<table>
+<tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>speed</code></td><td>float, 0 to 80</td><td><code>7</code></td><td>Walking speed in world units per second.</td></tr>
+<tr><td><code>jumpSpeed</code></td><td>float, 0 to 80</td><td><code>9</code></td><td>Initial upward speed of a jump.</td></tr>
+<tr><td><code>gravity</code></td><td>float, 0 to 200</td><td><code>26</code></td><td>Downward acceleration while in the air.</td></tr>
+<tr><td><code>radius</code></td><td>float, 0 to 10</td><td><code>0.6</code></td><td>Size of the body for collisions.</td></tr>
+<tr><td><code>follow</code></td><td>bool</td><td><code>true</code></td><td>Moves the game camera along. A camera object that is a child of the player moves with it instead.</td></tr>
+<tr><td><code>followRate</code></td><td>float, 0.1 to 30</td><td><code>5</code></td><td>How quickly the camera catches up.</td></tr>
+<tr><td><code>up</code></td><td>string</td><td><code>w</code></td><td>Key for moving up.</td></tr>
+<tr><td><code>down</code></td><td>string</td><td><code>s</code></td><td>Key for moving down.</td></tr>
+<tr><td><code>left</code></td><td>string</td><td><code>a</code></td><td>Key for moving left.</td></tr>
+<tr><td><code>right</code></td><td>string</td><td><code>d</code></td><td>Key for moving right.</td></tr>
+<tr><td><code>jump</code></td><td>string</td><td><code>space</code></td><td>Key for jumping.</td></tr>
+</table>
+<h3 id="toggle">Toggle <code>toggle</code></h3>
+<p>Switches a true or false property when a key is pressed. <span class="dim">Add Component.</span></p>
+<table>
+<tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>key</code></td><td>string</td><td><code>e</code></td><td>The key.</td></tr>
+<tr><td><code>target</code></td><td>object</td><td><code>none</code></td><td>The object whose property changes; empty for this object.</td></tr>
+<tr><td><code>prop</code></td><td>string</td><td><code>visible</code></td><td>The property name, such as visible or light.enabled.</td></tr>
+</table>
+<h3 id="daynight">Day Night <code>daynight</code></h3>
+<p>Moves the environment&#39;s time of day to the other phase when a key is pressed. <span class="dim">Add Component.</span></p>
+<table>
+<tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>key</code></td><td>string</td><td><code>t</code></td><td>The key.</td></tr>
+<tr><td><code>day</code></td><td>float, 0 to 24</td><td><code>16.5</code></td><td>Hour of the day phase.</td></tr>
+<tr><td><code>night</code></td><td>float, 0 to 24</td><td><code>0.5</code></td><td>Hour of the night phase.</td></tr>
+<tr><td><code>speed</code></td><td>float, 0.1 to 48</td><td><code>7</code></td><td>Hours per second during the change.</td></tr>
+</table>
+<h3 id="quit">Quit Key <code>quit</code></h3>
+<p>Ends the game when a key is pressed. <span class="dim">Add Component.</span></p>
+<table>
+<tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>key</code></td><td>string</td><td><code>q</code></td><td>The key.</td></tr>
+</table>
+<h3 id="script">Script <code>script</code></h3>
+<p>Runs a Lua script, see Lua scripting. A script&#39;s own fields appear below file. <span class="dim">Add Component.</span></p>
+<table>
+<tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>file</code></td><td>script</td><td><code>none</code></td><td>The Lua file.</td></tr>
+</table>
+<!-- docref:end -->
+<nav class="pager"><a class="prev" href="building.html"><small>Previous</small>Build</a><a class="next" href="dragonfall.html"><small>Next</small>Dragonfall module</a></nav>
+</main>
+</div>
+</body>
+</html>

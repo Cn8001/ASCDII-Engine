@@ -41,13 +41,14 @@ export const store = reactive({
   autoKey: false,
   view: 'scene' as 'scene' | 'game',
   dots: 'dots' as DotStyle,
-  cellPx: 8,
+  cellPx: 6, // about the game's 160 columns at the default window size
   buildOpen: false,
   newProject: false,
   packagesOpen: false,
   animator: '', // the controller open in the animator window
   particles: false, // the particle editor window
   folder: '', // the folder open in the Project window, where new files go
+  gizmos: true, // collider and camera outlines in the Scene view
   tool: 'move' as 'move' | 'rotate' | 'scale',
   brush: { on: false, color: '#d8463a', radius: 0.4, erase: false },
   assetsVersion: 0, // bumped when packages change the project's files
@@ -125,6 +126,7 @@ export function setFrame(f: session.Frame) {
   const dt = now - lastFrame
   lastFrame = now
   const m = store.frame
+  if (store.info && store.info.unsaved !== f.unsaved) store.info.unsaved = f.unsaved
   m.cols = f.cols
   m.rows = f.rows
   m.time = f.time

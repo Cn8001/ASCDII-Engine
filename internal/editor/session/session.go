@@ -74,6 +74,7 @@ type Session struct {
 	play      *scene.Scene
 	mode      Mode
 	live      bool
+	gizmos    bool // collider and camera outlines in the Scene view
 	pipe      *pipeline.Pipeline
 	frame     *pipeline.Frame
 	sel       uint64
@@ -103,11 +104,12 @@ func New(d Deps) *Session {
 		d.IDs = guid.Default()
 	}
 	reg, lib := project.Registry(d.Modules)
-	s := &Session{d: d, reg: reg, lib: lib, edit: scene.New("untitled"), mode: Edit, live: false, dirty: true, viewMode: SceneView, appCtx: context.Background()}
-	s.cam = s.edit.Camera
+	s := &Session{d: d, reg: reg, lib: lib, edit: scene.New("untitled"), mode: Edit, live: false, gizmos: true, dirty: true, viewMode: SceneView, appCtx: context.Background()}
+	s.cam = s.edit.View()
 	s.pipe = app.NewPipeline(s.current, d.Now)
 	s.pipe.Add(pipeline.Func("grid", pipeline.Geometry, s.grid))
 	s.pipe.Add(pipeline.Func("colliders", pipeline.Post, s.colliders))
+	s.pipe.Add(pipeline.Func("cameraview", pipeline.Post, s.cameraFrame))
 	s.frame = pipeline.NewFrame(120, 40)
 	s.resetCtx()
 	return s
@@ -216,7 +218,7 @@ func (s *Session) migrate(ctx context.Context, metas int) {
 }
 
 func (s *Session) load(sc *scene.Scene, path string) {
-	s.edit, s.play, s.scenePath, s.cam = sc, nil, path, sc.Camera
+	s.edit, s.play, s.scenePath, s.cam = sc, nil, path, sc.View()
 	s.mode, s.sel, s.unsaved, s.keys = Edit, 0, false, nil
 	s.hist = history{}
 	s.active = -1

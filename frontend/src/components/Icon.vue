@@ -34,6 +34,7 @@ const paths: Record<string, string> = {
   alert: 'M12 4l9 16H3zM12 10v4M12 17h.01',
   refresh: 'M20 12a8 8 0 11-2.3-5.7M20 4v5h-5',
   move: 'M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3',
+  camera: 'M3 8h3l2-3h8l2 3h3v11H3zM12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',
   sparkle: 'M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z',
   rotate: 'M21 12a9 9 0 1 1-9-9c2.5 0 4.9 1 6.7 2.7L21 8M21 3v5h-5',
   scale: 'M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7',

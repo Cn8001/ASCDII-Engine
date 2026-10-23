@@ -11,7 +11,9 @@ desktop app.
 make test                       # go vet + go test -race
 make hello                      # smallest program, see cmd/hello
 make dragonfall                 # the sample game in the terminal
-make players editor-dev         # editor with hot reload (WSLg / Linux)
+make cli players editor-linux   # bin/: the ascdii launcher, players, the editor
+bin/ascdii                      # launcher: recent projects open in the editor
+make editor-dev                 # editor with hot reload, without the launcher
 ```
 
 ```go
@@ -31,17 +33,19 @@ A game is a folder you can keep in git:
 ```
 MyGame/
   MyGame.ascdiiproj      manifest: name, version, engine, start scene, modules
-  scenes/*.scene.json    GameObject trees, camera, environment, animation clips
-  prefabs/*.prefab.json  reusable GameObject trees, instanced by reference
-  models/*.obj           models with their .mtl files
-  textures/*.png         pictures for materials
-  materials/*.material.json
-  art/*.json | *.xp      glyph art (JSON palette art or REXPaint)
-  scripts/*.lua          Lua scripts with Inspector fields
+  **/*.scene.json        GameObject trees, environment, animation clips
+  **/*.prefab.json       reusable GameObject trees, instanced by reference
+  **/*.obj, *.png        models with their .mtl files, textures
+  **/*.material.json, *.animator.json
+  **/*.sprite.json, *.xp sprites: glyph art as palette JSON or REXPaint
+  **/*.lua               Lua scripts with Inspector fields
+  **/*.wav, *.mp3        sounds
   packages/<name>/       installed packages, read only
   **/*.meta              UUIDv7 per asset, plus import settings
   build/                 output, ignored by the generated .gitignore
 ```
+
+Only the manifest has a fixed place; folders are the project's own.
 
 CLI, also the game player:
 
@@ -49,15 +53,16 @@ CLI, also the game player:
 ascdii new MyGame -template dragonfall
 ascdii run MyGame
 ascdii preview MyGame -size 160x50 -time 2
-ascdii build MyGame                          # one executable, project appended
-ascdii release MyGame -players bin/players   # per platform exe + zip + SHA256SUMS
+ascdii build MyGame                          # folder: player, data/game.pak, SHA256SUMS
+ascdii build MyGame -single                  # one executable instead
 ascdii pack install MyGame dragonfall        # the sample as a package
 ascdii pack export MyGame/props -name props  # share a folder as a .ascdiipack
 ascdii version
 ```
 
-A build is the `ascdii` binary with the project zipped onto its end; when it
-finds a bundle it plays it, so a release is a single file per platform.
+A build is the `ascdii` binary as the player next to `data/game.pak`, the
+project compiled into one encrypted file, plus checksums. The build is the
+release.
 
 ## Editor
 

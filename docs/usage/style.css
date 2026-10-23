@@ -130,12 +130,30 @@ pre code { background: none; border: 0; padding: 0; }
 .s { color: var(--ok); }
 
 figure { margin: 24px 0; }
+/* Screenshots are made at exactly twice the column width, or to fit it, so
+   the browser scales them by 0.5 or not at all: Braille dots alias badly at
+   other factors. Click opens them at full size. */
 figure img {
-  width: 100%;
+  max-width: 100%;
+  height: auto;
   border-radius: var(--radius);
   border: 1px solid var(--line);
   display: block;
+  margin: 0 auto;
+  cursor: zoom-in;
 }
+.zoom {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(8, 8, 8, .92);
+  overflow: auto;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  cursor: zoom-out;
+}
+.zoom img { max-width: none; border-radius: var(--radius); border: 1px solid var(--line); }
 figcaption { color: var(--dim); font-size: 13px; margin-top: 8px; text-align: center; }
 
 .steps { counter-reset: step; list-style: none; padding: 0; }
@@ -219,3 +237,4 @@ kbd {
   main { padding: 32px 16px 72px; }
   h1 { font-size: 28px; }
 }
+.dim { color: var(--dim); }

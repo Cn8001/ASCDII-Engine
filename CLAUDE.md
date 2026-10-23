@@ -44,7 +44,7 @@ engine never imports either.
 - Tests use the standard library, sit next to their subject, run under `-race`,
   are named `TestUnit_Behaviour` and use Arrange / Act / Assert comments.
 - Add a dependency in the same commit that uses it. Standard library first.
-- Embedded files (`frontend/dist`, players, templates) are the only package
+- Embedded files (`frontend/dist`, templates) are the only package
   level values; they are read-only build artefacts.
 
 ## Assets
@@ -70,6 +70,11 @@ at the feet) scaled by `Sprite.Scale` world units per pixel.
 ## Commands
 
 - `make test` runs `go vet` and `go test -race ./...`.
+- Docs: `python3 docs/nav.py` rewrites page navigation; `go run ./cmd/docref
+  docs/usage/components.html` (and `docs/usage/dragonfall.html dragonfall`)
+  regenerates the component reference. Every component property needs a
+  description in `cmd/docref/notes.go`.
 - `make hello`, `make dragonfall` run the terminal examples.
-- `make players` before any editor build; `make editor-dev`, `make editor-linux`,
+- `make cli`, `make players` (cross platform players next to it in `bin/`),
+  `make editor-dev`, `make editor-linux`,
   `make editor-windows`.

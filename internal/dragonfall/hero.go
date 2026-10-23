@@ -91,6 +91,8 @@ func (h *Hero) Draw(c *draw.Context, t scene.Transform) {
 	if !s.Visible(90) {
 		return
 	}
+	s.Smooth(90)
+	defer s.End()
 	bones := h.rig.Solve(h.pose(c.Time, t.Pos.Z > .05))
 	flap := math.Round(2.8*math.Sin(c.Time*2.2) + .9*math.Sin(c.Time*4.4+2))
 	with := func(b string, fn func()) { s.Push(bones[b]); fn(); s.Pop() }

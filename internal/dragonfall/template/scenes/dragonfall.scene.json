@@ -60,6 +60,26 @@
   "objects": [
     {
       "fid": 1,
+      "name": "Main Camera",
+      "pos": [
+        114,
+        79.5,
+        0
+      ],
+      "components": [
+        {
+          "kind": "camera",
+          "props": {
+            "anchorX": 0.5,
+            "anchorY": 0.6,
+            "pitch": 52,
+            "span": 38
+          }
+        }
+      ]
+    },
+    {
+      "fid": 2,
       "name": "terrain",
       "solid": true,
       "pos": [
@@ -78,7 +98,7 @@
       ]
     },
     {
-      "fid": 2,
+      "fid": 3,
       "name": "forest",
       "solid": true,
       "pos": [
@@ -98,7 +118,7 @@
       ]
     },
     {
-      "fid": 3,
+      "fid": 4,
       "name": "grass",
       "pos": [
         0,
@@ -117,7 +137,7 @@
       ]
     },
     {
-      "fid": 4,
+      "fid": 5,
       "name": "bridge",
       "pos": [
         122,
@@ -136,7 +156,7 @@
       ]
     },
     {
-      "fid": 5,
+      "fid": 6,
       "name": "castle",
       "solid": true,
       "pos": [
@@ -157,7 +177,7 @@
       ]
     },
     {
-      "fid": 6,
+      "fid": 7,
       "name": "dragon",
       "solid": true,
       "pos": [
@@ -191,7 +211,7 @@
       ]
     },
     {
-      "fid": 7,
+      "fid": 8,
       "name": "hero",
       "pos": [
         114,
@@ -225,7 +245,7 @@
       ]
     },
     {
-      "fid": 8,
+      "fid": 9,
       "name": "road",
       "pos": [
         0,
@@ -234,7 +254,7 @@
       ],
       "children": [
         {
-          "fid": 9,
+          "fid": 10,
           "name": "lantern 1",
           "solid": true,
           "pos": [
@@ -245,7 +265,7 @@
           "prefab": "01a160e8-5000-7dc8-8295-00ff6a1eb491"
         },
         {
-          "fid": 10,
+          "fid": 11,
           "name": "lantern 2",
           "solid": true,
           "pos": [
@@ -256,7 +276,7 @@
           "prefab": "01a160e8-5000-7dc8-8295-00ff6a1eb491"
         },
         {
-          "fid": 11,
+          "fid": 12,
           "name": "lantern 3",
           "solid": true,
           "pos": [
@@ -267,7 +287,7 @@
           "prefab": "01a160e8-5000-7dc8-8295-00ff6a1eb491"
         },
         {
-          "fid": 12,
+          "fid": 13,
           "name": "lantern 4",
           "solid": true,
           "pos": [
@@ -280,7 +300,7 @@
       ]
     },
     {
-      "fid": 13,
+      "fid": 14,
       "name": "crystal",
       "pos": [
         110,
@@ -305,7 +325,7 @@
       ],
       "children": [
         {
-          "fid": 14,
+          "fid": 15,
           "name": "shine",
           "pos": [
             0,
@@ -329,7 +349,7 @@
       ]
     },
     {
-      "fid": 15,
+      "fid": 16,
       "name": "hud",
       "pos": [
         0,
@@ -365,7 +385,7 @@
       ]
     },
     {
-      "fid": 16,
+      "fid": 17,
       "name": "rules",
       "pos": [
         0,

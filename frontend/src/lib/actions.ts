@@ -5,6 +5,7 @@ import type { MenuItem } from './menu'
 
 export function kindIcon(kind: string): string {
   if (!kind) return 'layers'
+  if (kind === 'camera') return 'camera'
   if (kind.includes('light')) return 'sun'
   if (kind.includes('audio')) return 'music'
   if (kind === 'animator') return 'graph'
@@ -87,7 +88,8 @@ export function addMenu(parent: number): MenuItem[] {
     { label: 'Directional Light', icon: 'sun', run: () => addLight(parent, 'directional', 'Directional Light') },
   )
   const order = [...Object.keys(categories), ...[...groups.keys()].filter((c) => !categories[c]).sort()]
-  const items: MenuItem[] = [{ label: 'Create Empty', icon: 'layers', run: () => add(parent, 'empty') }, { label: '-' }]
+  const items: MenuItem[] = [{ label: 'Create Empty', icon: 'layers', run: () => add(parent, 'empty') }, ...(groups.get('camera') ?? []), { label: '-' }]
+  groups.delete('camera')
   for (const c of order) {
     const children = groups.get(c)
     if (children) items.push({ label: categoryLabel(c), icon: categories[c]?.icon ?? 'package', children })

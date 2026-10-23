@@ -72,8 +72,15 @@ onMounted(async () => {
 })
 onBeforeUnmount(() => off?.())
 watch(() => store.assetsVersion, reloadAll)
-// another project has other folders
-watch(() => store.info?.dir, () => (store.folder = ''))
+// Another project has other folders: start at its top and read them again.
+watch(
+  () => store.info?.dir,
+  async () => {
+    store.folder = ''
+    open.value = {}
+    await reloadAll()
+  },
+)
 
 function name(p: string) {
   return base(p).replace(/\.(prefab|scene|material|animator|sprite)\.json$/, '').replace(/\.(json|xp|lua|obj|png|jpe?g|gif|wav|mp3)$/i, '')

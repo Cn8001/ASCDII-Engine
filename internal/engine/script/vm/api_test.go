@@ -320,6 +320,28 @@ end`})
 	}
 }
 
+func TestUnit_CameraGlobalDrivesTheCameraObject(t *testing.T) {
+	// Arrange
+	w := newWorld(t, map[string]string{"scripts/c.lua": `
+function start(self)
+  self.camname = camera.object.name
+  camera.span = 14
+  camera.object:set_parent(self)
+end`})
+	cam := components.NewCamera()
+	camObj := w.s.Add("Main Camera", cam).At(3, 4, 0)
+	o := w.s.Add("hero", w.script(t, "scripts/c.lua")).At(10, 0, 0)
+
+	// Act
+	w.run(1)
+
+	// Assert
+	self := o.Component(Kind).(*Script).self
+	if self.RawGetString("camname").String() != "Main Camera" || cam.Span != 14 || camObj.Parent() != o || camObj.World().Pos != geom.V3(3, 4, 0) {
+		t.Fatalf("name %v span %v parent %v pos %+v logs %v", self.RawGetString("camname"), cam.Span, camObj.Parent(), camObj.World().Pos, w.log.lines)
+	}
+}
+
 type fakeAudio struct{ played []string }
 
 func (f *fakeAudio) Play(ref string, vol float64, _ bool) (uint64, error) {

@@ -1,21 +1,21 @@
-// Package players ships the per platform ascdii binaries inside the editor so
-// a game can be built without a Go toolchain. "make players" fills bin/.
+// Package players finds the binaries a build starts from. ascdii is itself
+// the player, so the ascdii next to the editor serves its own platform and an
+// ascdii-<os>-<arch> beside it serves another one.
 package players
 
 import (
 	"context"
-	"embed"
 	"errors"
 	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime"
+
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/editor/launch"
 )
 
-//go:embed all:bin
-var embedded embed.FS // read-only build artefact
-
-var ErrNoPlayer = errors.New("no player binary for target, run make players")
+var ErrNoPlayer = errors.New("no player for this platform; place its ascdii next to the editor")
 
 func Name(goos, arch string) string {
 	n := "ascdii-" + goos + "-" + arch
@@ -25,19 +25,53 @@ func Name(goos, arch string) string {
 	return n
 }
 
-// Source finds players embedded in the editor or in a players folder next to it.
+// Source is the folders players are looked up in, first match wins.
 type Source struct {
-	FS       fs.FS
-	Fallback string
+	Dirs []fs.FS
 }
 
+// Dir is an extra folder to look in, for editors not started from a release
+// folder such as wails dev.
+const Dir = "ASCDII_PLAYERS"
+
+// Default looks next to the editor, next to the ascdii that started it, and
+// in the folder named by ASCDII_PLAYERS.
 func Default() Source {
-	sub, _ := fs.Sub(embedded, "bin")
-	dir := ""
+	var dirs []fs.FS
 	if exe, err := os.Executable(); err == nil {
-		dir = filepath.Join(filepath.Dir(exe), "players")
+		dirs = append(dirs, os.DirFS(filepath.Dir(exe)))
 	}
-	return Source{FS: sub, Fallback: dir}
+	if cli := os.Getenv(launch.Env); filepath.IsAbs(cli) {
+		dirs = append(dirs, os.DirFS(filepath.Dir(cli)))
+	}
+	if dir := os.Getenv(Dir); dir != "" {
+		dirs = append(dirs, os.DirFS(dir))
+	}
+	return Source{Dirs: dirs}
+}
+
+// names are the files that can be the player for a target.
+func names(goos, arch string) []string {
+	out := []string{Name(goos, arch)}
+	if goos == runtime.GOOS && arch == runtime.GOARCH {
+		self := launch.CLI
+		if goos == "windows" {
+			self += ".exe"
+		}
+		out = append(out, self)
+	}
+	return out
+}
+
+func (s Source) read(goos, arch string) ([]byte, error) {
+	for _, d := range s.Dirs {
+		for _, n := range names(goos, arch) {
+			if b, err := fs.ReadFile(d, n); err == nil {
+				return b, nil
+			}
+		}
+	}
+	return nil, fmt.Errorf("%w: %s", ErrNoPlayer, Name(goos, arch))
 }
 
 // Extract writes the player for a target into dir and returns its path.
@@ -45,18 +79,14 @@ func (s Source) Extract(ctx context.Context, goos, arch, dir string) (string, er
 	if err := ctx.Err(); err != nil {
 		return "", err
 	}
-	name := Name(goos, arch)
-	b, err := fs.ReadFile(s.FS, name)
-	if err != nil && s.Fallback != "" {
-		b, err = os.ReadFile(filepath.Join(s.Fallback, name))
-	}
+	b, err := s.read(goos, arch)
 	if err != nil {
-		return "", fmt.Errorf("%w: %s", ErrNoPlayer, name)
+		return "", err
 	}
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return "", fmt.Errorf("extract player: %w", err)
 	}
-	path := filepath.Join(dir, name)
+	path := filepath.Join(dir, Name(goos, arch))
 	if err := os.WriteFile(path, b, 0o755); err != nil {
 		return "", fmt.Errorf("extract player: %w", err)
 	}
@@ -66,11 +96,18 @@ func (s Source) Extract(ctx context.Context, goos, arch, dir string) (string, er
 func (s Source) Available() []string {
 	var out []string
 	for _, t := range [][2]string{{"linux", "amd64"}, {"windows", "amd64"}} {
-		n := Name(t[0], t[1])
-		if _, err := fs.Stat(s.FS, n); err == nil {
-			out = append(out, t[0])
-		} else if _, err := os.Stat(filepath.Join(s.Fallback, n)); s.Fallback != "" && err == nil {
-			out = append(out, t[0])
+		for _, d := range s.Dirs {
+			found := false
+			for _, n := range names(t[0], t[1]) {
+				if _, err := fs.Stat(d, n); err == nil {
+					found = true
+					break
+				}
+			}
+			if found {
+				out = append(out, t[0])
+				break
+			}
 		}
 	}
 	return out

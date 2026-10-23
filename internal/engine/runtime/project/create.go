@@ -12,6 +12,7 @@ import (
 
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/guid"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/version"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/components"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/scene"
 )
 
@@ -137,5 +138,8 @@ func FileName(name string) string {
 func Starter(name string) *scene.Scene {
 	s := scene.New(name)
 	s.Camera.Span = 40
+	cam := components.NewCamera()
+	cam.Span = s.Camera.Span
+	s.Add("Main Camera", cam)
 	return s
 }

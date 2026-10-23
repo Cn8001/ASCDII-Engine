@@ -6,6 +6,7 @@
 <title>Lua API | ASCDII Engine</title>
 <link rel="icon" href="img/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
+<script src="zoom.js" defer></script>
 </head>
 <body>
 <div class="layout">
@@ -21,7 +22,7 @@
 <a href="scenes.html">Scenes and prefabs</a>
 <a href="assets.html">Assets and import</a>
 <a href="packages.html">Packages</a>
-<a href="textures.html">Textures and materials</a>
+<a href="textures.html">Textures, materials, sprites</a>
 <a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
 <a href="particles.html">Particles</a>
@@ -31,6 +32,8 @@
 <a href="rendering.html">Rendering</a>
 <a href="building.html">Build</a>
 <h4>Reference</h4>
+<a href="components.html">Component reference</a>
+<a href="dragonfall.html">Dragonfall module</a>
 <a href="lua-api.html" class="on">Lua API</a>
 <a href="cli.html">CLI reference</a>
 <a href="go-api.html">Go API</a>
@@ -39,7 +42,7 @@
 <main>
 <div class="kicker">Reference</div>
 <h1>Lua API</h1>
-<p class="lead">Everything a script can call. Names are lower case with underscores. Positions, rotations and sizes are <code>vec3</code> values in world units; colors are hex strings such as <code>"#ff8800"</code>.</p>
+<p class="lead">Every function and field available to scripts. Names are lower case with underscores. Positions, rotations and sizes are <code>vec3</code> values in world units and degrees; colors are hex strings such as <code>"#ff8800"</code>.</p>
 
 <h2>Finding objects</h2>
 <table>
@@ -60,20 +63,20 @@
 </table>
 
 <h2>GameObject</h2>
-<p>Handles from <code>find</code>, fields and <code>self</code> share these fields and methods.</p>
+<p>Object handles returned by <code>find</code>, object fields and <code>self</code> share these fields and methods.</p>
 <table>
 <tr><th>Field</th><th>Read / write</th><th>Meaning</th></tr>
 <tr><td><code>name</code>, <code>tag</code></td><td>both</td><td>Name and tag.</td></tr>
-<tr><td><code>active</code></td><td>both</td><td>Visible; hidden objects are not drawn.</td></tr>
-<tr><td><code>solid</code></td><td>both</td><td>Blocks players.</td></tr>
+<tr><td><code>active</code></td><td>both</td><td>Visibility; hidden objects and their children are not drawn.</td></tr>
+<tr><td><code>solid</code></td><td>both</td><td>Blocks the player with the object's bounds.</td></tr>
 <tr><td><code>parent</code></td><td>both</td><td>Parent object or nil; setting it reparents and keeps the world position.</td></tr>
 <tr><td><code>children</code></td><td>read</td><td>List of child objects.</td></tr>
 <tr><td><code>root</code></td><td>read</td><td>The topmost parent, or the object itself.</td></tr>
-<tr><td><code>prefab</code></td><td>read</td><td>The prefab's path for an instance, else nil.</td></tr>
+<tr><td><code>prefab</code></td><td>read</td><td>The prefab's path for an instance, otherwise nil.</td></tr>
 <tr><td><code>id</code></td><td>read</td><td>Runtime id, unique while the game runs.</td></tr>
 </table>
 <h3 id="transform">Transform</h3>
-<p>World values are where the object ends up after all its parents; local values are relative to the parent, as the Inspector shows them. For objects at the top both are the same.</p>
+<p>World values include all parents; local values are relative to the parent, as the Inspector shows them. For objects at the top level both are equal.</p>
 <table>
 <tr><th>Field</th><th>Read / write</th><th>Meaning</th></tr>
 <tr><td><code>position</code>, <code>local_position</code></td><td>both</td><td>Position in the world, or relative to the parent.</td></tr>
@@ -84,12 +87,12 @@
 </table>
 <table>
 <tr><th>Method</th><th>Does</th></tr>
-<tr><td><code>o:set_parent(p, keep_world)</code></td><td>Reparents; <code>p</code> nil moves it to the top. <code>keep_world</code> defaults to true; false keeps the local values, so the object jumps with its new parent.</td></tr>
-<tr><td><code>o:translate(v, space)</code></td><td>Moves along its own axes, or along the world's with <code>"world"</code>.</td></tr>
+<tr><td><code>o:set_parent(p, keep_world)</code></td><td>Makes the object a child of <code>p</code>, or moves it to the top level when <code>p</code> is nil. <code>keep_world</code> defaults to true; with false the local values are kept, so the object moves with its new parent.</td></tr>
+<tr><td><code>o:translate(v, space)</code></td><td>Moves along the object's own axes, or along the world axes with <code>"world"</code>.</td></tr>
 <tr><td><code>o:rotate(degrees)</code></td><td>Adds a vec3 of degrees to the local rotation.</td></tr>
 <tr><td><code>o:look_at(target)</code></td><td>Turns around Z to face an object or a vec3 on the ground plane.</td></tr>
 <tr><td><code>o:transform_point(p)</code>, <code>o:inverse_transform_point(p)</code></td><td>A point from the object's space to the world, and back.</td></tr>
-<tr><td><code>o:move(delta)</code>, <code>o:move_to(pos)</code></td><td>Nudge or place in world units; a vec3 or x, y, z.</td></tr>
+<tr><td><code>o:move(delta)</code>, <code>o:move_to(pos)</code></td><td>Moves by a world offset, or to a world position; a vec3 or x, y, z.</td></tr>
 </table>
 <pre><code><span class="k">function</span> update(self, dt)
   self:rotate(vec3(0, 0, 90 * dt))            <span class="c">-- spin a quarter turn a second</span>
@@ -110,16 +113,16 @@
 <tr><td><code>o:add_component(kind)</code></td><td>Adds and returns a new component.</td></tr>
 <tr><td><code>o:remove_component(c)</code></td><td>Removes a component handle or script.</td></tr>
 <tr><td><code>o:child(path)</code></td><td>A descendant by name path, such as <code>"cage/flame"</code>.</td></tr>
-<tr><td><code>o:get(prop)</code>, <code>o:set(prop, value)</code></td><td>Any Inspector property by name: <code>"pos"</code>, <code>"light.radius"</code>, or a short name such as <code>"glow"</code>.</td></tr>
+<tr><td><code>o:get(prop)</code>, <code>o:set(prop, value)</code></td><td>Any property by name: <code>"pos"</code>, <code>"light.radius"</code>, or a short name such as <code>"glow"</code>.</td></tr>
 <tr><td><code>o:distance(other)</code></td><td>World distance between two objects.</td></tr>
-<tr><td><code>o:tween(prop, to, seconds, ease)</code></td><td>Animate a property from its current value. Eases: <code>linear</code>, <code>in</code>, <code>out</code>, <code>inout</code>, <code>step</code>, <code>back</code>, <code>elastic</code>.</td></tr>
-<tr><td><code>o:say(text, seconds)</code></td><td>A floating label over the object; repeating the same text keeps it up.</td></tr>
-<tr><td><code>o:play(clip)</code>, <code>o:stop(clip)</code></td><td>Start or stop an animation clip of the scene by name.</td></tr>
+<tr><td><code>o:tween(prop, to, seconds, ease)</code></td><td>Animates a property from its current value. Eases: <code>linear</code>, <code>in</code>, <code>out</code>, <code>inout</code>, <code>step</code>, <code>back</code>, <code>elastic</code>.</td></tr>
+<tr><td><code>o:say(text, seconds)</code></td><td>Shows a label over the object; calling it again with the same text keeps it visible.</td></tr>
+<tr><td><code>o:play(clip)</code>, <code>o:stop(clip)</code></td><td>Starts or stops one of the object's animation clips by name.</td></tr>
 <tr><td><code>o:destroy()</code></td><td>Same as <code>destroy(o)</code>.</td></tr>
 </table>
 
 <h2>Components</h2>
-<p>A component handle's fields are its Inspector properties: <code>light.radius</code> reads, <code>light.radius = 12</code> writes. Reference properties come back as objects or components. Every handle also has:</p>
+<p>A component handle's fields are its properties, as listed in the <a href="components.html">Component reference</a>: <code>light.radius</code> reads, <code>light.radius = 12</code> writes. Reference properties are returned as objects or components. Every handle also has:</p>
 <table>
 <tr><th>Field</th><th>Meaning</th></tr>
 <tr><td><code>enabled</code></td><td>The card's checkbox; read and write.</td></tr>
@@ -134,7 +137,7 @@
 <tr><td><code>audio_source</code></td><td><code>s:play()</code>, <code>s:stop()</code>, <code>s:playing()</code>; <code>s.volume</code>, <code>s.loop</code>, <code>s.clip</code>.</td></tr>
 <tr><td><code>rigidbody</code></td><td><code>rb:add_force(vec3)</code>; <code>rb.velocity</code>, <code>rb.mass</code>, <code>rb.gravity</code>, <code>rb.kinematic</code>.</td></tr>
 <tr><td><code>emitter</code></td><td><code>p:play()</code>, <code>p:stop()</code>, <code>p:emit(n)</code>, <code>p:clear()</code>, <code>p:count()</code>; every setting is a field, see <a href="particles.html">Particles</a>.</td></tr>
-<tr><td><code>light</code></td><td>Fields only: <code>type</code>, <code>radius</code>, <code>color</code>, <code>intensity</code>, <code>angle</code>.</td></tr>
+<tr><td>others</td><td>Fields only, for example <code>light.intensity</code> or <code>camera.span</code>.</td></tr>
 </table>
 
 <h2>Fields</h2>
@@ -169,23 +172,35 @@ log(a:len(), a:dist(b), a:dot(b), a:cross(b), a:lerp(b, 0.5))</code></pre>
 <tr><td><code>play_sound(sound, volume)</code></td><td>Plays a sound asset once, by path or from a field.</td></tr>
 <tr><td><code>quit()</code></td><td>Ends the game.</td></tr>
 </table>
-<p>Terminals report key presses but not releases, so there a key counts as held for a moment after each press, extended by key repeat. In the editor and in graphical backends releases are exact.</p>
+<p>Terminals report key presses but not releases; there a key counts as held for a short time after each press, extended by key repeat. In the editor, releases are exact.</p>
 
-<h2>Camera, environment and pipeline</h2>
-<pre><code>camera.span = 24                  <span class="c">-- zoom: world units across the view</span>
+<h2 id="camera">Camera</h2>
+<p>The global <code>camera</code> controls the game camera: the scene's camera object when it has one, otherwise the scene camera. See <a href="gameobjects.html#cameras">Cameras</a>.</p>
+<table>
+<tr><th>Field or function</th><th>Meaning</th></tr>
+<tr><td><code>camera.target</code></td><td>The point the camera looks at; on a camera object, its world position.</td></tr>
+<tr><td><code>camera.span</code></td><td>World units across the width of the view.</td></tr>
+<tr><td><code>camera.pitch</code>, <code>camera.yaw</code></td><td>Angle above the ground, and rotation around the up axis, in degrees.</td></tr>
+<tr><td><code>camera.anchorX</code>, <code>camera.anchorY</code></td><td>Screen position of the target, 0 to 1.</td></tr>
+<tr><td><code>camera.object</code></td><td>The camera's GameObject, or nil in scenes without one.</td></tr>
+<tr><td><code>camera.follow(obj, rate)</code></td><td>Moves the camera toward <code>obj</code> every frame; <code>camera.follow(nil)</code> stops.</td></tr>
+</table>
+<pre><code>camera.span = 24
 camera.pitch, camera.yaw = 45, 15
 camera.target = vec3(10, 20, 0)
-camera.follow(find(<span class="s">"hero"</span>), 5)      <span class="c">-- follow with a rate; follow(nil) stops</span>
+camera.follow(find(<span class="s">"hero"</span>), 5)
+camera.object:set_parent(find(<span class="s">"cart"</span>))   <span class="c">-- ride along with the cart</span></code></pre>
 
-env.hour = 21.5                   <span class="c">-- any Environment property of the Scene</span>
+<h2>Environment and pipeline</h2>
+<pre><code>env.hour = 21.5                   <span class="c">-- any environment property of the scene</span>
 env.auto = <span class="k">false</span>
 
-pipeline.pass(<span class="s">"fog"</span>).density = 0.8  <span class="c">-- any pass setting from the Pipeline tab</span>
+pipeline.pass(<span class="s">"fog"</span>).density = 0.8  <span class="c">-- any pass setting, see Rendering</span>
 pipeline.enable(<span class="s">"outline"</span>, <span class="k">false</span>)
 log(pipeline.enabled(<span class="s">"grade"</span>))</code></pre>
 
 <h2 id="draw">Drawing from Lua</h2>
-<p>A script with a <code>draw(self, d)</code> hook draws extra shapes every frame. Positions and sizes are in the object's local space, so they move, turn and scale with it.</p>
+<p>A script with a <code>draw(self, d)</code> hook draws additional shapes every frame. Positions and sizes are in the object's local space, so the shapes move, rotate and scale with the object.</p>
 <table>
 <tr><th>Call</th><th>Draws</th></tr>
 <tr><td><code>d:box(pos, size, color, glow)</code></td><td>A box standing on <code>pos</code>.</td></tr>
@@ -201,9 +216,9 @@ log(pipeline.enabled(<span class="s">"grade"</span>))</code></pre>
   d:light(vec3(0, 0, h), 6, <span class="s">"#9fd8ff"</span>, 1.2)
 <span class="k">end</span></code></pre>
 
-<h2>From the first API</h2>
-<p>Scripts written for 0.0.1 keep working: <code>dist(a, b)</code> (distance on the ground), <code>hour()</code>, <code>setHour(h)</code>, <code>o:pos()</code> and <code>o:moveTo(x, y, z)</code> are still there.</p>
-<nav class="pager"><a class="prev" href="building.html"><small>Previous</small>Build</a><a class="next" href="cli.html"><small>Next</small>CLI reference</a></nav>
+<h2>Earlier names</h2>
+<p>The functions of the first API remain available: <code>dist(a, b)</code> (distance on the ground), <code>hour()</code>, <code>setHour(h)</code>, <code>o:pos()</code> and <code>o:moveTo(x, y, z)</code>. <code>position</code> and <code>rotation</code> now hold world values; scripts that set them on child objects and expect local values use <code>local_position</code> and <code>local_rotation</code>.</p>
+<nav class="pager"><a class="prev" href="dragonfall.html"><small>Previous</small>Dragonfall module</a><a class="next" href="cli.html"><small>Next</small>CLI reference</a></nav>
 </main>
 </div>
 </body>

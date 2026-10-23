@@ -6,6 +6,7 @@
 <title>GameObjects and components | ASCDII Engine</title>
 <link rel="icon" href="img/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
+<script src="zoom.js" defer></script>
 </head>
 <body>
 <div class="layout">
@@ -21,7 +22,7 @@
 <a href="scenes.html">Scenes and prefabs</a>
 <a href="assets.html">Assets and import</a>
 <a href="packages.html">Packages</a>
-<a href="textures.html">Textures and materials</a>
+<a href="textures.html">Textures, materials, sprites</a>
 <a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
 <a href="particles.html">Particles</a>
@@ -31,6 +32,8 @@
 <a href="rendering.html">Rendering</a>
 <a href="building.html">Build</a>
 <h4>Reference</h4>
+<a href="components.html">Component reference</a>
+<a href="dragonfall.html">Dragonfall module</a>
 <a href="lua-api.html">Lua API</a>
 <a href="cli.html">CLI reference</a>
 <a href="go-api.html">Go API</a>
@@ -39,60 +42,77 @@
 <main>
 <div class="kicker">Guides</div>
 <h1>GameObjects and components</h1>
-<p class="lead">Everything in a scene is a GameObject: a name, a transform and a list of components. Components do the work: one draws a box, another is a light, another runs a Lua script. An object can have as many as it needs, including several of the same kind.</p>
+<p class="lead">A scene consists of GameObjects. Each GameObject has a name, a transform and a list of components; the components define what the object is and does. An object can carry any number of components, including several of the same kind.</p>
 
 <h2>Creating objects</h2>
-<figure><img src="img/editor-gameobject-menu.png" alt="GameObject menu"><figcaption>The GameObject menu. The same list opens from the Hierarchy's + button and from right click, Create.</figcaption></figure>
-<p>Open <b>GameObject</b> in the toolbar. When an object is selected, the new one is created as its child; otherwise it goes to the scene root at the center of the view.</p>
+<figure><img src="img/editor-gameobject-menu.png" alt="GameObject menu"><figcaption>The GameObject menu. The Hierarchy's <b>+</b> button and its context menu open the same list.</figcaption></figure>
+<p>The <b>GameObject</b> menu in the toolbar creates objects. With an object selected, the new object becomes its child; otherwise it is created at the top level, at the center of the view.</p>
 <table>
 <tr><th>Entry</th><th>Creates</th></tr>
 <tr><td>Create Empty</td><td>An object with only a transform, for grouping and for scripts.</td></tr>
-<tr><td>3D Object</td><td>Cube, Sphere, Cylinder, Cone, Plane, Quad, Ground, Water.</td></tr>
+<tr><td>Camera</td><td>A camera object, see <a href="#cameras">Cameras</a>.</td></tr>
+<tr><td>3D Object</td><td>Cube, Sphere, Cylinder, Cone, Plane, Quad, Ground and Water.</td></tr>
 <tr><td>Light</td><td>Point, spot and directional lights.</td></tr>
 <tr><td>Effects</td><td>Particle System, see <a href="particles.html">Particles</a>.</td></tr>
-<tr><td>UI</td><td>Text and sprites.</td></tr>
-<tr><td>Model</td><td>Every model in the project, see <a href="models.html">Models</a>.</td></tr>
-<tr><td>Prefab</td><td>An instance of a prefab, see <a href="scenes.html">Scenes and prefabs</a>.</td></tr>
+<tr><td>UI</td><td>Text and Sprite.</td></tr>
+<tr><td>Model</td><td>An instance of a model of the project, see <a href="models.html">Models</a>.</td></tr>
+<tr><td>Prefab</td><td>An instance of a prefab of the project, see <a href="scenes.html">Scenes and prefabs</a>.</td></tr>
 </table>
-<p>Code modules add their own entries; installing the Dragonfall package adds a Dragonfall submenu with its terrain, castle, dragon and knight. Submenus open when you click them or rest the pointer on them, and moving diagonally across other rows does not switch them. The arrow keys, <kbd>Enter</kbd> and <kbd>Esc</kbd> work too.</p>
+<p>Code modules add their own entries; the Dragonfall module adds a Dragonfall submenu with its terrain, forest, grass, castle, bridge, dragon, knight and HUD. Submenus open on click or when the pointer rests on them; the arrow keys, <kbd>Enter</kbd> and <kbd>Esc</kbd> navigate the menu.</p>
 
-<h2>Parents and children</h2>
-<p>Any object can hold other objects. Drag a row in the Hierarchy onto another row to make it a child, or onto <b>Scene</b> to move it back to the top. A child moves, turns and scales with its parent, which is how a lantern carries its flame and light, or a hand carries a sword. Reparenting keeps the object where it is on screen: its local values change so its place in the world does not. Scripts do the same with <code>obj.parent = other</code> or <code>obj:set_parent(other)</code>, see the <a href="lua-api.html#transform">Lua API</a>.</p>
-
-<h2>Moving, rotating and scaling</h2>
-<p>The Scene view's toolbar has three tools, also on <kbd>W</kbd>, <kbd>E</kbd> and <kbd>R</kbd>:</p>
+<h2 id="transform">Transform</h2>
+<p>Every object has a transform: a position in world units, a rotation in degrees around X, Y and Z (Z points up), a scale per axis, and <b>flip</b>, which mirrors sprites to face left. The values in the Inspector are local: relative to the parent object, or to the world for objects at the top level.</p>
+<p>The Scene view's transform tools change these values by dragging; see <a href="editor.html#view-toolbar">View toolbar</a>.</p>
 <table>
-<tr><th>Tool</th><th>Drag</th></tr>
-<tr><td>Move</td><td>An arrow along its axis, or the square in the middle along the ground.</td></tr>
-<tr><td>Rotate</td><td>The ring to turn around the up axis, or the red and green handles to tilt around X and Y.</td></tr>
-<tr><td>Scale</td><td>A handle to stretch one axis, or the middle to scale evenly. Right or up grows, left or down shrinks.</td></tr>
+<tr><th>Tool</th><th>Key</th><th>Handles</th></tr>
+<tr><td>Move</td><td><kbd>W</kbd></td><td>An arrow moves along its axis; the square in the middle moves along the ground.</td></tr>
+<tr><td>Rotate</td><td><kbd>E</kbd></td><td>The ring turns around the up axis; the red and green handles tilt around X and Y.</td></tr>
+<tr><td>Scale</td><td><kbd>R</kbd></td><td>A handle stretches one axis; the square in the middle scales evenly. Dragging right or up enlarges, left or down shrinks.</td></tr>
 </table>
-<p>Every drag is one undo step. Exact values go in the Transform card.</p>
+
+<h2 id="parents">Parents and children</h2>
+<p>An object can contain other objects. A child moves, rotates and scales with its parent: a lantern carries its flame and light, a hand carries a sword, a vehicle carries its camera. In the Hierarchy, dragging a row onto another row makes it a child, and dropping it on <b>Scene</b> moves it to the top level. Reparenting keeps the object's place in the world; its local transform is recalculated. Scripts reparent with <code>obj.parent = other</code> or <code>obj:set_parent(other)</code>, and read world and local values separately, see <a href="lua-api.html#transform">Transform</a> in the Lua API.</p>
+
+<h2 id="cameras">Cameras</h2>
+<p>A <b>Camera</b> component makes its object the game camera. The object's position is the point the camera looks at; its rotation around Z turns the view. The component sets the remaining parameters:</p>
+<table>
+<tr><th>Property</th><th>Meaning</th></tr>
+<tr><td><code>span</code></td><td>World units across the width of the view. Smaller values zoom in.</td></tr>
+<tr><td><code>pitch</code></td><td>Angle above the ground in degrees; 90 looks straight down.</td></tr>
+<tr><td><code>anchorX</code>, <code>anchorY</code></td><td>Where the target point appears on screen, from 0 to 1 in each direction.</td></tr>
+</table>
+<ul>
+<li>The game uses the first enabled camera on a visible object, in Hierarchy order. Disabling a camera component, or hiding its object, switches to the next one.</li>
+<li>As a child of another object, the camera moves with it. A camera that is a child of the player is not moved by the player's <code>follow</code> setting.</li>
+<li>New projects and the Dragonfall template contain a <b>Main Camera</b> object. Scenes without a camera object use the scene camera, which is edited by selecting <b>Scene</b> in the Hierarchy.</li>
+<li>In the Scene view, the area the camera shows is outlined in amber. <b>Align</b> moves the camera to the current Scene view.</li>
+<li>Scripts reach the camera through the <code>camera</code> global; <code>camera.object</code> is the camera's GameObject. See <a href="lua-api.html#camera">Camera</a> in the Lua API.</li>
+</ul>
 
 <h2>The Inspector</h2>
-<figure><img src="img/editor-components.png" alt="Inspector with component cards"></figure>
+<figure><img src="img/editor-components.png" alt="Inspector with component cards"><figcaption>A Sphere selected: its transform and the Sphere component.</figcaption></figure>
 <ul>
-<li>The header holds the name, the visibility checkbox, the <b>tag</b> (for <code>find_by_tag</code> in Lua) and <b>Solid</b>, which makes players collide with the object.</li>
-<li><b>Transform</b> comes first: position, rotation in degrees around X, Y and Z (Z is up), scale per axis, and flip, which mirrors sprites the 2.5D way of facing left. The values are local: relative to the parent object, or to the world for objects at the top.</li>
-<li>Every component is a card with a checkbox to switch it off without losing its settings. The <b>⋮</b> button (or right click on the card) has <b>Reset</b>, <b>Move Up</b>, <b>Move Down</b> and <b>Remove Component</b>.</li>
-<li><b>Add Component</b> searches every kind and every Lua script in the project, grouped by category. Type to filter, use the arrow keys and <kbd>Enter</kbd>, or create a new script from the search text.</li>
+<li>The header contains the name, the visibility checkbox, the <b>tag</b>, which scripts search with <code>find_by_tag</code>, and <b>Solid</b>, which makes the player collide with the object's bounds.</li>
+<li><b>Transform</b> follows the header.</li>
+<li>Each component is a card with a checkbox that disables it while keeping its settings. The <b>⋮</b> button and the card's context menu provide <b>Reset</b>, <b>Move Up</b>, <b>Move Down</b> and <b>Remove Component</b>. Cards can be reordered by dragging their header.</li>
+<li><b>Add Component</b> searches all component kinds and the project's Lua scripts, grouped by category. Typing filters the list; the arrow keys and <kbd>Enter</kbd> select; a new script can be created from the search text.</li>
 </ul>
-<p>Prefab instances do not take new components; change the prefab instead, or unpack the instance.</p>
+<p>Prefab instances cannot receive new components; edit the prefab, or unpack the instance first.</p>
 
-<h2>Property names</h2>
-<p>A component's properties are named after its kind: <code>light.radius</code>, <code>box.size</code>. A second light on the same object is <code>light#2</code>, so its radius is <code>light#2.radius</code>. Animation keys, prefab overrides and Lua all use these names, and a short name such as <code>radius</code> also works when only one component has it.</p>
+<h2 id="property-names">Property names</h2>
+<p>A component's properties are named after its kind: <code>light.radius</code>, <code>box.size</code>. A second component of the same kind on one object is numbered: the second light is <code>light#2</code> and its radius <code>light#2.radius</code>. Animation tracks, prefab overrides and Lua use these names. A short name such as <code>radius</code> is accepted when only one component of the object has that property.</p>
 
-<h2>References</h2>
+<h2 id="references">References</h2>
 <figure><img src="img/editor-references.png" alt="Reference slot filled by dragging the hero"><figcaption>Dragging the hero from the Hierarchy onto a script's object field.</figcaption></figure>
-<p>Some properties point at something else instead of holding a value: another object, a component, a prefab, a texture or a material. They show as slots.</p>
+<p>Reference properties point to another object, a component or an asset instead of holding a value. The Inspector shows them as slots.</p>
 <ul>
-<li><b>Object slots</b> take a row dragged from the Hierarchy.</li>
-<li><b>Component slots</b> take a component card dragged from the Inspector header, or an object, in which case its first component of the wanted kind is used.</li>
-<li><b>Prefab, texture and material slots</b> take a tile dragged from the Project window.</li>
-<li>The target button lists everything that fits, and <b>None</b> clears the slot.</li>
-<li>A slot whose target was deleted shows <b>Missing</b> in red.</li>
+<li><b>Object slots</b> accept a row dragged from the Hierarchy.</li>
+<li><b>Component slots</b> accept a component card dragged by its header, or an object, in which case its first component of the required kind is used.</li>
+<li><b>Asset slots</b> (prefab, texture, material, model, sprite, sound, controller, script) accept a tile dragged from the Project window.</li>
+<li>The button at the end of a slot lists every suitable target; <b>None</b> clears the slot.</li>
+<li>A slot whose target has been deleted shows <b>Missing</b> in red.</li>
 </ul>
-<p>The toggle component's target and every <code>object()</code> or <code>component()</code> field of a Lua script are references.</p>
+<p>The toggle component's target and the <code>object()</code>, <code>component()</code> and <code>prefab()</code> fields of Lua scripts are references.</p>
 
 <h3>How references are stored</h3>
 <p>Assets are named by the GUID in their <code>.meta</code> file. Objects inside a scene or prefab are named by a <b>file id</b> (<code>"fid"</code> in the file), unique within that file:</p>
@@ -106,27 +126,26 @@
 <p>New objects get random 53 bit file ids, so two people who add objects on different git branches can merge without clashing ids. References survive renaming and moving objects, saving and loading, duplicating (references inside the copy point at the copies), saving as a prefab and unpacking an instance.</p>
 
 <h2>Built in components</h2>
+<p>All properties of every component are listed in the <a href="components.html">Component reference</a>.</p>
 <table>
-<tr><th>Kind</th><th>Menu</th><th>What it is</th></tr>
-<tr><td><code>box</code></td><td>Cube</td><td>A box with top and side colors, or a material with a texture per face.</td></tr>
-<tr><td><code>blob</code></td><td>Sphere</td><td>A sphere shaded per dot, for canopies, bushes and rocks.</td></tr>
-<tr><td><code>cylinder</code>, <code>cone</code></td><td>Cylinder, Cone</td><td>Faceted solids; cones can sway in the wind.</td></tr>
-<tr><td><code>plane</code>, <code>quad</code></td><td>Plane, Quad</td><td>A flat rectangle on the ground, and an upright one facing the camera; both take materials.</td></tr>
-<tr><td><code>mesh</code></td><td>Model</td><td>An imported .obj model.</td></tr>
+<tr><th>Kind</th><th>Name</th><th>Purpose</th></tr>
+<tr><td><code>box</code>, <code>blob</code>, <code>cylinder</code>, <code>cone</code></td><td>Cube, Sphere, Cylinder, Cone</td><td>Solid shapes; the cube accepts a material.</td></tr>
+<tr><td><code>plane</code>, <code>quad</code></td><td>Plane, Quad</td><td>A flat rectangle on the ground and an upright one facing the camera; both accept materials.</td></tr>
+<tr><td><code>mesh</code></td><td>Mesh</td><td>An imported OBJ model, see <a href="models.html">Models</a>.</td></tr>
 <tr><td><code>ground</code>, <code>water</code></td><td>Ground, Water</td><td>Terrain patches; water has animated glints.</td></tr>
-<tr><td><code>light</code></td><td>Point, Spot, Directional Light</td><td>A <code>type</code> of point, spot (a cone aimed by the object's rotation, <code>angle</code>) or directional (replaces the sun, aimed by the rotation); radius, color, intensity, flicker.</td></tr>
-<tr><td><code>emitter</code></td><td>Particle System</td><td>Fire, smoke, sparks, rain and more, with a Particle Editor; see <a href="particles.html">Particles</a>.</td></tr>
-<tr><td><code>label</code>, <code>sprite</code></td><td>Text, Sprite</td><td>Text in the world or on screen, and sprites: glyph art from a <code>.sprite.json</code> or <code>.xp</code> file.</td></tr>
-<tr><td><code>player</code></td><td>Add Component</td><td>Walk, jump, slide along walls, camera follow.</td></tr>
-<tr><td><code>toggle</code></td><td>Add Component</td><td>Flip a bool property on a key, on this object or a referenced one.</td></tr>
-<tr><td><code>daynight</code>, <code>quit</code></td><td>Add Component</td><td>Run the clock to the other phase on a key; leave the game on a key.</td></tr>
-<tr><td><code>animator</code></td><td>Add Component</td><td>Plays the object's clips as states of a controller, see <a href="animation.html#animator">Animation</a>.</td></tr>
-<tr><td><code>audio_source</code></td><td>Add Component</td><td>Plays a sound, see <a href="audio.html">Audio</a>.</td></tr>
-<tr><td><code>box_collider</code>, <code>circle_collider</code>, <code>mesh_collider</code>, <code>rigidbody</code></td><td>Add Component</td><td>Collision and simple physics, see <a href="physics.html">Physics</a>.</td></tr>
-<tr><td><code>paint</code></td><td>Braille brush</td><td>Strokes painted over the object in the editor, see <a href="editor.html#brush">the editor</a>.</td></tr>
-<tr><td><code>script</code></td><td>Add Component</td><td>A Lua file, see <a href="scripting.html">Lua scripting</a>.</td></tr>
+<tr><td><code>camera</code></td><td>Camera</td><td>The game camera, see <a href="#cameras">Cameras</a>.</td></tr>
+<tr><td><code>light</code></td><td>Point, Spot and Directional Light</td><td>Light sources, see <a href="rendering.html">Rendering</a>.</td></tr>
+<tr><td><code>emitter</code></td><td>Particle System</td><td>Particle effects, see <a href="particles.html">Particles</a>.</td></tr>
+<tr><td><code>label</code>, <code>sprite</code></td><td>Text, Sprite</td><td>Text and sprites drawn as whole terminal cells.</td></tr>
+<tr><td><code>audio_source</code></td><td>Audio Source</td><td>Plays a sound, see <a href="audio.html">Audio</a>.</td></tr>
+<tr><td><code>box_collider</code>, <code>circle_collider</code>, <code>mesh_collider</code>, <code>rigidbody</code></td><td>Colliders, Rigidbody</td><td>Collision and physics, see <a href="physics.html">Physics</a>.</td></tr>
+<tr><td><code>animator</code></td><td>Animator</td><td>Plays clips as states of a controller, see <a href="animation.html#animator">Animation</a>.</td></tr>
+<tr><td><code>player</code></td><td>Player</td><td>Keyboard movement, jumping and camera following.</td></tr>
+<tr><td><code>toggle</code>, <code>daynight</code>, <code>quit</code></td><td>Toggle, Day Night, Quit Key</td><td>Switch a property, change the time of day, or end the game on a key.</td></tr>
+<tr><td><code>paint</code></td><td>Paint</td><td>Strokes made with the <a href="editor.html#brush">Braille brush</a>.</td></tr>
+<tr><td><code>script</code></td><td>Script</td><td>A Lua script, see <a href="scripting.html">Lua scripting</a>.</td></tr>
 </table>
-<div class="tip"><b>Writing your own</b>Components are Go types registered by kind; see <a href="go-api.html">Go API</a>. Lua scripts with a <code>draw</code> hook can draw too, without Go.</div>
+<div class="tip"><b>Custom components</b>Components are Go types registered by kind; see <a href="go-api.html">Go API</a>. A Lua script with a <code>draw</code> hook can also draw, without Go.</div>
 <nav class="pager"><a class="prev" href="editor.html"><small>Previous</small>The editor</a><a class="next" href="scenes.html"><small>Next</small>Scenes and prefabs</a></nav>
 </main>
 </div>

@@ -6,6 +6,7 @@
 <title>ASCDII Engine</title>
 <link rel="icon" href="img/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
+<script src="zoom.js" defer></script>
 </head>
 <body>
 <div class="layout">
@@ -21,7 +22,7 @@
 <a href="scenes.html">Scenes and prefabs</a>
 <a href="assets.html">Assets and import</a>
 <a href="packages.html">Packages</a>
-<a href="textures.html">Textures and materials</a>
+<a href="textures.html">Textures, materials, sprites</a>
 <a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
 <a href="particles.html">Particles</a>
@@ -31,6 +32,8 @@
 <a href="rendering.html">Rendering</a>
 <a href="building.html">Build</a>
 <h4>Reference</h4>
+<a href="components.html">Component reference</a>
+<a href="dragonfall.html">Dragonfall module</a>
 <a href="lua-api.html">Lua API</a>
 <a href="cli.html">CLI reference</a>
 <a href="go-api.html">Go API</a>
@@ -39,35 +42,37 @@
 <main>
 <div class="kicker">Start</div>
 <h1>ASCDII Engine</h1>
-<p class="lead">A 2.5D game engine that draws with Unicode Braille. Build a world with a desktop editor, script it in Lua, and ship it as a single executable that runs in any truecolor terminal.</p>
-<figure><img src="img/game-night.png" alt="Dragonfall at night"><figcaption>The Dragonfall sample at night, rendered in a terminal. Every cell holds a 2x4 grid of lit, depth tested dots.</figcaption></figure>
+<p class="lead">ASCDII Engine is a 2.5D game engine that renders with Unicode Braille characters. Worlds are built in a desktop editor, scripted in Lua, and built into games that run in any terminal with 24 bit color.</p>
+<figure><img src="img/game-night.png" alt="Dragonfall at night"><figcaption>The Dragonfall sample at night. Each terminal cell holds a 2 by 4 grid of lit, depth tested dots.</figcaption></figure>
 
-<h2>What you get</h2>
-<ul>
-  <li><b>A real 2.5D renderer.</b> Boxes, towers, roofs, terrain with cliffs, camera facing sprites, shadows, point lights, fog and water, all resolved per Braille dot.</li>
-  <li><b>Desktop editor.</b> Hierarchy, Scene and Game views, an Inspector with components, Project window, Console and Animation window.</li>
-  <li><b>Lua scripting.</b> Write scripts in your own code editor, expose fields to the Inspector and reach any object, component, the camera or the render pipeline. Saving a file reloads it in the running scene.</li>
-  <li><b>Packages.</b> Install and remove sets of assets as a whole, share them as one file, and keep samples such as Dragonfall out of projects that do not need them.</li>
-  <li><b>Particles.</b> Fire, smoke, sparks, rain and snow from presets, tuned live in a Particle Editor.</li>
-  <li><b>Animator, audio and physics.</b> State machines over animation clips, sounds from WAV and MP3, box, circle and mesh colliders with rigidbodies, all reachable from Lua.</li>
-  <li><b>Textures, materials and models.</b> Drop pictures and .obj models into the editor; they draw in Braille, lit and shaded.</li>
-  <li><b>Plain project files.</b> A game is a folder of JSON and Lua, organized as you like, made to live in git.</li>
-  <li><b>Builds ready to ship.</b> One click makes a Windows and a Linux folder with the game, its compiled data and checksums.</li>
-</ul>
+<h2>Features</h2>
+<table>
+<tr><th>Area</th><th>Contents</th></tr>
+<tr><td>Rendering</td><td>Boxes, cylinders, cones, spheres, planes, terrain with cliffs, models, camera facing sprites, shadows, point, spot and directional lights, fog, water and color grading, resolved per Braille dot. See <a href="rendering.html">Rendering</a>.</td></tr>
+<tr><td>Editor</td><td>Hierarchy, Scene and Game views with move, rotate and scale tools, Inspector, Project window, Console, Animation timeline, Animator graph, Particle Editor, Package Manager and builds. See <a href="editor.html">The editor</a>.</td></tr>
+<tr><td>Objects</td><td>GameObjects with components, parent and child hierarchies, prefabs with overrides, references between objects and assets, and a camera component. See <a href="gameobjects.html">GameObjects and components</a> and <a href="scenes.html">Scenes and prefabs</a>.</td></tr>
+<tr><td>Scripting</td><td>Lua scripts with Inspector fields and hooks, access to every object, component, the camera, the environment and the render pipeline, and reloading on save. See <a href="scripting.html">Lua scripting</a>.</td></tr>
+<tr><td>Animation</td><td>Clips with keys and easing, and animator controllers with states, parameters and transitions. See <a href="animation.html">Animation</a>.</td></tr>
+<tr><td>Physics</td><td>Box, circle and mesh colliders, triggers and rigidbodies, edited in the Scene view. See <a href="physics.html">Physics</a>.</td></tr>
+<tr><td>Audio</td><td>WAV and MP3 sounds played by audio sources and scripts. See <a href="audio.html">Audio</a>.</td></tr>
+<tr><td>Particles</td><td>A particle system with nine presets and a Particle Editor. See <a href="particles.html">Particles</a>.</td></tr>
+<tr><td>Assets</td><td>Textures, materials, OBJ models, sprites and packages, organized in any folder layout. See <a href="assets.html">Assets and import</a>.</td></tr>
+<tr><td>Builds</td><td>A folder per platform with the player, the compiled game data and checksums, for Windows and Linux. See <a href="building.html">Build</a>.</td></tr>
+</table>
 
-<h2>Where to go next</h2>
+<h2>Documentation</h2>
 <div class="cards">
-  <a class="card" href="install.html"><strong>Install</strong><span>Tools you need and how to build the editor and CLI.</span></a>
-  <a class="card" href="first-game.html"><strong>Your first game</strong><span>A guided tour from an empty folder to a playable scene.</span></a>
-  <a class="card" href="editor.html"><strong>The editor</strong><span>Every panel, every shortcut.</span></a>
-  <a class="card" href="gameobjects.html"><strong>GameObjects</strong><span>Objects, components and references.</span></a>
+  <a class="card" href="install.html"><strong>Install</strong><span>Requirements, installation and the launcher.</span></a>
+  <a class="card" href="first-game.html"><strong>Your first game</strong><span>Creating, editing, playing and saving a project.</span></a>
+  <a class="card" href="editor.html"><strong>The editor</strong><span>Every panel, control and shortcut.</span></a>
+  <a class="card" href="gameobjects.html"><strong>GameObjects</strong><span>Objects, components, hierarchy, references, cameras.</span></a>
   <a class="card" href="scenes.html"><strong>Scenes and prefabs</strong><span>Projects, prefabs, overrides and world units.</span></a>
-  <a class="card" href="animation.html"><strong>Animation</strong><span>Record keys, edit timing and easing, loop clips.</span></a>
-  <a class="card" href="scripting.html"><strong>Lua scripting</strong><span>Hooks, the full API and hot reload.</span></a>
-  <a class="card" href="rendering.html"><strong>Rendering</strong><span>How a frame is made and how to tune it.</span></a>
-  <a class="card" href="building.html"><strong>Build</strong><span>Make the folders players download.</span></a>
-  <a class="card" href="lua-api.html"><strong>Lua API</strong><span>Every function a script can call.</span></a>
-  <a class="card" href="go-api.html"><strong>Go API</strong><span>Use the engine from Go and add your own components.</span></a>
+  <a class="card" href="scripting.html"><strong>Lua scripting</strong><span>Scripts, fields, hooks and hot reload.</span></a>
+  <a class="card" href="lua-api.html"><strong>Lua API</strong><span>Every function and field available to scripts.</span></a>
+  <a class="card" href="rendering.html"><strong>Rendering</strong><span>Frames, passes, lights and terminal output.</span></a>
+  <a class="card" href="building.html"><strong>Build</strong><span>Game folders, compiled data and checksums.</span></a>
+  <a class="card" href="cli.html"><strong>CLI reference</strong><span>The launcher and every ascdii command.</span></a>
+  <a class="card" href="go-api.html"><strong>Go API</strong><span>Using the engine from Go and writing components.</span></a>
 </div>
 <nav class="pager"><span></span><a class="next" href="install.html"><small>Next</small>Install</a></nav>
 </main>

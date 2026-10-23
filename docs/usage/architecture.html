@@ -6,6 +6,7 @@
 <title>Architecture | ASCDII Engine</title>
 <link rel="icon" href="img/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
+<script src="zoom.js" defer></script>
 </head>
 <body>
 <div class="layout">
@@ -21,7 +22,7 @@
 <a href="scenes.html">Scenes and prefabs</a>
 <a href="assets.html">Assets and import</a>
 <a href="packages.html">Packages</a>
-<a href="textures.html">Textures and materials</a>
+<a href="textures.html">Textures, materials, sprites</a>
 <a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
 <a href="particles.html">Particles</a>
@@ -31,6 +32,8 @@
 <a href="rendering.html">Rendering</a>
 <a href="building.html">Build</a>
 <h4>Reference</h4>
+<a href="components.html">Component reference</a>
+<a href="dragonfall.html">Dragonfall module</a>
 <a href="lua-api.html">Lua API</a>
 <a href="cli.html">CLI reference</a>
 <a href="go-api.html">Go API</a>
@@ -39,7 +42,7 @@
 <main>
 <div class="kicker">Reference</div>
 <h1>Architecture</h1>
-<p class="lead">How the engine is split into modules, which way they depend on each other, and the small contract a new display backend, such as SDL, has to fill.</p>
+<p class="lead">The engine's packages and their dependencies, the stages of a frame, and the contract a display backend implements.</p>
 
 <h2>Modules</h2>
 <p>One Go module. Everything except the public <code>pkg/ascdii</code> facade lives under <code>internal/</code>, one package per concern, grouped by module:</p>
@@ -53,14 +56,17 @@
   script/    vm (Lua: VM, scripts, fields, API)
   platform/  the backend contract, terminal, headless, speaker (sound output)
   runtime/   app, loop, bundle, project (manifest, modules), pack (packages), version
-internal/editor/   session, service (the Wails boundary), players, recent, brand
+internal/editor/   session, service (the Wails boundary), launch (the launcher handshake),
+                   players (finds the ascdii binaries builds start from), recent, brand
 internal/dragonfall/  the sample: a code module and a package
-cmd/      ascdii (CLI, player and the menu in ascdii/menu), editor (Wails), snapshot, hello</code></pre>
-<p>Dependencies point one way: <code>core</code> ← <code>render</code> ← <code>world</code> ← <code>script</code>, with <code>assets</code> using core, render and world types, and <code>runtime</code> tying it together. The editor and content modules depend on the engine; the engine never depends on them. Nothing keeps package level state: registries, libraries and VMs are created at startup and passed in.</p>
+cmd/      ascdii (CLI, player and the launcher in ascdii/menu), editor (Wails), snapshot (PNG renders),
+          docref (component reference for the docs), brand (icons), hello
+docs/     usage (these pages), nav.py (rewrites their navigation)</code></pre>
+<p>Dependencies point one way: <code>core</code> ← <code>render</code> ← <code>world</code> ← <code>script</code>; <code>assets</code> uses core, render and world types, and <code>runtime</code> combines them. The editor and content modules depend on the engine; the engine never depends on them. No package keeps state: registries, libraries and VMs are created at startup and passed in.</p>
 
 <h2>A frame</h2>
 <ol class="steps">
-<li><b>Update.</b> Key handlers, updaters and tickers of every enabled component run; Lua scripts run in one VM per game run, each in its own environment. Animation clips apply.</li>
+<li><b>Update.</b> Key handlers, updaters and tickers of every enabled component run; Lua scripts run in one VM per game run, each in its own environment. Animation clips are applied, and the main camera object determines the view.</li>
 <li><b>Geometry.</b> Each renderer component draws into the dot buffer through <code>draw.Context</code>: positions in world units, depth and normals derived, textures sampled per dot.</li>
 <li><b>Lighting and post.</b> Shadows, lights, water, fog, outline and grading run over the dots.</li>
 <li><b>Resolve.</b> Every 2x4 dot block becomes one Braille cell with a foreground and a background color; cell drawers such as sprites and HUDs write on top.</li>
@@ -99,7 +105,8 @@ cmd/      ascdii (CLI, player and the menu in ascdii/menu), editor (Wails), snap
 <p>A <b>module</b> (<code>project.Module</code>) is Go code: a name and a function that registers component kinds. Modules are compiled into the editor and the player, and a project lists the ones it uses in its manifest; only those are installed into its registry. A <b>package</b> (<code>runtime/pack</code>) is data: assets with .meta files and a <code>pack.json</code> naming the modules they need. Installing a package copies it into <code>packages/&lt;name&gt;/</code> and adds its modules; see <a href="packages.html">Packages</a>.</p>
 
 <h2>The editor</h2>
-<p><code>editor/session</code> owns the open project, the edited scene, a cloned scene while playing, undo history and the render loop. <code>editor/service</code> is the boundary to the Vue interface: Wails binds its methods, and every error leaves it with a stable code such as <code>not_found:</code> or <code>prefab_locked:</code>. Frames go to the interface as raw bytes from a small HTTP handler, not as JSON, so a 220 by 60 view stays cheap at 60 frames a second.</p>
+<p><code>editor/session</code> owns the open project, the edited scene, a cloned scene during play, the undo history and the render loop. <code>editor/service</code> is the boundary to the Vue interface: Wails binds its methods, and every error leaves it with a stable code such as <code>not_found:</code> or <code>prefab_locked:</code>. Frames reach the interface as raw bytes from a small HTTP handler rather than as JSON, so a 220 by 60 view remains cheap at 60 frames per second.</p>
+<p>The editor starts only from the <code>ascdii</code> launcher (<code>editor/launch</code>): the launcher sets <code>ASCDII_LAUNCHER</code> to its own path when it starts the editor, and an editor started without it opens the launcher in a terminal and exits. The path also tells the editor where to find the players for builds. Editors built for <code>wails dev</code> skip the check.</p>
 <nav class="pager"><a class="prev" href="go-api.html"><small>Previous</small>Go API</a><span></span></nav>
 </main>
 </div>

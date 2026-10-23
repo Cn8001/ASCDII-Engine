@@ -42,13 +42,25 @@ func (s *Session) SetView(mode string) {
 	s.touch()
 }
 
-// camera is what navigation moves: the editor camera in the scene view, the
-// game camera otherwise.
-func (s *Session) camera() *view.Camera {
+// camera is what navigation looks through: the editor camera in the scene
+// view, the game camera otherwise.
+func (s *Session) camera() view.Camera {
 	if s.viewMode == SceneView {
-		return &s.cam
+		return s.cam
 	}
-	return &s.current().Camera
+	return s.current().View()
+}
+
+// moveCamera changes what navigation looks through; in the game view that
+// moves the scene's camera object.
+func (s *Session) moveCamera(fn func(c *view.Camera)) {
+	if s.viewMode == SceneView {
+		fn(&s.cam)
+		return
+	}
+	c := s.current().View()
+	fn(&c)
+	s.current().SetView(c)
 }
 
 func (s *Session) view() view.View { return s.camera().View(s.frame.Buf.W, s.frame.Buf.H) }
@@ -61,27 +73,28 @@ func ground(v view.View, col, row, z float64) geom.Vec3 {
 func (s *Session) Pan(dcol, drow float64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	c := s.camera()
 	v := s.view()
-	d := ground(v, dcol, drow, c.Target.Z).Sub(ground(v, 0, 0, c.Target.Z))
-	c.Target = c.Target.Sub(d)
+	s.moveCamera(func(c *view.Camera) {
+		d := ground(v, dcol, drow, c.Target.Z).Sub(ground(v, 0, 0, c.Target.Z))
+		c.Target = c.Target.Sub(d)
+	})
 	s.touch()
 }
 
 func (s *Session) Orbit(dyaw, dpitch float64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	c := s.camera()
-	c.Yaw = math.Mod(c.Yaw+dyaw+540, 360) - 180
-	c.Pitch = geom.Clamp(c.Pitch+dpitch, 15, 89)
+	s.moveCamera(func(c *view.Camera) {
+		c.Yaw = math.Mod(c.Yaw+dyaw+540, 360) - 180
+		c.Pitch = geom.Clamp(c.Pitch+dpitch, 15, 89)
+	})
 	s.touch()
 }
 
 func (s *Session) Zoom(k float64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	c := s.camera()
-	c.Span = geom.Clamp(c.Span*k, 6, 400)
+	s.moveCamera(func(c *view.Camera) { c.Span = geom.Clamp(c.Span*k, 6, 400) })
 	s.touch()
 }
 
@@ -93,7 +106,7 @@ func (s *Session) Focus(id uint64) error {
 		return err
 	}
 	p := e.World().Pos
-	s.camera().Target = geom.V3(p.X, p.Y, 0)
+	s.moveCamera(func(c *view.Camera) { c.Target = geom.V3(p.X, p.Y, 0) })
 	s.touch()
 	return nil
 }
@@ -105,7 +118,7 @@ func (s *Session) AlignGame() {
 	if s.play == nil {
 		s.checkpoint("")
 	}
-	s.current().Camera = s.cam
+	s.current().SetView(s.cam)
 	s.changed()
 }
 

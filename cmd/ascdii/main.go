@@ -28,10 +28,10 @@ import (
 )
 
 const usage = `usage:
-  ascdii                      main menu
+  ascdii                      launcher: recent projects open in the editor
   ascdii new <dir> [-name N] [-template dragonfall]
   ascdii run <dir>
-  ascdii preview <dir> [-size 160x50] [-time 2] [-plain]
+  ascdii preview <dir> [-size 160x50] [-time 2] [-hour 22] [-plain]
   ascdii build <dir> [-out path] [-player path] [-single]
   ascdii pack list|install|remove|export ...
   ascdii version

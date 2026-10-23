@@ -99,6 +99,26 @@ func (b *Buffer) Clear(bg color.Color) {
 	b.tag = 0
 }
 
+// Grow makes the buffer at least w by h dots, keeping it when it is larger,
+// for scratch buffers reused at changing sizes.
+func (b *Buffer) Grow(w, h int) {
+	cols, rows := (w+SubW-1)/SubW, (h+SubH-1)/SubH
+	if cols > b.Cols || rows > b.Rows {
+		b.Resize(max(cols, b.Cols), max(rows, b.Rows))
+	}
+}
+
+// ClearRect empties the dots in [x0,x1) by [y0,y1).
+func (b *Buffer) ClearRect(x0, y0, x1, y1 int) {
+	empty := Dot{Flags: FlagEmpty | FlagUnlit, Depth: float32(math.Inf(-1))}
+	for y := max(0, y0); y < min(b.H, y1); y++ {
+		row := b.dots[y*b.W : (y+1)*b.W]
+		for x := max(0, x0); x < min(b.W, x1); x++ {
+			row[x] = empty
+		}
+	}
+}
+
 // SetTag marks every following write, which is how the editor picks entities.
 func (b *Buffer) SetTag(tag uint32) { b.tag = tag }
 

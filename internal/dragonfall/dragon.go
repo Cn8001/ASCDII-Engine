@@ -80,6 +80,8 @@ func (d *Dragon) Draw(c *draw.Context, t scene.Transform) {
 	if !s.Visible(160) {
 		return
 	}
+	s.Smooth(160)
+	defer s.End()
 	w := d.wake
 	if w < .01 && d.Awake {
 		w = 1 // editor preview without ticks still shows the awake pose

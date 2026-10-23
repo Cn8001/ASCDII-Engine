@@ -3,9 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Textures and materials | ASCDII Engine</title>
+<title>Textures, materials, sprites | ASCDII Engine</title>
 <link rel="icon" href="img/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
+<script src="zoom.js" defer></script>
 </head>
 <body>
 <div class="layout">
@@ -21,7 +22,7 @@
 <a href="scenes.html">Scenes and prefabs</a>
 <a href="assets.html">Assets and import</a>
 <a href="packages.html">Packages</a>
-<a href="textures.html" class="on">Textures and materials</a>
+<a href="textures.html" class="on">Textures, materials, sprites</a>
 <a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
 <a href="particles.html">Particles</a>
@@ -31,6 +32,8 @@
 <a href="rendering.html">Rendering</a>
 <a href="building.html">Build</a>
 <h4>Reference</h4>
+<a href="components.html">Component reference</a>
+<a href="dragonfall.html">Dragonfall module</a>
 <a href="lua-api.html">Lua API</a>
 <a href="cli.html">CLI reference</a>
 <a href="go-api.html">Go API</a>
@@ -38,43 +41,63 @@
 </aside>
 <main>
 <div class="kicker">Guides</div>
-<h1>Textures and materials</h1>
-<p class="lead">Import a picture, put it in a material and drop the material on an object. The engine samples the texture for every Braille dot, then lights, shades and fogs it like everything else.</p>
+<h1>Textures, materials and sprites</h1>
+<p class="lead">Textures are pictures that materials map onto surfaces; the engine samples them for every Braille dot and lights, shades and fogs the result. Sprites are glyph art drawn as whole terminal cells.</p>
 <figure><img src="img/editor-material.png" alt="Textured cube"><figcaption>A brick texture tiled twice on a rotated cube; the material slot shows in the Cube card.</figcaption></figure>
 
-<h2>In three steps</h2>
+<h2>Applying a texture</h2>
 <ol class="steps">
-<li>Drag a <code>.png</code> or <code>.jpg</code> into the Project window. It lands in <code>textures/</code>.</li>
-<li>Right click it and choose <b>Create Material</b>. The new material uses the texture and opens in the Inspector.</li>
-<li>Drag the material tile onto an object in the Scene view or in the Hierarchy, or onto any material slot in the Inspector.</li>
+<li>Drag a <code>.png</code>, <code>.jpg</code> or <code>.gif</code> into the Project window. It is imported into the open folder.</li>
+<li>Choose <b>Create Material</b> in its context menu. The new material uses the texture and opens in the Inspector.</li>
+<li>Drag the material tile onto an object in the Scene view or in the Hierarchy, or onto a material slot in the Inspector.</li>
 </ol>
 
 <h2>Import settings</h2>
 <figure><img src="img/editor-texture.png" alt="Texture import settings"></figure>
-<p>Click a texture to see its settings in the Inspector. Changes are saved in the texture's <code>.meta</code> and applied at once.</p>
+<p>Selecting a texture shows its import settings in the Inspector. Changes are stored in the texture's <code>.meta</code> file and take effect immediately.</p>
 <table>
-<tr><th>Setting</th><th>Does</th></tr>
-<tr><td><code>maxSize</code></td><td>The longest side kept, 256 by default. A Braille dot is coarse; small textures look the same and load faster.</td></tr>
-<tr><td><code>filter</code></td><td><code>linear</code> blends neighbouring texels, for photos and painted art. <code>nearest</code> keeps them crisp, for pixel art.</td></tr>
-<tr><td><code>alphaCutoff</code></td><td>Texels more transparent than this are holes, so a quad with a cut out picture shows only the picture.</td></tr>
+<tr><th>Setting</th><th>Meaning</th></tr>
+<tr><td><code>maxSize</code></td><td>The longest side kept after import, 256 by default. At Braille resolution, smaller textures look the same and load faster.</td></tr>
+<tr><td><code>filter</code></td><td><code>linear</code> blends neighboring texels, for photos and painted textures; <code>nearest</code> keeps them sharp, for pixel art.</td></tr>
+<tr><td><code>alphaCutoff</code></td><td>Texels more transparent than this value are left out, so a quad with a cut out picture shows only the picture.</td></tr>
 </table>
-<p>Textures are mip mapped: a surface far away samples a smaller, averaged copy, so distant textures stay calm instead of flickering as the camera moves.</p>
+<p>Textures are mip mapped: distant surfaces sample a smaller, averaged copy, which prevents flickering as the camera moves.</p>
 
 <h2>Materials</h2>
-<p>A material is a small <code>.material.json</code> asset. Create one with <b>Create</b>, <b>Material</b> and edit it in the Inspector:</p>
+<p>A material is a <code>.material.json</code> asset, created with <b>Create</b>, <b>Material</b> in the Project window and edited in the Inspector:</p>
 <table>
-<tr><th>Property</th><th>Does</th></tr>
-<tr><td><code>albedo</code></td><td>The base color; it tints the texture, white leaves it as it is.</td></tr>
-<tr><td><code>texture</code></td><td>A texture slot; drag a texture tile onto it.</td></tr>
-<tr><td><code>tilingX</code>, <code>tilingY</code></td><td>How many times the texture repeats across a face.</td></tr>
-<tr><td><code>offsetX</code>, <code>offsetY</code></td><td>Slides the texture.</td></tr>
-<tr><td><code>emissive</code></td><td>Light the surface gives off itself, 0 to 1; it glows at night.</td></tr>
-<tr><td><code>unlit</code></td><td>Ignore lighting entirely.</td></tr>
+<tr><th>Property</th><th>Meaning</th></tr>
+<tr><td><code>albedo</code></td><td>The base color, multiplied with the texture; white leaves the texture unchanged.</td></tr>
+<tr><td><code>texture</code></td><td>The texture.</td></tr>
+<tr><td><code>tilingX</code>, <code>tilingY</code></td><td>Number of repetitions of the texture across a face.</td></tr>
+<tr><td><code>offsetX</code>, <code>offsetY</code></td><td>Shift of the texture across a face.</td></tr>
+<tr><td><code>emissive</code></td><td>Light emitted by the surface itself, 0 to 1.</td></tr>
+<tr><td><code>unlit</code></td><td>Ignores lighting and shows the texture as it is.</td></tr>
 </table>
-<p>The Cube, Plane, Quad and Mesh components have a material slot. A cube maps the texture once onto every face, a plane and a quad once onto their surface, and a model uses the texture coordinates of its file. Every object that uses a material changes when you edit it.</p>
+<p>The Cube, Plane, Quad and Mesh components have a material slot. A cube maps the texture once onto each face, a plane and a quad once onto their surface, and a model uses the texture coordinates of its file. Editing a material changes every object that uses it.</p>
 
-<h2>Convert to a sprite</h2>
-<p>Right click a texture and choose <b>Convert to Sprite</b>, or use the button under its preview. The picture becomes a sprite next to it, 48 cells wide: each cell shows two pixels stacked with a half block, which keeps the picture's proportions in a terminal cell. Use it as a sprite, for logos, portraits and signs that should look sharp rather than lit.</p>
+<h2 id="sprites">Sprites</h2>
+<p>A sprite is glyph art: a grid of terminal cells, each with a character, a foreground and a background color. The <b>Sprite</b> component draws it as whole cells at its object's position, hidden behind nearer geometry, which suits logos, portraits and signs that should stay sharp and are not lit. Sprites are created in three ways:</p>
+<ul>
+<li><b>Convert to Sprite</b> in a texture's context menu, or the button under its preview, writes a sprite 48 cells wide next to the texture. Each cell shows two pixels of the picture stacked with a half block character, which keeps the picture's proportions.</li>
+<li>REXPaint files (<code>.xp</code>) are imported as they are.</li>
+<li>A <code>.sprite.json</code> file can be written by hand or by a tool:</li>
+</ul>
+<pre><code>{
+  "name": "sign",
+  "pivot": [2, 1],
+  "palette": {
+    ".": { "transparent": true },
+    "w": { "glyph": "#", "fg": "#c8a060", "bg": "#3a2a18" },
+    "t": { "glyph": "*", "fg": "#ffd890", "bg": "#3a2a18" }
+  },
+  "rows": [
+    ".www.",
+    "wtwtw",
+    ".www."
+  ]
+}</code></pre>
+<p>Each character of <code>rows</code> is a key of <code>palette</code>; every row has the same length. <code>pivot</code> is the cell, counted from the top left, that lies at the object's position. Palette entries marked <code>transparent</code> show what is behind the sprite.</p>
 <nav class="pager"><a class="prev" href="packages.html"><small>Previous</small>Packages</a><a class="next" href="models.html"><small>Next</small>Models</a></nav>
 </main>
 </div>

@@ -6,6 +6,7 @@
 <title>CLI reference | ASCDII Engine</title>
 <link rel="icon" href="img/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
+<script src="zoom.js" defer></script>
 </head>
 <body>
 <div class="layout">
@@ -21,7 +22,7 @@
 <a href="scenes.html">Scenes and prefabs</a>
 <a href="assets.html">Assets and import</a>
 <a href="packages.html">Packages</a>
-<a href="textures.html">Textures and materials</a>
+<a href="textures.html">Textures, materials, sprites</a>
 <a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
 <a href="particles.html">Particles</a>
@@ -31,6 +32,8 @@
 <a href="rendering.html">Rendering</a>
 <a href="building.html">Build</a>
 <h4>Reference</h4>
+<a href="components.html">Component reference</a>
+<a href="dragonfall.html">Dragonfall module</a>
 <a href="lua-api.html">Lua API</a>
 <a href="cli.html" class="on">CLI reference</a>
 <a href="go-api.html">Go API</a>
@@ -39,39 +42,43 @@
 <main>
 <div class="kicker">Reference</div>
 <h1>CLI reference</h1>
-<p class="lead">The ascdii binary is both the developer tool and the game player. When it finds a packed project inside itself, it just plays it.</p>
+<p class="lead"><code>ascdii</code> is the launcher, the command line tool and the game player. A copy that contains game data, as in a build, plays that game.</p>
+
 <h2>Launcher</h2>
-<p>Running <code>ascdii</code> without arguments opens the launcher in the terminal. It lists recent projects and provides <b>Open project</b>, by path, and <b>New project</b>, from a template. The selected project opens in the editor; the launcher remains open. Navigation: arrow keys or <kbd>W</kbd> <kbd>S</kbd>, <kbd>Enter</kbd> to select, <kbd>Esc</kbd> to go back. The editor shares the list of recent projects and can only be started from the launcher.</p>
+<p><code>ascdii</code> without arguments opens the launcher in the terminal. It lists the recent projects, followed by <b>Open project</b>, which accepts a folder or a <code>.ascdiiproj</code> path, and <b>New project</b>, which asks for a name, a location and a template. The selected project opens in the editor, and the launcher remains open for further projects. The arrow keys or <kbd>W</kbd> and <kbd>S</kbd> move the selection, <kbd>Enter</kbd> selects and <kbd>Esc</kbd> goes back. The editor uses the same list of recent projects and is always started from the launcher; started directly, it opens the launcher in a new terminal window.</p>
+
 <h2>Commands</h2>
 <table>
-<tr><th>Command</th><th>Does</th></tr>
-<tr><td><code>ascdii new &lt;dir&gt; [-name N] [-template dragonfall]</code></td><td>Create a project. Without a template it starts empty.</td></tr>
-<tr><td><code>ascdii pack list &lt;dir&gt;</code></td><td>Installed packages, and built in ones that are not.</td></tr>
-<tr><td><code>ascdii pack install &lt;dir&gt; &lt;file | name&gt;</code></td><td>Install a <code>.ascdiipack</code> or a built in package such as <code>dragonfall</code>.</td></tr>
-<tr><td><code>ascdii pack remove &lt;dir&gt; &lt;name&gt;</code></td><td>Remove a package, and the modules only it needed.</td></tr>
-<tr><td><code>ascdii pack export &lt;folder&gt; -name N [-version V] [-description D] [-out file]</code></td><td>Write a folder, .meta files included, as a <code>.ascdiipack</code>.</td></tr>
-
-<tr><td><code>ascdii run &lt;dir&gt;</code></td><td>Play a project folder in this terminal.</td></tr>
-<tr><td><code>ascdii preview &lt;dir&gt; [-size 160x50] [-time 2] [-hour 22] [-plain]</code></td><td>Print one frame after simulating some time.</td></tr>
-<tr><td><code>ascdii build &lt;dir&gt; [-out path] [-player path] [-single]</code></td><td>A game folder: the player, <code>data/game.pak</code> and SHA256SUMS. <code>-single</code> makes one executable instead. The player defaults to this binary.</td></tr>
-
-<tr><td><code>ascdii version</code></td><td>Print the engine version.</td></tr>
-<tr><td><code>ascdii help</code></td><td>Print this list.</td></tr>
+<tr><th>Command</th><th>Function</th></tr>
+<tr><td><code>ascdii new &lt;dir&gt; [-name N] [-template dragonfall]</code></td><td>Creates a project. Without a template, the project contains a manifest and a start scene with a camera.</td></tr>
+<tr><td><code>ascdii run &lt;dir&gt;</code></td><td>Plays a project folder in the terminal.</td></tr>
+<tr><td><code>ascdii preview &lt;dir&gt; [-size 160x50] [-time 2] [-hour 22] [-plain]</code></td><td>Prints one frame after simulating <code>-time</code> seconds, at an optional time of day; <code>-plain</code> omits colors.</td></tr>
+<tr><td><code>ascdii build &lt;dir&gt; [-out path] [-player path] [-single]</code></td><td>Builds a game folder with the player, <code>data/game.pak</code> and <code>SHA256SUMS</code>; <code>-single</code> builds one executable. The player defaults to this <code>ascdii</code>. See <a href="building.html">Build</a>.</td></tr>
+<tr><td><code>ascdii pack list &lt;dir&gt;</code></td><td>Lists installed packages and the built in packages that are not installed.</td></tr>
+<tr><td><code>ascdii pack install &lt;dir&gt; &lt;file | name&gt;</code></td><td>Installs a <code>.ascdiipack</code> file or a built in package such as <code>dragonfall</code>.</td></tr>
+<tr><td><code>ascdii pack remove &lt;dir&gt; &lt;name&gt;</code></td><td>Removes a package and the modules only it required.</td></tr>
+<tr><td><code>ascdii pack export &lt;folder&gt; -name N [-version V] [-description D] [-out file]</code></td><td>Writes a folder, with its .meta files, as a <code>.ascdiipack</code>. See <a href="packages.html">Packages</a>.</td></tr>
+<tr><td><code>ascdii version</code></td><td>Prints the engine version.</td></tr>
+<tr><td><code>ascdii help</code></td><td>Prints the list of commands.</td></tr>
 </table>
+<p>A built game accepts <code>--preview [-size 160x50] [-time 2]</code> to print one frame instead of starting.</p>
 
 <h2>Make targets</h2>
+<p>For working on the engine from source; see <a href="install.html#building-from-source">Building from source</a>.</p>
 <table>
-<tr><th>Target</th><th>Does</th></tr>
+<tr><th>Target</th><th>Function</th></tr>
 <tr><td><code>make test</code></td><td><code>go vet</code> and <code>go test -race</code> for the whole module.</td></tr>
-<tr><td><code>make cli</code></td><td>Build <code>bin/ascdii</code>.</td></tr>
-<tr><td><code>make players</code></td><td>Linux and Windows players, also copied into the editor.</td></tr>
-<tr><td><code>make editor-dev</code>, <code>make editor-linux</code>, <code>make editor-windows</code></td><td>Run or build the editor.</td></tr>
-<tr><td><code>make dist</code></td><td>Archives of the editor and <code>ascdii</code> per platform, for people without the source.</td></tr>
-<tr><td><code>make hello</code>, <code>make dragonfall</code></td><td>The two examples in the terminal.</td></tr>
-<tr><td><code>make template</code></td><td>Regenerate the Dragonfall template from its Go source.</td></tr>
-<tr><td><code>make brand</code></td><td>Regenerate the app icon.</td></tr>
-<tr><td><code>make bench</code></td><td>Frame time of the sample scene.</td></tr>
+<tr><td><code>make cli</code></td><td>Builds <code>bin/ascdii</code>.</td></tr>
+<tr><td><code>make players</code></td><td>Builds the Linux and Windows players into <code>bin/</code>, next to the editor, for builds on both platforms.</td></tr>
+<tr><td><code>make editor-linux</code>, <code>make editor-windows</code></td><td>Builds the editor and copies it into <code>bin/</code>, next to <code>ascdii</code>.</td></tr>
+<tr><td><code>make editor-dev</code></td><td>Runs the editor with hot reload, without the launcher.</td></tr>
+<tr><td><code>make dist</code></td><td>Builds the release archives in <code>bin/dist</code>.</td></tr>
+<tr><td><code>make hello</code>, <code>make dragonfall</code></td><td>Runs the two examples in the terminal.</td></tr>
+<tr><td><code>make template</code></td><td>Regenerates the Dragonfall template from its Go source.</td></tr>
+<tr><td><code>make brand</code></td><td>Regenerates the application icon.</td></tr>
+<tr><td><code>make bench</code></td><td>Measures the frame time of the sample scene.</td></tr>
 </table>
+<p>The documentation has two maintenance tools: <code>python3 docs/nav.py</code> rewrites the navigation of every page, and <code>go run ./cmd/docref docs/usage/components.html</code> regenerates the component reference (with <code>docs/usage/dragonfall.html dragonfall</code> for the module).</p>
 <nav class="pager"><a class="prev" href="lua-api.html"><small>Previous</small>Lua API</a><a class="next" href="go-api.html"><small>Next</small>Go API</a></nav>
 </main>
 </div>

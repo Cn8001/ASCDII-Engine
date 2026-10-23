@@ -75,7 +75,7 @@ func (c *Cells) Run(f *pipeline.Frame) {
 
 // Render binds the scene camera, time and environment, then runs the pipeline.
 func Render(p *pipeline.Pipeline, f *pipeline.Frame, s *Scene) {
-	f.Begin(s.Camera, s.Time, s.Env)
+	f.Begin(s.View(), s.Time, s.Env)
 	p.Render(f)
 }
 

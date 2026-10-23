@@ -14,6 +14,10 @@ export function Drag(arg1, arg2, arg3, arg4, arg5, arg6) {
   return window['go']['service']['ViewportService']['Drag'](arg1, arg2, arg3, arg4, arg5, arg6);
 }
 
+export function DragCollider(arg1, arg2, arg3, arg4, arg5, arg6, arg7) {
+  return window['go']['service']['ViewportService']['DragCollider'](arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+}
+
 export function Drop(arg1, arg2, arg3) {
   return window['go']['service']['ViewportService']['Drop'](arg1, arg2, arg3);
 }
@@ -64,6 +68,10 @@ export function Play() {
 
 export function Resize(arg1, arg2) {
   return window['go']['service']['ViewportService']['Resize'](arg1, arg2);
+}
+
+export function SetGizmos(arg1) {
+  return window['go']['service']['ViewportService']['SetGizmos'](arg1);
 }
 
 export function SetLive(arg1) {

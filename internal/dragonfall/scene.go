@@ -113,6 +113,9 @@ func BuildScene(reg *scene.Registry) (*scene.Scene, error) {
 	s := scene.New("Dragonfall")
 	s.UseFIDs(scene.CountingFIDs())
 	s.Camera.Target, s.Camera.Span, s.Camera.Pitch, s.Camera.AnchorY = geom.V3(114, 79.5, 0), 38, 52, .6
+	cam := components.NewCamera()
+	cam.Span, cam.Pitch, cam.AnchorY = s.Camera.Span, s.Camera.Pitch, s.Camera.AnchorY
+	s.Add("Main Camera", cam).At(114, 79.5, 0)
 	s.Add("terrain", b.node("df.terrain")).Blocking()
 	s.Add("forest", b.node("df.forest")).Blocking()
 	s.Add("grass", b.node("df.grass"))

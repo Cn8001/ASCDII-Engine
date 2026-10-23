@@ -35,8 +35,8 @@ func TestUnit_CreateThenOpenStarter(t *testing.T) {
 		t.Fatalf("gitignore %q %v", b, err)
 	}
 	s, err := p.StartScene(ctx)
-	if err != nil || len(s.Root.Children) != 0 {
-		t.Fatalf("start scene should be empty: %v", err)
+	if err != nil || len(s.Root.Children) != 1 || s.Root.Children[0].Component("camera") == nil {
+		t.Fatalf("start scene should hold only a camera: %v", err)
 	}
 }
 
