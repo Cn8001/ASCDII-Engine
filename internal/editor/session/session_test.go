@@ -10,6 +10,7 @@ import (
 	"image/png"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -19,6 +20,7 @@ import (
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/dragonfall"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/editor/players"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/guid"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/pack"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/project"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/components"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/scene"
@@ -45,8 +47,9 @@ func newSession(t *testing.T, template string) (*Session, *recorder, string) {
 	t.Helper()
 	rec := &recorder{events: map[string]int{}}
 	s := New(Deps{
-		Packs:     []project.Pack{dragonfall.Pack()},
+		Modules:   []project.Module{dragonfall.Module()},
 		Templates: []Template{{Name: "empty"}, {Name: "dragonfall", FS: dragonfall.Template()}},
+		Packages:  []pack.Source{dragonfall.Package()},
 		Players:   players.Source{FS: fstest.MapFS{"ascdii-linux-amd64": {Data: []byte("PLAYER")}}},
 		Emit:      rec,
 	})
@@ -799,5 +802,65 @@ func TestUnit_ImportedFolderKeepsGUIDsFromItsMetas(t *testing.T) {
 	s.mu.Unlock()
 	if len(inst.Children) == 0 {
 		t.Fatal("instance of the imported prefab is empty")
+	}
+}
+
+func TestUnit_PackageInstallUseAndRemove(t *testing.T) {
+	// Arrange
+	s, _, dir := newSession(t, "")
+	ctx := context.Background()
+	before, _ := s.PackageList(ctx)
+	hasCastle := func() bool {
+		return slices.Contains(s.Kinds().Components, Kind{Kind: "df.castle", Meta: s.reg.Meta("df.castle")})
+	}
+	castleBefore := hasCastle()
+
+	// Act
+	home, errInstall := s.InstallPackage(ctx, "builtin:dragonfall")
+	list, _ := s.PackageList(ctx)
+	castleAfter := hasCastle()
+	id, errDrop := s.Drop("prefab:packages/dragonfall/prefabs/lantern.prefab.json", 30, 10)
+	errMove := func() error { _, err := s.Move(ctx, "packages/dragonfall/prefabs/lantern.prefab.json", ""); return err }()
+	errDelete := s.Delete(ctx, "packages/dragonfall/scripts/crystal.lua")
+	_ = s.Remove(id)
+	errRemove := s.RemovePackage(ctx, "dragonfall")
+
+	// Assert
+	if castleBefore || len(before.Installed) != 0 || len(before.Available) != 1 {
+		t.Fatalf("a new project should start without the sample: %v %+v", castleBefore, before)
+	}
+	if errInstall != nil || errDrop != nil || errRemove != nil || home != "packages/dragonfall" || !castleAfter || len(list.Installed) != 1 {
+		t.Fatalf("errs %v %v %v castle %v list %+v", errInstall, errDrop, errRemove, castleAfter, list)
+	}
+	if !errors.Is(errMove, ErrPackageLocked) || !errors.Is(errDelete, ErrPackageLocked) {
+		t.Fatalf("package edits allowed: %v %v", errMove, errDelete)
+	}
+	if hasCastle() || slices.Contains(s.proj.Manifest.Modules, "dragonfall") {
+		t.Fatal("module should leave with its package")
+	}
+	if _, err := os.Stat(filepath.Join(dir, "packages", "dragonfall")); err == nil {
+		t.Fatal("package folder still there")
+	}
+}
+
+func TestUnit_PackageClashAndExport(t *testing.T) {
+	// Arrange
+	s, _, _ := newSession(t, "dragonfall")
+	ctx := context.Background()
+	out := filepath.Join(t.TempDir(), "sample")
+
+	// Act
+	_, clash := s.InstallPackage(ctx, "builtin:dragonfall")
+	errExport := s.ExportPackage(ctx, "prefabs", pack.Manifest{Name: "lanterns", Version: "1.0.0"}, out)
+	src, closer, errOpen := pack.Open(out + pack.Ext)
+
+	// Assert
+	if !errors.Is(clash, pack.ErrConflict) || errExport != nil || errOpen != nil {
+		t.Fatalf("clash %v export %v open %v", clash, errExport, errOpen)
+	}
+	defer closer.Close()
+	files, _ := pack.Files(src.FS)
+	if src.Manifest.Name != "lanterns" || !slices.Contains(files, "lantern.prefab.json.meta") {
+		t.Fatalf("manifest %+v files %v", src.Manifest, files)
 	}
 }

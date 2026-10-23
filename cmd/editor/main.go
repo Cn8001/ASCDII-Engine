@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
@@ -30,6 +31,7 @@ import (
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/editor/recent"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/editor/service"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/editor/session"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/pack"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/project"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/version"
 )
@@ -41,6 +43,15 @@ func main() {
 	}
 }
 
+// packageDir is where .ascdiipack files the user collects are listed from.
+func packageDir() string {
+	dir, err := os.UserConfigDir()
+	if err != nil {
+		return ""
+	}
+	return filepath.Join(dir, "ascdii", "packages")
+}
+
 func run() error {
 	store, err := recent.Default()
 	if err != nil {
@@ -48,12 +59,14 @@ func run() error {
 	}
 	appCtx := &service.Context{}
 	sess := session.New(session.Deps{
-		Packs:     []project.Pack{dragonfall.Pack()},
-		Templates: []session.Template{{Name: "empty"}, {Name: "dragonfall", FS: dragonfall.Template()}},
-		Players:   players.Default(),
-		Binary:    true,
-		Emit:      emitter{},
-		Now:       time.Now,
+		Modules:    []project.Module{dragonfall.Module()},
+		Templates:  []session.Template{{Name: "empty"}, {Name: "dragonfall", FS: dragonfall.Template()}},
+		Packages:   []pack.Source{dragonfall.Package()},
+		PackageDir: packageDir(),
+		Players:    players.Default(),
+		Binary:     true,
+		Emit:       emitter{},
+		Now:        time.Now,
 	})
 	var icon bytes.Buffer
 	if err := png.Encode(&icon, brand.Icon(256)); err != nil {
@@ -113,6 +126,18 @@ func (dialogs) OpenFile(ctx context.Context, title string, filters []service.Fil
 	path, err := wruntime.OpenFileDialog(ctx, wruntime.OpenDialogOptions{Title: title, Filters: fs})
 	if err != nil {
 		return "", fmt.Errorf("open dialog: %w", err)
+	}
+	return path, nil
+}
+
+func (dialogs) SaveFile(ctx context.Context, title, name string, filters []service.Filter) (string, error) {
+	fs := make([]wruntime.FileFilter, len(filters))
+	for i, f := range filters {
+		fs[i] = wruntime.FileFilter{DisplayName: f.Name, Pattern: f.Pattern}
+	}
+	path, err := wruntime.SaveFileDialog(ctx, wruntime.SaveDialogOptions{Title: title, DefaultFilename: name, Filters: fs})
+	if err != nil {
+		return "", fmt.Errorf("save dialog: %w", err)
 	}
 	return path, nil
 }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { Assets, EventsOn, Project, Scene } from '../lib/api'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { Assets, EventsOn, Packages, Project, Scene } from '../lib/api'
 import { openMenu, type MenuItem } from '../lib/menu'
 import { ask, confirmAction } from '../lib/dialog'
 import { call, refresh, refreshAssets, select, store, toast } from '../lib/store'
@@ -28,11 +28,15 @@ const folders = ref<string[]>([])
 const open = ref<Record<string, boolean>>({})
 const over = ref('')
 
+// Installed packages live under packages/ and are read only.
+const isPkg = (p: string) => p === 'packages' || p.startsWith('packages/')
+const pkgOf = (p: string) => p.split('/')[1] ?? ''
+const locked = computed(() => isPkg(cwd.value))
 const dirOf = (p: string) => (p.includes('/') ? p.slice(0, p.lastIndexOf('/')) : '')
 const base = (p: string) => p.split('/').pop() ?? p
 // searching or filtering looks through every folder, like Unity's search.
 const flat = computed(() => search.value !== '' || kind.value !== 'all')
-const subfolders = computed(() => (flat.value ? [] : folders.value.filter((f) => dirOf(f) === cwd.value)))
+const subfolders = computed(() => (flat.value ? [] : folders.value.filter((f) => dirOf(f) === cwd.value && f !== 'packages')))
 const items = computed(() =>
   store.assets.filter(
     (a) => (flat.value || dirOf(a.path) === cwd.value) && (kind.value === 'all' || a.kind === kind.value) && name(a.path).toLowerCase().includes(search.value.toLowerCase()),
@@ -43,12 +47,12 @@ const crumbs = computed(() => {
   return parts.map((p, i) => ({ label: p, path: parts.slice(0, i + 1).join('/') }))
 })
 // tree shows a folder when every folder above it is open.
-const tree = computed(() =>
-  folders.value.filter((f) => {
-    const parts = f.split('/')
-    return parts.slice(0, -1).every((_, i) => open.value[parts.slice(0, i + 1).join('/')])
-  }),
-)
+const visible = (f: string) => {
+  const parts = f.split('/')
+  return parts.slice(0, -1).every((_, i) => open.value[parts.slice(0, i + 1).join('/')])
+}
+const tree = computed(() => folders.value.filter((f) => !isPkg(f) && visible(f)))
+const pkgTree = computed(() => folders.value.filter((f) => isPkg(f) && f !== 'packages' && visible(f)))
 let off: (() => void) | null = null
 
 async function reloadAll() {
@@ -64,6 +68,7 @@ onMounted(async () => {
   })
 })
 onBeforeUnmount(() => off?.())
+watch(() => store.assetsVersion, reloadAll)
 
 function name(p: string) {
   return base(p).replace(/\.(prefab|scene|material)\.json$/, '').replace(/\.(json|xp|lua|obj|png|jpe?g|gif)$/i, '')
@@ -98,11 +103,12 @@ function dragStart(e: DragEvent, a: asset.Entry) {
 }
 
 function dragFolder(e: DragEvent, f: string) {
+  if (isPkg(f)) return
   e.dataTransfer?.setData('text/path', f)
 }
 
 function dragOver(e: DragEvent, target: string) {
-  if (!e.dataTransfer?.types.includes('text/path')) return
+  if (!e.dataTransfer?.types.includes('text/path') || isPkg(target)) return
   e.preventDefault()
   over.value = target
 }
@@ -176,7 +182,7 @@ async function newMaterial(texture = '') {
   if (!n) return
   const rel = await call(() => Assets.CreateMaterial(within(n)))
   if (!rel) return
-  if (texture) await call(() => Assets.SetProp(rel, 'texture', texture))
+  if (texture) await call(() => Assets.SetProp(rel, 'texture', isPkg(texture) ? (store.assets.find((a) => a.path === texture)?.guid ?? texture) : texture))
   toast(rel, 'ok')
   await reloadAll()
   store.asset = rel
@@ -234,6 +240,7 @@ async function rename(a: asset.Entry) {
 }
 
 function createItems(): MenuItem[] {
+  if (locked.value) return [{ label: 'Packages are read only', icon: 'lock', disabled: true }]
   return [
     { label: 'Folder', icon: 'folder', run: () => newFolder() },
     { label: '-' },
@@ -243,11 +250,42 @@ function createItems(): MenuItem[] {
   ]
 }
 
+async function exportFolder(f: string) {
+  const name = await ask('Export package', (f ? base(f) : store.info?.name ?? 'package').toLowerCase().replace(/[^a-z0-9.-]+/g, '-'), { hint: 'Lower case letters, digits, dots and dashes.', ok: 'Next' })
+  if (!name) return
+  const version = await ask('Version', '1.0.0', { ok: 'Export' })
+  if (!version) return
+  const out = await call(() => Packages.Export(f, { format: 1, name, version, engine: '', description: '', author: '', modules: [] } as never))
+  if (out) toast(out, 'ok')
+}
+
+function showPackages() {
+  store.packagesOpen = true
+}
+
+async function removePackage(f: string) {
+  const name = pkgOf(f)
+  if (!(await confirmAction(`Remove ${name}?`, 'Its files leave the project. Anything that uses them shows as missing.', 'Remove'))) return
+  const ok = await call(() => Packages.Remove(name).then(() => true))
+  if (!ok) return
+  if (isPkg(cwd.value)) cwd.value = ''
+  toast(`${name} removed`, 'ok')
+  await reloadAll()
+  await refresh()
+}
+
 function folderMenu(e: MouseEvent, f: string) {
+  if (isPkg(f)) {
+    const items: MenuItem[] = [{ label: 'Open', icon: 'open', run: () => go(f) }]
+    if (f.split('/').length === 2) items.push({ label: 'Package Manager', icon: 'package', run: showPackages }, { label: '-' }, { label: 'Remove Package', icon: 'trash', danger: true, run: () => removePackage(f) })
+    openMenu(e, items)
+    return
+  }
   openMenu(e, [
     { label: 'Open', icon: 'open', run: () => go(f) },
     { label: 'New Folder', icon: 'folder', run: () => newFolder(f) },
     { label: 'Rename', icon: 'file', run: () => renameFolder(f) },
+    { label: 'Export Package', icon: 'package', run: () => exportFolder(f) },
     { label: '-' },
     { label: 'Delete', icon: 'trash', danger: true, run: () => remove(f, true) },
   ])
@@ -264,9 +302,11 @@ function itemMenu(e: MouseEvent, a: asset.Entry) {
   } else {
     items.push({ label: a.kind === 'scene' ? 'Open' : a.kind === 'script' ? 'Edit' : 'Place', icon: 'open', run: () => openAsset(a) })
   }
-  items.push({ label: 'Rename', icon: 'file', run: () => rename(a) })
   if (flat.value) items.push({ label: 'Show in Folder', icon: 'folder', run: () => { go(dirOf(a.path)); picked.value = a.path } })
-  items.push({ label: '-' }, { label: 'Delete', icon: 'trash', danger: true, run: () => remove(a.path, false) })
+  if (!isPkg(a.path)) {
+    items.push({ label: 'Rename', icon: 'file', run: () => rename(a) })
+    items.push({ label: '-' }, { label: 'Delete', icon: 'trash', danger: true, run: () => remove(a.path, false) })
+  }
   openMenu(e, items)
 }
 
@@ -286,6 +326,7 @@ async function reload() {
         @dragover="(e) => dragOver(e, '/')"
         @dragleave="over = ''"
         @drop.prevent="(e) => dropInto(e, '')"
+        @contextmenu.prevent="(e) => openMenu(e, [{ label: 'New Folder', icon: 'folder', run: () => newFolder('') }, { label: 'Export Package', icon: 'package', run: () => exportFolder('') }])"
       >
         <Icon name="folder" :size="13" :class="cwd === '' ? 'text-amber-glow' : ''" />
         <span class="flex-1 truncate">Assets</span>
@@ -310,6 +351,30 @@ async function reload() {
         <Icon name="folder" :size="13" :class="cwd === f ? 'text-amber-glow' : ''" />
         <span class="flex-1 truncate">{{ base(f) }}</span>
       </button>
+      <button
+        class="mt-2 flex h-7 w-full items-center gap-1.5 rounded-md px-2 text-left text-[12px] transition"
+        :class="cwd === 'packages' && !flat ? 'bg-ink-800 text-ink-100' : 'text-ink-400 hover:text-ink-200'"
+        @click="go('packages')"
+        @contextmenu.prevent="(e) => openMenu(e, [{ label: 'Package Manager', icon: 'package', run: showPackages }])"
+      >
+        <Icon name="package" :size="13" :class="cwd === 'packages' ? 'text-amber-glow' : ''" />
+        <span class="flex-1 truncate">Packages</span>
+      </button>
+      <button
+        v-for="f in pkgTree"
+        :key="f"
+        class="flex h-7 w-full items-center gap-1 rounded-md pr-2 text-left text-[12px] transition"
+        :class="cwd === f && !flat ? 'bg-ink-800 text-ink-100' : 'text-ink-400 hover:text-ink-200'"
+        :style="{ paddingLeft: (f.split('/').length - 1) * 12 + 'px' }"
+        @click="go(f)"
+        @contextmenu.prevent="(e) => folderMenu(e, f)"
+      >
+        <span class="grid size-4 place-items-center text-ink-500" :class="folders.some((x) => dirOf(x) === f) ? '' : 'invisible'" @click.stop="open[f] = !open[f]">
+          <Icon :name="open[f] ? 'chevdown' : 'chevright'" :size="11" />
+        </span>
+        <Icon :name="f.split('/').length === 2 ? 'package' : 'folder'" :size="13" :class="cwd === f ? 'text-amber-glow' : 'text-amber-soft/70'" />
+        <span class="flex-1 truncate">{{ base(f) }}</span>
+      </button>
     </nav>
     <div class="flex min-w-0 flex-1 flex-col">
       <div class="flex h-8 shrink-0 items-center gap-1 border-b border-ink-800 px-2">
@@ -318,23 +383,25 @@ async function reload() {
           <button class="rounded px-1 hover:text-ink-100" @click="go('')" @dragover="(e) => dragOver(e, '/')" @drop.prevent="(e) => dropInto(e, '')">Assets</button>
           <template v-for="c in crumbs" :key="c.path">
             <Icon name="chevright" :size="10" class="text-ink-600" />
+            <Icon v-if="c.path === 'packages'" name="package" :size="11" class="text-amber-soft" />
             <button class="truncate rounded px-1 hover:text-ink-100" @click="go(c.path)" @dragover="(e) => dragOver(e, c.path)" @drop.prevent="(e) => dropInto(e, c.path)">{{ c.label }}</button>
           </template>
         </div>
+        <span v-if="locked" class="mr-1 flex items-center gap-1 text-[11px] text-ink-500"><Icon name="lock" :size="11" /> read only</span>
         <select v-model="kind" class="h-6 rounded-md bg-ink-800 px-1.5 text-[11.5px] text-ink-300 outline-none ring-1 ring-ink-700">
           <option v-for="k in kinds" :key="k.id" :value="k.id">{{ k.label }}</option>
         </select>
         <input v-model="search" class="field h-6 w-40" placeholder="Search" />
         <button class="icon-btn size-6" title="Reload" @click="reload"><Icon name="refresh" :size="12" /></button>
       </div>
-      <div class="flex-1 overflow-auto p-2" data-drop="project" :data-folder="cwd" @click.self="picked = ''" @filedrop="fileDrop" @contextmenu.self.prevent="(e) => openMenu(e, createItems())">
+      <div class="flex-1 overflow-auto p-2" :data-drop="locked ? undefined : 'project'" :data-folder="cwd" @click.self="picked = ''" @filedrop="fileDrop" @contextmenu.self.prevent="(e) => openMenu(e, createItems())">
         <div class="grid grid-cols-[repeat(auto-fill,minmax(88px,1fr))] gap-1" @contextmenu.self.prevent="(e) => openMenu(e, createItems())">
           <button
             v-for="f in subfolders"
             :key="f"
             class="group flex h-[88px] flex-col items-center justify-center gap-1.5 rounded-lg p-1.5 transition"
             :class="over === f ? 'bg-amber-glow/12 ring-1 ring-amber-soft' : 'hover:bg-ink-800'"
-            draggable="true"
+            :draggable="!isPkg(f)"
             :title="f"
             @dragstart="(e) => dragFolder(e, f)"
             @dblclick="go(f)"
@@ -343,7 +410,7 @@ async function reload() {
             @dragleave="over = ''"
             @drop.prevent.stop="(e) => dropInto(e, f)"
           >
-            <div class="grid h-12 w-16 place-items-center"><Icon name="folder" :size="30" class="text-amber-soft/80" /></div>
+            <div class="grid h-12 w-16 place-items-center"><Icon :name="f.split('/').length === 2 && isPkg(f) ? 'package' : 'folder'" :size="30" class="text-amber-soft/80" /></div>
             <span class="w-full truncate text-center text-[11px] text-ink-300 group-hover:text-ink-100">{{ base(f) }}</span>
           </button>
           <button

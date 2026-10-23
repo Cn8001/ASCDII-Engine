@@ -13,7 +13,7 @@ One Go module.
   pipeline, ...), `world` (scene: GameObjects, components, references;
   components; anim; fx), `assets` (asset, mesh, material), `script/vm` (Lua),
   `platform` (backend contract, terminal, headless), `runtime` (app, project,
-  bundle, ...).
+  pack, bundle, ...).
 - `internal/dragonfall/...` example game content built on the engine.
 - `internal/editor/...` editor backend (session, services, Wails adapters).
 - `cmd/launcher` the terminal main menu as its own program; the menu code is
@@ -48,6 +48,11 @@ engine never imports either.
   level values; they are read-only build artefacts.
 
 ## Assets
+
+Packages (`runtime/pack`) are installed into `packages/<name>/` and are read
+only: the session refuses writes there (`ErrPackageLocked`). Go components ship
+as code modules (`project.Module`); a project loads only the modules its
+manifest lists.
 
 Every asset has a `<file>.meta` with a UUIDv7 (`internal/engine/core/guid`) and
 optional import settings. Scenes reference assets by that id;

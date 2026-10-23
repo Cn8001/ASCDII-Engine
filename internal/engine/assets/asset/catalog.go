@@ -46,6 +46,8 @@ type Entry struct {
 func Classify(p string) (Kind, bool) {
 	l := strings.ToLower(p)
 	switch {
+	case path.Base(l) == "pack.json":
+		return "", false // a package's manifest, not art
 	case strings.HasSuffix(l, PrefabExt):
 		return Prefab, true
 	case strings.HasSuffix(l, SceneExt):

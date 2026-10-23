@@ -25,8 +25,8 @@ const (
 )
 
 var (
-	ErrNoManifest  = errors.New("no " + Ext + " manifest")
-	ErrMissingPack = errors.New("content pack not available")
+	ErrNoManifest    = errors.New("no " + Ext + " manifest")
+	ErrMissingModule = errors.New("code module not available")
 )
 
 type Manifest struct {
@@ -38,11 +38,13 @@ type Manifest struct {
 	Cols    int      `json:"cols,omitempty"`
 	Rows    int      `json:"rows,omitempty"`
 	FPS     int      `json:"fps,omitempty"`
-	Packs   []string `json:"packs,omitempty"`
+	Modules []string `json:"modules,omitempty"` // compiled Go components the project uses
+	Legacy  []string `json:"packs,omitempty"`   // the name modules had before packages existed
 }
 
-// Pack is compiled content, node kinds written in Go, that a project can require.
-type Pack struct {
+// Module is compiled content, component kinds written in Go, that a project
+// can require; the editor and player list the modules they were built with.
+type Module struct {
 	Name    string
 	Install func(r *scene.Registry, lib *asset.Library)
 }
@@ -77,22 +79,23 @@ func ReadManifest(fsys fs.FS, name string) (Manifest, error) {
 	if err := json.Unmarshal(b, &m); err != nil {
 		return Manifest{}, fmt.Errorf("decode manifest %s: %w", name, err)
 	}
+	m.Modules, m.Legacy = append(m.Modules, m.Legacy...), nil
 	return m, nil
 }
 
-// Registry builds the node and behaviour set a project can use.
-func Registry(packs []Pack) (*scene.Registry, *asset.Library) {
+// Registry builds the component set a project can use.
+func Registry(modules []Module) (*scene.Registry, *asset.Library) {
 	reg := scene.NewRegistry()
 	lib := asset.NewLibrary(reg)
 	components.Register(reg, lib)
 	vm.Register(reg, lib)
-	for _, p := range packs {
+	for _, p := range modules {
 		p.Install(reg, lib)
 	}
 	return reg, lib
 }
 
-func Open(ctx context.Context, fsys fs.FS, packs []Pack) (*Project, error) {
+func Open(ctx context.Context, fsys fs.FS, modules []Module) (*Project, error) {
 	file, err := Find(fsys)
 	if err != nil {
 		return nil, err
@@ -101,15 +104,15 @@ func Open(ctx context.Context, fsys fs.FS, packs []Pack) (*Project, error) {
 	if err != nil {
 		return nil, err
 	}
-	// Only the packs the manifest names are installed, so a new project shows
-	// the engine's own components and not those of a sample it never uses.
-	var use []Pack
-	for _, need := range m.Packs {
-		i := slices.IndexFunc(packs, func(p Pack) bool { return p.Name == need })
+	// Only the modules the manifest names are installed, so a new project
+	// shows the engine's own components and not those of a sample it never uses.
+	var use []Module
+	for _, need := range m.Modules {
+		i := slices.IndexFunc(modules, func(p Module) bool { return p.Name == need })
 		if i < 0 {
-			return nil, fmt.Errorf("%w: %s", ErrMissingPack, need)
+			return nil, fmt.Errorf("%w: %s", ErrMissingModule, need)
 		}
-		use = append(use, packs[i])
+		use = append(use, modules[i])
 	}
 	reg, lib := Registry(use)
 	if err := lib.Load(ctx, fsys, BuildDir); err != nil {

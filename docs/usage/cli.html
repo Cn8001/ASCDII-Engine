@@ -20,6 +20,7 @@
 <a href="gameobjects.html">GameObjects and components</a>
 <a href="scenes.html">Scenes and prefabs</a>
 <a href="assets.html">Assets and import</a>
+<a href="packages.html">Packages</a>
 <a href="textures.html">Textures and materials</a>
 <a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
@@ -41,7 +42,12 @@
 <h2>Commands</h2>
 <table>
 <tr><th>Command</th><th>Does</th></tr>
-<tr><td><code>ascdii new &lt;dir&gt; [-name N] [-template dragonfall]</code></td><td>Create a project. Without a template you get a small starter scene.</td></tr>
+<tr><td><code>ascdii new &lt;dir&gt; [-name N] [-template dragonfall]</code></td><td>Create a project. Without a template it starts empty.</td></tr>
+<tr><td><code>ascdii pack list &lt;dir&gt;</code></td><td>Installed packages, and built in ones that are not.</td></tr>
+<tr><td><code>ascdii pack install &lt;dir&gt; &lt;file | name&gt;</code></td><td>Install a <code>.ascdiipack</code> or a built in package such as <code>dragonfall</code>.</td></tr>
+<tr><td><code>ascdii pack remove &lt;dir&gt; &lt;name&gt;</code></td><td>Remove a package, and the modules only it needed.</td></tr>
+<tr><td><code>ascdii pack export &lt;folder&gt; -name N [-version V] [-description D] [-out file]</code></td><td>Write a folder, .meta files included, as a <code>.ascdiipack</code>.</td></tr>
+<tr><td><code>launcher</code></td><td>The terminal main menu as its own program; <code>ascdii</code> without arguments shows the same.</td></tr>
 <tr><td><code>ascdii run &lt;dir&gt;</code></td><td>Play a project folder in this terminal.</td></tr>
 <tr><td><code>ascdii preview &lt;dir&gt; [-size 160x50] [-time 2] [-hour 22] [-plain]</code></td><td>Print one frame after simulating some time.</td></tr>
 <tr><td><code>ascdii build &lt;dir&gt; [-out path] [-player path]</code></td><td>One executable. The player defaults to this binary.</td></tr>

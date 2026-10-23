@@ -13,10 +13,12 @@ const props = ref<prop.Prop[]>([])
 const entry = computed(() => store.assets.find((a) => a.path === store.asset))
 const kind = computed(() => entry.value?.kind ?? '')
 const title = computed(() => store.asset.split('/').pop()?.replace(/\.(material\.json|png|jpe?g|gif|obj)$/i, '') ?? '')
+const pkg = computed(() => (store.asset.startsWith('packages/') ? store.asset.split('/')[1] : ''))
 const heading = computed(() => ({ material: 'Material', texture: 'Import Settings', model: 'Import Settings' })[kind.value] ?? '')
 
 async function load() {
-  props.value = store.asset && heading.value ? ((await call(() => Assets.Props(store.asset))) ?? []) : []
+  const list = store.asset && heading.value ? ((await call(() => Assets.Props(store.asset))) ?? []) : []
+  props.value = pkg.value ? list.map((p) => ({ ...p, locked: true }) as prop.Prop) : list
 }
 
 watch(() => store.asset, load, { immediate: true })
@@ -47,6 +49,9 @@ async function toArt() {
         <div class="truncate font-mono text-[10.5px] text-ink-500">{{ store.asset }}</div>
       </div>
       <button class="icon-btn" title="Close" @click="store.asset = ''"><Icon name="x" :size="14" /></button>
+    </div>
+    <div v-if="pkg" class="flex items-center gap-2 border-b border-ink-750 bg-amber-glow/[.06] px-3 py-2 text-[12px] text-ink-300">
+      <Icon name="lock" :size="12" class="text-amber-soft" /> Read only, from the {{ pkg }} package
     </div>
     <div class="flex-1 overflow-auto px-2 pb-6 pt-2">
       <section v-if="props.length" class="mb-2 overflow-hidden rounded-lg border border-ink-800 bg-ink-850/40">

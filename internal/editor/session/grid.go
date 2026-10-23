@@ -10,7 +10,7 @@ import (
 
 // grid draws a ground grid on the dots nothing else covered, in the Scene
 // view while editing, so an empty scene still shows where the ground is.
-// Lines every unit thin out to every 10 or 100 as the view zooms out.
+// Lines thin out as the view zooms out, like a CAD grid.
 func (s *Session) grid(f *pipeline.Frame) {
 	if s.viewMode != SceneView || s.play != nil {
 		return
@@ -22,10 +22,12 @@ func (s *Session) grid(f *pipeline.Frame) {
 	if step <= 0 || math.IsNaN(step) {
 		return
 	}
+	// The finest of 1, 2, 5, 10, 20, 50... units that keeps lines 8 dots apart.
 	unit := 1.0
-	for unit/step < 4 {
-		unit *= 10
+	for i := 0; unit/step < 8; i++ {
+		unit *= [3]float64{2, 2.5, 2}[i%3]
 	}
+	major := unit * 5
 	half := step * .55
 	near := func(c, u float64) bool {
 		r := math.Mod(c, u)
@@ -34,8 +36,8 @@ func (s *Session) grid(f *pipeline.Frame) {
 		}
 		return r < half || u-r < half
 	}
-	minor, major := color.RGB(46, 46, 44), color.RGB(70, 68, 64)
-	axisX, axisY := color.RGB(118, 62, 52), color.RGB(70, 104, 64)
+	ink := color.RGB(20, 20, 20)
+	axisX, axisY := color.RGB(170, 70, 56), color.RGB(80, 140, 72)
 	for y := 0; y < b.H; y++ {
 		for x := 0; x < b.W; x++ {
 			d := b.At(x, y)
@@ -43,16 +45,17 @@ func (s *Session) grid(f *pipeline.Frame) {
 				continue
 			}
 			p := o.Add(dx.Scale(float64(x) + .5)).Add(dy.Scale(float64(y) + .5))
+			// Lines are tinted from the background, so they stay quiet on any sky.
 			var c color.Color
 			switch {
 			case math.Abs(p.Y) < half:
-				c = axisX
+				c = color.Mix(d.Color, axisX, .55)
 			case math.Abs(p.X) < half:
-				c = axisY
-			case near(p.X, unit*10) || near(p.Y, unit*10):
-				c = major
+				c = color.Mix(d.Color, axisY, .55)
+			case near(p.X, major) || near(p.Y, major):
+				c = color.Mix(d.Color, ink, .22)
 			case near(p.X, unit) || near(p.Y, unit):
-				c = minor
+				c = color.Mix(d.Color, ink, .1)
 			default:
 				continue
 			}

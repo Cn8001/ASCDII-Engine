@@ -20,6 +20,7 @@
 <a href="gameobjects.html">GameObjects and components</a>
 <a href="scenes.html" class="on">Scenes and prefabs</a>
 <a href="assets.html">Assets and import</a>
+<a href="packages.html">Packages</a>
 <a href="textures.html">Textures and materials</a>
 <a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
@@ -46,6 +47,7 @@
   materials/*.material.json
   art/*.json, *.xp        <span class="c">glyph art: palette JSON or REXPaint</span>
   scripts/*.lua           <span class="c">scripts in Lua</span>
+  packages/&lt;name&gt;/       <span class="c">installed packages, read only</span>
   **/*.meta               <span class="c">one per asset: its permanent id</span>
   build/                  <span class="c">output, ignored by git</span></code></pre>
 
@@ -65,9 +67,9 @@
   "engine": "0.0.1",
   "start": "scenes/dragonfall.scene.json",
   "cols": 160, "rows": 50, "fps": 30,
-  "packs": ["dragonfall"]
+  "modules": ["dragonfall"]
 }</code></pre>
-<p><code>packs</code> lists compiled content packs the project needs; the sample uses the Dragonfall pack for its terrain, castle, dragon and knight. Projects that only use built in components leave it out.</p>
+<p><code>modules</code> lists the Go code modules the project uses; the sample uses the Dragonfall module for its terrain, castle, dragon and knight. Installing a <a href="packages.html">package</a> adds the modules it needs, and projects that only use built in components have none. Files from before 0.0.1 call this list <code>packs</code>; it is read the same way.</p>
 
 <h2>World units</h2>
 <p>Everything is measured in world units, where one unit is one tile of ground. A knight is about 4 units tall, a castle wall 8, a tower with its roof about 20. You never type dots, cells or depth values: the camera projects positions, and depth comes from the projection. That is also why objects never sink into each other by accident.</p>
@@ -101,7 +103,7 @@
 }</code></pre>
 
 <h2>Scenes</h2>
-<p>A project can have many scenes. Use the scene picker in the toolbar or double click a scene in the Project window to open one, and the key button to make the open scene the one a build starts with. New scenes start with a small ground, a crate, a pillar, a player and a lamp.</p>
+<p>A project can have many scenes. Use the scene picker in the toolbar or double click a scene in the Project window to open one, and the key button to make the open scene the one a build starts with. New scenes start empty; the Scene view shows a ground grid until you add something.</p>
 <nav class="pager"><a class="prev" href="gameobjects.html"><small>Previous</small>GameObjects and components</a><a class="next" href="assets.html"><small>Next</small>Assets and import</a></nav>
 </main>
 </div>

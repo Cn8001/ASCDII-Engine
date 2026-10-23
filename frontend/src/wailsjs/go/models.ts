@@ -74,6 +74,35 @@ export namespace asset {
 
 }
 
+export namespace pack {
+	
+	export class Manifest {
+	    format: number;
+	    name: string;
+	    version: string;
+	    engine?: string;
+	    description?: string;
+	    author?: string;
+	    modules?: string[];
+	
+	    static createFrom(source: any = {}) {
+	        return new Manifest(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.format = source["format"];
+	        this.name = source["name"];
+	        this.version = source["version"];
+	        this.engine = source["engine"];
+	        this.description = source["description"];
+	        this.author = source["author"];
+	        this.modules = source["modules"];
+	    }
+	}
+
+}
+
 export namespace pipeline {
 	
 	export class Info {
@@ -399,6 +428,66 @@ export namespace session {
 	        this.inherited = source["inherited"];
 	        this.components = source["components"];
 	        this.children = this.convertValues(source["children"], Node);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class Package {
+	    name: string;
+	    version: string;
+	    description: string;
+	    author: string;
+	    modules: string[];
+	    missing: string[];
+	    source: string;
+	    installed: string;
+	    files: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new Package(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.name = source["name"];
+	        this.version = source["version"];
+	        this.description = source["description"];
+	        this.author = source["author"];
+	        this.modules = source["modules"];
+	        this.missing = source["missing"];
+	        this.source = source["source"];
+	        this.installed = source["installed"];
+	        this.files = source["files"];
+	    }
+	}
+	export class Packages {
+	    installed: Package[];
+	    available: Package[];
+	
+	    static createFrom(source: any = {}) {
+	        return new Packages(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.installed = this.convertValues(source["installed"], Package);
+	        this.available = this.convertValues(source["available"], Package);
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

@@ -8,7 +8,9 @@ import (
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/dragonfall/realm"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/dragonfall/vegetation"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/asset"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/pack"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/project"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/version"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/scene"
 )
 
@@ -17,7 +19,17 @@ const (
 	Seed = 2026
 )
 
-func Pack() project.Pack { return project.Pack{Name: Name, Install: Install} }
+func Module() project.Module { return project.Module{Name: Name, Install: Install} }
+
+// Package is the sample as an installable package: its scenes, prefabs, art
+// and scripts land in packages/dragonfall of any project.
+func Package() pack.Source {
+	return pack.Source{FS: Template(), Origin: "builtin:" + Name, Manifest: pack.Manifest{
+		Format: 1, Name: Name, Version: "0.1.0", Engine: version.Engine, Author: "Rapsodo Studios",
+		Description: "The sample valley: a castle, a sleeping dragon, a knight, lanterns and Lua scripts. Open scenes/dragonfall.scene.json to play it.",
+		Modules:     []string{Name},
+	}}
+}
 
 // Install registers the pack's kinds; they share one realm cache so terrain,
 // forest, grass and HUD agree on the same valley.

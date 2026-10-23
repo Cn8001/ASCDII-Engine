@@ -32,6 +32,7 @@ const usage = `usage:
   ascdii preview <dir> [-size 160x50] [-time 2] [-plain]
   ascdii build <dir> [-out path] [-player path]
   ascdii release <dir> [-version v] [-players dir]
+  ascdii pack list|install|remove|export ...
   ascdii version
   ascdii help`
 
@@ -44,7 +45,7 @@ func main() {
 	}
 }
 
-func packs() []project.Pack { return []project.Pack{dragonfall.Pack()} }
+func modules() []project.Module { return []project.Module{dragonfall.Module()} }
 
 func run(ctx context.Context, args []string) error {
 	self, err := os.Executable()
@@ -77,6 +78,8 @@ func run(ctx context.Context, args []string) error {
 		return cmdBuild(ctx, self, args[1:])
 	case "release":
 		return cmdRelease(ctx, self, args[1:])
+	case "pack":
+		return cmdPack(ctx, args[1:])
 	case "version":
 		fmt.Println("ASCDII Engine " + version.Engine)
 		return nil
@@ -104,7 +107,7 @@ func play(ctx context.Context, fsys fs.FS, args []string) error {
 	if len(args) > 0 && args[0] == "--preview" {
 		return preview(ctx, fsys, args[1:])
 	}
-	e, err := app.Open(ctx, fsys, app.Options{Packs: packs()})
+	e, err := app.Open(ctx, fsys, app.Options{Modules: modules()})
 	if err != nil {
 		return err
 	}
@@ -164,7 +167,7 @@ func preview(ctx context.Context, fsys fs.FS, args []string) error {
 	if err != nil {
 		return err
 	}
-	e, err := app.Open(ctx, fsys, app.Options{Cols: cols, Rows: rows, Packs: packs()})
+	e, err := app.Open(ctx, fsys, app.Options{Cols: cols, Rows: rows, Modules: modules()})
 	if err != nil {
 		return err
 	}
@@ -197,7 +200,7 @@ func cmdBuild(ctx context.Context, self string, args []string) error {
 		return err
 	}
 	fsys := os.DirFS(dir)
-	p, err := project.Open(ctx, fsys, packs())
+	p, err := project.Open(ctx, fsys, modules())
 	if err != nil {
 		return err
 	}
@@ -229,7 +232,7 @@ func cmdRelease(ctx context.Context, self string, args []string) error {
 		return err
 	}
 	fsys := os.DirFS(dir)
-	p, err := project.Open(ctx, fsys, packs())
+	p, err := project.Open(ctx, fsys, modules())
 	if err != nil {
 		return err
 	}

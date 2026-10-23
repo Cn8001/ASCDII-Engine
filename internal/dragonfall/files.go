@@ -14,7 +14,7 @@ import (
 
 // TemplateFiles renders every generated file of the template project.
 func TemplateFiles() (map[string][]byte, error) {
-	reg, _ := project.Registry([]project.Pack{Pack()})
+	reg, _ := project.Registry([]project.Module{Module()})
 	s, err := BuildScene(reg)
 	if err != nil {
 		return nil, err
@@ -26,7 +26,7 @@ func TemplateFiles() (map[string][]byte, error) {
 	if err := scene.EncodePrefab(&pf, Lantern()); err != nil {
 		return nil, err
 	}
-	m := project.Manifest{Format: 1, Name: "Dragonfall", Version: "0.1.0", Engine: version.Engine, Start: StartScene, Cols: 160, Rows: 50, FPS: 30, Packs: []string{Name}}
+	m := project.Manifest{Format: 1, Name: "Dragonfall", Version: "0.1.0", Engine: version.Engine, Start: StartScene, Cols: 160, Rows: 50, FPS: 30, Modules: []string{Name}}
 	mb, err := json.MarshalIndent(m, "", "  ")
 	if err != nil {
 		return nil, fmt.Errorf("encode manifest: %w", err)

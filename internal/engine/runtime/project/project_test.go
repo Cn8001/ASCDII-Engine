@@ -81,7 +81,7 @@ func TestUnit_OpenRequiresPacks(t *testing.T) {
 	_, err := Open(context.Background(), fsys, nil)
 
 	// Assert
-	if !errors.Is(err, ErrMissingPack) {
+	if !errors.Is(err, ErrMissingModule) {
 		t.Fatalf("got %v", err)
 	}
 }
@@ -129,12 +129,12 @@ func TestUnit_CreateWritesMetaAndMigrateUsesGUIDs(t *testing.T) {
 	}
 }
 
-func TestUnit_OnlyNamedPacksAreInstalled(t *testing.T) {
+func TestUnit_OnlyNamedModulesAreInstalled(t *testing.T) {
 	// Arrange
 	dir := t.TempDir()
 	ctx := context.Background()
 	installed := false
-	sample := Pack{Name: "sample", Install: func(r *scene.Registry, _ *asset.Library) {
+	sample := Module{Name: "sample", Install: func(r *scene.Registry, _ *asset.Library) {
 		installed = true
 		r.Register("sample.thing", func() scene.Component { return nil }, scene.Meta{})
 	}}
@@ -143,7 +143,7 @@ func TestUnit_OnlyNamedPacksAreInstalled(t *testing.T) {
 	}
 
 	// Act
-	p, err := Open(ctx, os.DirFS(dir), []Pack{sample})
+	p, err := Open(ctx, os.DirFS(dir), []Module{sample})
 
 	// Assert
 	if err != nil || installed || slices.Contains(p.Registry.Kinds(), "sample.thing") {

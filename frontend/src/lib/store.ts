@@ -44,6 +44,8 @@ export const store = reactive({
   cellPx: 8,
   buildOpen: false,
   newProject: false,
+  packagesOpen: false,
+  assetsVersion: 0, // bumped when packages change the project's files
   busy: '',
   logs: [] as session.LogEntry[],
   key: null as { clip: number; prop: string; t: number } | null,

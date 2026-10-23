@@ -6,9 +6,10 @@ import * as Assets from '../wailsjs/go/service/AssetService'
 import * as Anim from '../wailsjs/go/service/AnimService'
 import * as Build from '../wailsjs/go/service/BuildService'
 import * as Console from '../wailsjs/go/service/ConsoleService'
+import * as Packages from '../wailsjs/go/service/PackageService'
 import { EventsOn, OnFileDrop } from '../wailsjs/runtime/runtime'
 
-export { Project, Scene, Viewport, Pipeline, Assets, Anim, Build, Console, EventsOn, OnFileDrop }
+export { Project, Scene, Viewport, Pipeline, Assets, Anim, Build, Console, Packages, EventsOn, OnFileDrop }
 
 export interface ApiError {
   code: string

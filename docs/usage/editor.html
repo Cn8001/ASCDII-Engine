@@ -20,6 +20,7 @@
 <a href="gameobjects.html">GameObjects and components</a>
 <a href="scenes.html">Scenes and prefabs</a>
 <a href="assets.html">Assets and import</a>
+<a href="packages.html">Packages</a>
 <a href="textures.html">Textures and materials</a>
 <a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
@@ -39,7 +40,7 @@
 <figure><img src="img/editor-main.png" alt="Editor layout"></figure>
 
 <h2>Toolbar</h2>
-<p>Left: the logo, the project name and version, buttons to open another project or close this one and return to the start screen, and the scene picker. The key next to it marks the open scene as the one a build starts with. <b>GameObject</b> opens the menu that creates objects, see <a href="gameobjects.html">GameObjects and components</a>. Center: <b>Play</b>, <b>Step</b> (one frame while paused) and <b>Stop</b>. Right: undo, redo, save (a dot means unsaved changes) and <b>Build</b>.</p>
+<p>Left: the logo, the project name and version, buttons for a <b>new project</b> (<kbd>Ctrl</kbd>+<kbd>N</kbd>, without leaving the editor), to open another project or to close this one and return to the start screen, the scene picker, and the <b>Package Manager</b>. The key next to it marks the open scene as the one a build starts with. <b>GameObject</b> opens the menu that creates objects, see <a href="gameobjects.html">GameObjects and components</a>. Center: <b>Play</b>, <b>Step</b> (one frame while paused) and <b>Stop</b>. Right: undo, redo, save (a dot means unsaved changes) and <b>Build</b>.</p>
 
 <h2>Hierarchy</h2>
 <ul>
@@ -64,7 +65,7 @@
 <tr><td>Place an asset</td><td>Drop a prefab, model or art tile from the Project window, or a file from your file manager</td></tr>
 <tr><td>Apply a material</td><td>Drop a material tile on an object</td></tr>
 </table>
-<p>The view always shows exactly what a terminal will show: the same Braille pattern and the same two colors in every cell. The toolbar only changes how those cells are drawn: <b>dots</b> draws the Braille dots with gaps, like a terminal font, and <b>pixels</b> draws the same dots without gaps, which is easier on the eyes but carries the same information. The toolbar also picks the cell size (smaller cells give more resolution) and toggles <b>Live</b>, which plays water, wind and animation clips while you edit; it starts off. The corner of the view shows the render and paint time of each frame.</p>
+<p>In the Scene view an empty ground shows a grid with the X axis in red and the Y axis in green; it is an editor aid, listed as the <code>grid</code> pass in the Pipeline tab, and never appears in the Game view or in builds. The view always shows exactly what a terminal will show: the same Braille pattern and the same two colors in every cell. The toolbar only changes how those cells are drawn: <b>dots</b> draws the Braille dots with gaps, like a terminal font, and <b>pixels</b> draws the same dots without gaps, which is easier on the eyes but carries the same information. The toolbar also picks the cell size (smaller cells give more resolution) and toggles <b>Live</b>, which plays water, wind and animation clips while you edit; it starts off. The corner of the view shows the render and paint time of each frame.</p>
 
 <h2>Inspector</h2>
 <p>The header holds the name, visibility, tag and Solid. Below it come <b>Transform</b> and one card per component, each with a checkbox and a ⋮ menu for Reset, Move Up, Move Down and Remove. <b>Add Component</b> searches every component kind and your Lua scripts, and can create a new script on the spot. Slots for objects, components, prefabs, textures and materials take drops, as described in <a href="gameobjects.html#references">References</a>. Clicking a texture, material or model in the Project window shows its settings here instead.</p>
@@ -93,6 +94,7 @@
 <tr><td><kbd>F</kbd></td><td>Frame selection</td></tr>
 <tr><td><kbd>Ctrl</kbd>+<kbd>6</kbd></td><td>Open the Animation tab</td></tr>
 <tr><td><kbd>Ctrl</kbd>+<kbd>B</kbd></td><td>Build</td></tr>
+<tr><td><kbd>Ctrl</kbd>+<kbd>N</kbd></td><td>New project</td></tr>
 </table>
 <div class="note"><b>Code editor</b>Scripts open in VS Code when the <code>code</code> command is available, otherwise in the system default program. Set <code>ASCDII_EDITOR</code> to use another one, for example <code>ASCDII_EDITOR="subl {file}:{line}"</code>.</div>
 <nav class="pager"><a class="prev" href="first-game.html"><small>Previous</small>Your first game</a><a class="next" href="gameobjects.html"><small>Next</small>GameObjects and components</a></nav>

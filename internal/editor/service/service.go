@@ -16,6 +16,7 @@ import (
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/input"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/prop"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/pipeline"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/pack"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/project"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/scene"
 )
@@ -46,6 +47,7 @@ type Filter struct{ Name, Pattern string }
 type Dialogs interface {
 	OpenFile(ctx context.Context, title string, filters []Filter) (string, error)
 	PickDir(ctx context.Context, title string) (string, error)
+	SaveFile(ctx context.Context, title, name string, filters []Filter) (string, error)
 }
 
 type Deps struct {
@@ -66,6 +68,7 @@ type Services struct {
 	Anim     *AnimService
 	Build    *BuildService
 	Console  *ConsoleService
+	Packages *PackageService
 }
 
 func New(d Deps) *Services {
@@ -78,12 +81,13 @@ func New(d Deps) *Services {
 		Anim:     &AnimService{d: d},
 		Build:    &BuildService{d: d},
 		Console:  &ConsoleService{d: d},
+		Packages: &PackageService{d: d},
 	}
 }
 
 // All lists the services for Wails Bind.
 func (s *Services) All() []any {
-	return []any{s.Project, s.Scene, s.Viewport, s.Pipeline, s.Assets, s.Anim, s.Build, s.Console}
+	return []any{s.Project, s.Scene, s.Viewport, s.Pipeline, s.Assets, s.Anim, s.Build, s.Console, s.Packages}
 }
 
 // Code is the stable error code the UI switches on.
@@ -108,10 +112,14 @@ func Code(err error) string {
 		{session.ErrNotReference, "not_reference"},
 		{session.ErrNoSettings, "no_settings"},
 		{session.ErrBadPath, "bad_path"},
+		{session.ErrPackageLocked, "package_locked"},
+		{pack.ErrConflict, "conflict"},
+		{pack.ErrBadName, "bad_name"},
+		{pack.ErrNotPack, "not_package"},
 		{asset.ErrExists, "exists"},
 		{session.ErrUnknownTemplate, "unknown_template"},
 		{project.ErrNoManifest, "no_manifest"},
-		{project.ErrMissingPack, "missing_pack"},
+		{project.ErrMissingModule, "missing_module"},
 		{asset.ErrNotFound, "asset_not_found"},
 		{asset.ErrInvalidArt, "invalid_art"},
 		{players.ErrNoPlayer, "no_player"},

@@ -38,6 +38,9 @@ func (s *Session) NewScript(ctx context.Context, name string) (string, error) {
 	if !strings.Contains(rel, "/") {
 		rel = "scripts/" + rel
 	}
+	if locked(rel) {
+		return "", lockedErr(rel)
+	}
 	abs := filepath.Join(s.dir, filepath.FromSlash(rel))
 	if _, err := os.Stat(abs); err == nil {
 		return "", fmt.Errorf("new script %s: %w", rel, fs.ErrExist)
@@ -68,6 +71,9 @@ func (s *Session) RenameAsset(ctx context.Context, from, to string) (string, err
 
 // move renames one asset with its .meta and every place that names its path.
 func (s *Session) move(ctx context.Context, from, to string) (string, error) {
+	if locked(from) || locked(to) {
+		return "", lockedErr(from)
+	}
 	if k, _ := asset.Classify(from); k != "" {
 		if want := assetExt(from); !strings.HasSuffix(to, want) {
 			to += want
