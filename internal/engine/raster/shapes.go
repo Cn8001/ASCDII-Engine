@@ -156,6 +156,34 @@ func (b *Buffer) Triangle(v0, v1, v2 Vertex, f Frag) { b.triangle(v0, v1, v2, f,
 // visible tile edges.
 func (b *Buffer) TriangleShaded(v0, v1, v2 Vertex, f Frag) { b.triangle(v0, v1, v2, f, true) }
 
+// plane holds an attribute as a linear function of dot position, so the
+// inner loop only adds a step per dot instead of solving barycentrics.
+type plane struct{ at0, dx, dy float64 }
+
+func newPlane(v0, v1, v2 Vertex, a0, a1, a2, inv float64) plane {
+	return plane{
+		at0: a0,
+		dx:  ((a1-a0)*(v2.Y-v0.Y) - (a2-a0)*(v1.Y-v0.Y)) * inv,
+		dy:  ((a2-a0)*(v1.X-v0.X) - (a1-a0)*(v2.X-v0.X)) * inv,
+	}
+}
+
+// row returns the value at the first sample of a row, given the origin vertex.
+func (p plane) row(v0 Vertex, px, py float64) float64 {
+	return p.at0 + p.dx*(px-v0.X) + p.dy*(py-v0.Y)
+}
+
+func channel(v float64) uint8 {
+	v = v*255 + .5
+	if v <= 0 {
+		return 0
+	}
+	if v >= 255 {
+		return 255
+	}
+	return uint8(v)
+}
+
 func (b *Buffer) triangle(v0, v1, v2 Vertex, f Frag, shaded bool) {
 	area := edge(v0, v1, v2.X, v2.Y)
 	if math.Abs(area) < 1e-9 {
@@ -165,25 +193,44 @@ func (b *Buffer) triangle(v0, v1, v2 Vertex, f Frag, shaded bool) {
 	x1 := min(b.W-1, int(math.Ceil(max(v0.X, v1.X, v2.X))))
 	y0 := max(0, int(math.Floor(min(v0.Y, v1.Y, v2.Y))))
 	y1 := min(b.H-1, int(math.Ceil(max(v0.Y, v1.Y, v2.Y))))
+	if x0 > x1 || y0 > y1 {
+		return
+	}
 	inv := 1 / area
+	depth := newPlane(v0, v1, v2, v0.Depth, v1.Depth, v2.Depth, inv)
+	wx := newPlane(v0, v1, v2, v0.WX, v1.WX, v2.WX, inv)
+	wy := newPlane(v0, v1, v2, v0.WY, v1.WY, v2.WY, inv)
+	wz := newPlane(v0, v1, v2, v0.WZ, v1.WZ, v2.WZ, inv)
+	var cr, cg, cb plane
+	if shaded {
+		cr = newPlane(v0, v1, v2, v0.R, v1.R, v2.R, inv)
+		cg = newPlane(v0, v1, v2, v0.G, v1.G, v2.G, inv)
+		cb = newPlane(v0, v1, v2, v0.B, v1.B, v2.B, inv)
+	}
+	// Edge functions grow linearly in x; their per dot steps are constant.
+	s0, s1 := -(v2.Y-v1.Y)*inv, -(v0.Y-v2.Y)*inv
 	for y := y0; y <= y1; y++ {
-		py := float64(y) + .5
+		px, py := float64(x0)+.5, float64(y)+.5
+		w0 := edge(v1, v2, px, py) * inv
+		w1 := edge(v2, v0, px, py) * inv
+		d, ex, ey, ez := depth.row(v0, px, py), wx.row(v0, px, py), wy.row(v0, px, py), wz.row(v0, px, py)
+		var r, g, bl float64
+		if shaded {
+			r, g, bl = cr.row(v0, px, py), cg.row(v0, px, py), cb.row(v0, px, py)
+		}
 		for x := x0; x <= x1; x++ {
-			px := float64(x) + .5
-			w0 := edge(v1, v2, px, py) * inv
-			w1 := edge(v2, v0, px, py) * inv
-			w2 := 1 - w0 - w1
-			if w0 < -1e-6 || w1 < -1e-6 || w2 < -1e-6 {
-				continue
+			if w0 >= -1e-6 && w1 >= -1e-6 && 1-w0-w1 >= -1e-6 {
+				f.Depth, f.World.X, f.World.Y, f.World.Z = d, ex, ey, ez
+				if shaded {
+					f.Albedo = color.Color{R: channel(r), G: channel(g), B: channel(bl)}
+				}
+				b.Plot(x, y, f)
 			}
-			f.Depth = w0*v0.Depth + w1*v1.Depth + w2*v2.Depth
-			f.World.X = w0*v0.WX + w1*v1.WX + w2*v2.WX
-			f.World.Y = w0*v0.WY + w1*v1.WY + w2*v2.WY
-			f.World.Z = w0*v0.WZ + w1*v1.WZ + w2*v2.WZ
+			w0, w1 = w0+s0, w1+s1
+			d, ex, ey, ez = d+depth.dx, ex+wx.dx, ey+wy.dx, ez+wz.dx
 			if shaded {
-				f.Albedo = color.FromFloat(w0*v0.R+w1*v1.R+w2*v2.R, w0*v0.G+w1*v1.G+w2*v2.G, w0*v0.B+w1*v1.B+w2*v2.B)
+				r, g, bl = r+cr.dx, g+cg.dx, bl+cb.dx
 			}
-			b.Plot(x, y, f)
 		}
 	}
 }

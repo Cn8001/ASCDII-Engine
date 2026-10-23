@@ -5,6 +5,7 @@ package braille
 import (
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/cell"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/color"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/par"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/raster"
 )
 
@@ -107,16 +108,18 @@ func EncodeFlat(samples [8]color.Color, flat int) cell.Cell {
 func Resolve(buf *raster.Buffer, g *cell.Grid, flat int) {
 	g.Resize(buf.Cols, buf.Rows)
 	dots := buf.Dots()
-	var samples [8]color.Color
-	for cy := 0; cy < buf.Rows; cy++ {
-		for cx := 0; cx < buf.Cols; cx++ {
-			for dy := 0; dy < raster.SubH; dy++ {
-				row := (cy*raster.SubH + dy) * buf.W
-				for dx := 0; dx < raster.SubW; dx++ {
-					samples[dy*2+dx] = dots[row+cx*raster.SubW+dx].Color
+	par.Rows(buf.Rows, func(lo, hi int) {
+		var samples [8]color.Color
+		for cy := lo; cy < hi; cy++ {
+			for cx := 0; cx < buf.Cols; cx++ {
+				for dy := 0; dy < raster.SubH; dy++ {
+					row := (cy*raster.SubH + dy) * buf.W
+					for dx := 0; dx < raster.SubW; dx++ {
+						samples[dy*2+dx] = dots[row+cx*raster.SubW+dx].Color
+					}
 				}
+				g.Set(cx, cy, EncodeFlat(samples, flat))
 			}
-			g.Set(cx, cy, EncodeFlat(samples, flat))
 		}
-	}
+	})
 }

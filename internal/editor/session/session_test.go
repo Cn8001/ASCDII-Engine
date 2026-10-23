@@ -250,9 +250,24 @@ func TestUnit_DragMovesOnGround(t *testing.T) {
 	}
 }
 
+func TestUnit_RawFrameHasHeaderAndCells(t *testing.T) {
+	// Arrange
+	s, _, _ := newSession(t, "")
+
+	// Act
+	f := s.Snapshot()
+	raw := s.Raw()
+
+	// Assert
+	if len(raw) != 12+80*30*10 || raw[0] != 80 || raw[4] != 30 || uint64(raw[8]) != f.Seq%256 {
+		t.Fatalf("raw %d bytes header %v seq %d", len(raw), raw[:12], f.Seq)
+	}
+}
+
 func TestUnit_RunEmitsFrames(t *testing.T) {
 	// Arrange
 	s, rec, _ := newSession(t, "")
+	s.SetLive(true)
 	ctx, cancel := context.WithTimeout(context.Background(), 250*time.Millisecond)
 	defer cancel()
 

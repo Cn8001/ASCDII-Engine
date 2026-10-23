@@ -45,6 +45,7 @@ type Deps struct {
 	Packs     []project.Pack
 	Templates []Template
 	Players   players.Source
+	Binary    bool        // frames are fetched with Raw instead of riding in events
 	IDs       guid.Source // asset ids; guid.Default() when zero
 	Emit      Emitter
 	Now       func() time.Time
@@ -79,6 +80,8 @@ type Session struct {
 	sctx      scene.Ctx
 	hist      history
 	logs      logbook
+	raw       []byte
+	seq       uint64
 	cam       view.Camera // editor camera, separate from the scene's game camera
 	viewMode  string
 	step      float64
@@ -94,7 +97,7 @@ func New(d Deps) *Session {
 		d.IDs = guid.Default()
 	}
 	reg, lib := project.Registry(d.Packs)
-	s := &Session{d: d, reg: reg, lib: lib, edit: scene.New("untitled"), mode: Edit, live: true, dirty: true, viewMode: SceneView, appCtx: context.Background()}
+	s := &Session{d: d, reg: reg, lib: lib, edit: scene.New("untitled"), mode: Edit, live: false, dirty: true, viewMode: SceneView, appCtx: context.Background()}
 	s.cam = s.edit.Camera
 	s.pipe = app.NewPipeline(s.current, d.Now)
 	s.frame = pipeline.NewFrame(120, 40)

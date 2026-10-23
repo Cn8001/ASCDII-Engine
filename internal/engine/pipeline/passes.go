@@ -8,6 +8,7 @@ import (
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/color"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/geom"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/light"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/par"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/prop"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/raster"
 )
@@ -83,17 +84,19 @@ func (*Lit) Name() string { return "lighting" }
 func (*Lit) Stage() Stage { return Lighting }
 func (*Lit) Run(f *Frame) {
 	sh := light.NewShader(f.Env, f.Ctx.Lights, f.Time)
-	dots := f.Buf.Dots()
-	for i := range dots {
-		d := &dots[i]
-		if d.Flags&raster.FlagUnlit != 0 {
-			continue
+	dots, w := f.Buf.Dots(), f.Buf.W
+	par.Rows(f.Buf.H, func(lo, hi int) {
+		for i := lo * w; i < hi*w; i++ {
+			d := &dots[i]
+			if d.Flags&raster.FlagUnlit != 0 {
+				continue
+			}
+			r, g, b := sh.Irradiance(d.Normal.Vec(), d.World(), float64(d.Shadow)/255)
+			e := float64(d.Emissive) / 255
+			ar, ag, ab := d.Albedo.Float()
+			d.Color = color.FromFloat(ar*(r*(1-e)+e*1.15), ag*(g*(1-e)+e*1.15), ab*(b*(1-e)+e*1.15))
 		}
-		r, g, b := sh.Irradiance(d.Normal.Vec(), d.World(), float64(d.Shadow)/255)
-		e := float64(d.Emissive) / 255
-		ar, ag, ab := d.Albedo.Float()
-		d.Color = color.FromFloat(ar*(r*(1-e)+e*1.15), ag*(g*(1-e)+e*1.15), ab*(b*(1-e)+e*1.15))
-	}
+	})
 }
 
 type Water struct{ Strength, Speed float64 }
@@ -112,21 +115,23 @@ func (w *Water) Set(n string, v any) error { return w.bind().Set(n, v) }
 func (w *Water) Run(f *Frame) {
 	t := f.Time * w.Speed
 	glint := color.Mix(f.Env.Sun.Color, color.RGB(255, 255, 255), .4)
-	dots := f.Buf.Dots()
-	for i := range dots {
-		d := &dots[i]
-		if d.Flags&raster.FlagWater == 0 {
-			continue
+	dots, width := f.Buf.Dots(), f.Buf.W
+	par.Rows(f.Buf.H, func(lo, hi int) {
+		for i := lo * width; i < hi*width; i++ {
+			d := &dots[i]
+			if d.Flags&raster.FlagWater == 0 {
+				continue
+			}
+			x, y := float64(d.X), float64(d.Y)
+			wave := math.Sin(x*1.7+t*1.9+math.Sin(y*.9+t*.7)*1.6) * math.Sin(y*2.3-t*1.3)
+			switch {
+			case wave > .78:
+				d.Color = color.Mix(d.Color, glint, (wave-.78)/.22*.7*w.Strength)
+			case wave < -.6:
+				d.Color = color.Scale(d.Color, 1-(-.6-wave)*.5*w.Strength)
+			}
 		}
-		x, y := float64(d.X), float64(d.Y)
-		wave := math.Sin(x*1.7+t*1.9+math.Sin(y*.9+t*.7)*1.6) * math.Sin(y*2.3-t*1.3)
-		switch {
-		case wave > .78:
-			d.Color = color.Mix(d.Color, glint, (wave-.78)/.22*.7*w.Strength)
-		case wave < -.6:
-			d.Color = color.Scale(d.Color, 1-(-.6-wave)*.5*w.Strength)
-		}
-	}
+	})
 }
 
 type Fog struct{ Density, Start, End, Height float64 }
@@ -147,21 +152,23 @@ func (g *Fog) Run(f *Frame) {
 	if g.Density <= 0 {
 		return
 	}
-	dots := f.Buf.Dots()
-	for i := range dots {
-		d := &dots[i]
-		if d.Flags&raster.FlagEmpty != 0 {
-			continue
+	dots, w := f.Buf.Dots(), f.Buf.W
+	par.Rows(f.Buf.H, func(lo, hi int) {
+		for i := lo * w; i < hi*w; i++ {
+			d := &dots[i]
+			if d.Flags&raster.FlagEmpty != 0 {
+				continue
+			}
+			far := geom.Smoothstep(g.Start, g.End, -float64(d.Depth))
+			low := 0.0
+			if g.Height > 0 {
+				low = (1 - geom.Smoothstep(-.5, g.Height, float64(d.Z))) * .35
+			}
+			if k := math.Min(1, (far+low)*g.Density); k > .004 {
+				d.Color = color.Mix(d.Color, f.Env.Fog, k)
+			}
 		}
-		far := geom.Smoothstep(g.Start, g.End, -float64(d.Depth))
-		low := 0.0
-		if g.Height > 0 {
-			low = (1 - geom.Smoothstep(-.5, g.Height, float64(d.Z))) * .35
-		}
-		if k := math.Min(1, (far+low)*g.Density); k > .004 {
-			d.Color = color.Mix(d.Color, f.Env.Fog, k)
-		}
-	}
+	})
 }
 
 type Outline struct{ Threshold, Strength float64 }
@@ -180,20 +187,23 @@ func (o *Outline) Set(n string, v any) error { return o.bind().Set(n, v) }
 // silhouette does more for legibility than any shading.
 func (o *Outline) Run(f *Frame) {
 	b := f.Buf
-	for y := 0; y < b.H; y++ {
-		for x := 0; x < b.W; x++ {
-			d := b.At(x, y)
-			if d.Flags&raster.FlagEmpty != 0 {
-				continue
-			}
-			for _, n := range [4]*raster.Dot{b.At(x+1, y), b.At(x-1, y), b.At(x, y+1), b.At(x, y-1)} {
-				if n != nil && d.Depth-n.Depth > float32(o.Threshold) {
-					d.Color = color.Scale(d.Color, 1-o.Strength)
-					break
+	// Reads neighbour depth only and writes own color, so bands never race.
+	par.Rows(b.H, func(lo, hi int) {
+		for y := lo; y < hi; y++ {
+			for x := 0; x < b.W; x++ {
+				d := b.At(x, y)
+				if d.Flags&raster.FlagEmpty != 0 {
+					continue
+				}
+				for _, n := range [4]*raster.Dot{b.At(x+1, y), b.At(x-1, y), b.At(x, y+1), b.At(x, y-1)} {
+					if n != nil && d.Depth-n.Depth > float32(o.Threshold) {
+						d.Color = color.Scale(d.Color, 1-o.Strength)
+						break
+					}
 				}
 			}
 		}
-	}
+	})
 }
 
 type Grade struct{ Exposure, Contrast, Saturation, Warmth, Vignette float64 }
@@ -214,7 +224,11 @@ func (g *Grade) Set(n string, v any) error { return g.bind().Set(n, v) }
 func (g *Grade) Run(f *Frame) {
 	b := f.Buf
 	cx, cy := float64(b.W)/2, float64(b.H)/2
-	for y := 0; y < b.H; y++ {
+	par.Rows(b.H, func(lo, hi int) { g.rows(b, cx, cy, lo, hi) })
+}
+
+func (g *Grade) rows(b *raster.Buffer, cx, cy float64, lo, hi int) {
+	for y := lo; y < hi; y++ {
 		for x := 0; x < b.W; x++ {
 			d := b.At(x, y)
 			r, gr, bl := d.Color.Float()

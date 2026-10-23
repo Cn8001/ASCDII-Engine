@@ -88,8 +88,12 @@ func (b *Buffer) Resize(cols, rows int) bool {
 
 func (b *Buffer) Clear(bg color.Color) {
 	empty := Dot{Color: bg, Albedo: bg, Flags: FlagEmpty | FlagUnlit, Depth: float32(math.Inf(-1))}
-	for i := range b.dots {
-		b.dots[i] = empty
+	if len(b.dots) > 0 {
+		// Doubling copies fill the slice far faster than assigning one dot at a time.
+		b.dots[0] = empty
+		for n := 1; n < len(b.dots); n *= 2 {
+			copy(b.dots[n:], b.dots[:n])
+		}
 	}
 	b.tag = 0
 }

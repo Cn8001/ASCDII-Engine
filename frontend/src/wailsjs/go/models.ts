@@ -213,7 +213,8 @@ export namespace session {
 	export class Frame {
 	    cols: number;
 	    rows: number;
-	    cells: string;
+	    cells?: string;
+	    seq: number;
 	    time: number;
 	    mode: string;
 	    millis: number;
@@ -230,6 +231,7 @@ export namespace session {
 	        this.cols = source["cols"];
 	        this.rows = source["rows"];
 	        this.cells = source["cells"];
+	        this.seq = source["seq"];
 	        this.time = source["time"];
 	        this.mode = source["mode"];
 	        this.millis = source["millis"];
