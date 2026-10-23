@@ -124,3 +124,19 @@ func BenchmarkScene160x50(b *testing.B) {
 		e.Render()
 	}
 }
+
+// BenchmarkScene220x60 is the editor at full screen; it logs each pass so a
+// slow frame points at its cause.
+func BenchmarkScene220x60(b *testing.B) {
+	e := open(b)
+	e.Resize(220, 60)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _ = e.Update(1.0/30, nil)
+		e.Render()
+	}
+	b.StopTimer()
+	for _, in := range e.Pipeline().Infos() {
+		b.Logf("%-10s %6d us", in.Name, in.Micros)
+	}
+}

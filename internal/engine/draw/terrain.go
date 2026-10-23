@@ -32,10 +32,38 @@ type TerrainOptions struct {
 
 // Terrain draws tile tops split in 2x2 jittered quads and cliff faces wherever a
 // neighbour is lower, which is what makes the ground read as 2.5D.
-func (c *Context) Terrain(h Heightmap, o TerrainOptions) {
+// tileCache samples the visible tiles once per frame; corners and cliff
+// sides ask for the same neighbours many times.
+type tileCache struct {
+	x0, y0, w, h int
+	tiles        []Tile
+	src          Heightmap
+}
+
+func newTileCache(src Heightmap, x0, y0, x1, y1 int) *tileCache {
+	c := &tileCache{x0: x0, y0: y0, w: x1 - x0 + 1, h: y1 - y0 + 1, src: src}
+	c.tiles = make([]Tile, c.w*c.h)
+	for y := 0; y < c.h; y++ {
+		for x := 0; x < c.w; x++ {
+			c.tiles[y*c.w+x] = src.Tile(x0+x, y0+y)
+		}
+	}
+	return c
+}
+
+func (c *tileCache) Tile(x, y int) Tile {
+	tx, ty := x-c.x0, y-c.y0
+	if tx < 0 || ty < 0 || tx >= c.w || ty >= c.h {
+		return c.src.Tile(x, y)
+	}
+	return c.tiles[ty*c.w+tx]
+}
+
+func (c *Context) Terrain(src Heightmap, o TerrainOptions) {
 	lo, hi := c.View.GroundRect(2 + o.Max*1.5)
 	x0, y0 := int(math.Floor(lo.X)), int(math.Floor(lo.Y))
 	x1, y1 := int(math.Ceil(hi.X)), int(math.Ceil(hi.Y))
+	h := newTileCache(src, x0-1, y0-1, x1+1, y1+1)
 	for y := y0; y <= y1; y++ {
 		for x := x0; x <= x1; x++ {
 			t := h.Tile(x, y)

@@ -95,3 +95,120 @@ export function render(canvas: HTMLCanvasElement, g: Grid, p: Paint) {
     ctx.fillText(t.ch, t.x * cw + cw / 2, t.y * ch + ch / 2 + scale)
   }
 }
+
+interface Glyph {
+  x: number
+  y: number
+  ch: string
+  fg: string
+}
+
+// Painter keeps the last frame and its image, repaints only cells whose bytes
+// changed and uploads just the dirty rectangle. Live scenes still change a
+// lot, but static parts such as walls and the HUD cost nothing.
+export class Painter {
+  private img: ImageData | null = null
+  private prev: Uint8Array | null = null
+  private key = ''
+  private glyphs = new Map<number, Glyph>()
+  millis = 0
+
+  constructor(private canvas: HTMLCanvasElement) {}
+
+  draw(cols: number, rows: number, bytes: Uint8Array, p: Paint) {
+    const t0 = performance.now()
+    const scale = Math.max(1, Math.round(window.devicePixelRatio || 1))
+    const cw = p.cw * scale
+    const ch = p.ch * scale
+    const key = `${cols}x${rows}:${cw}x${ch}:${p.style}`
+    const ctx = this.canvas.getContext('2d')
+    if (!ctx) return
+    let full = false
+    if (key !== this.key || !this.img) {
+      this.key = key
+      this.canvas.width = cols * cw
+      this.canvas.height = rows * ch
+      this.canvas.style.width = `${cols * p.cw}px`
+      this.canvas.style.height = `${rows * p.ch}px`
+      this.img = ctx.createImageData(cols * cw, rows * ch)
+      this.prev = null
+      this.glyphs.clear()
+      full = true
+    }
+    const img = this.img
+    const px = new Uint32Array(img.data.buffer)
+    const W = img.width
+    const dw = cw / 2
+    const dh = ch / 4
+    const gap = p.style === 'dots' ? Math.max(1, Math.round(dw * 0.28)) : 0
+    const prev = this.prev
+    let minX = cols, minY = rows, maxX = -1, maxY = -1
+    for (let cy = 0; cy < rows; cy++) {
+      for (let cx = 0; cx < cols; cx++) {
+        const i = cy * cols + cx
+        const o = i * 10
+        if (!full && prev) {
+          let same = true
+          for (let k = 0; k < 10; k++) {
+            if (bytes[o + k] !== prev[o + k]) {
+              same = false
+              break
+            }
+          }
+          if (same) continue
+        }
+        if (cx < minX) minX = cx
+        if (cx > maxX) maxX = cx
+        if (cy < minY) minY = cy
+        if (cy > maxY) maxY = cy
+        const rune = bytes[o] | (bytes[o + 1] << 8) | (bytes[o + 2] << 16) | (bytes[o + 3] << 24)
+        const fg = 0xff000000 | (bytes[o + 6] << 16) | (bytes[o + 5] << 8) | bytes[o + 4]
+        const bg = 0xff000000 | (bytes[o + 9] << 16) | (bytes[o + 8] << 8) | bytes[o + 7]
+        const x0 = cx * cw
+        const y0 = cy * ch
+        for (let y = 0; y < ch; y++) px.fill(bg, (y0 + y) * W + x0, (y0 + y) * W + x0 + cw)
+        this.glyphs.delete(i)
+        if (rune > BRAILLE && rune <= BRAILLE + 0xff) {
+          const mask = rune - BRAILLE
+          for (let dy = 0; dy < 4; dy++) {
+            for (let dx = 0; dx < 2; dx++) {
+              if (!(mask & bit(dx, dy))) continue
+              const sx = x0 + Math.round(dx * dw)
+              const sy = y0 + Math.round(dy * dh)
+              const ex = x0 + Math.round((dx + 1) * dw) - gap
+              const ey = y0 + Math.round((dy + 1) * dh) - gap
+              for (let y = sy; y < ey; y++) px.fill(fg, y * W + sx, y * W + ex)
+            }
+          }
+        } else if (rune !== 32 && rune !== 0 && rune !== BRAILLE) {
+          this.glyphs.set(i, { x: cx, y: cy, ch: String.fromCodePoint(rune), fg: `rgb(${bytes[o + 4]},${bytes[o + 5]},${bytes[o + 6]})` })
+        }
+      }
+    }
+    this.prev = bytes
+    if (maxX >= 0) {
+      ctx.putImageData(img, 0, 0, minX * cw, minY * ch, (maxX - minX + 1) * cw, (maxY - minY + 1) * ch)
+      // putImageData cleared any glyph inside the rectangle, so redraw those.
+      ctx.font = `${Math.round(ch * 0.78)}px ${getComputedStyle(document.body).getPropertyValue('--font-mono') || 'monospace'}`
+      ctx.textBaseline = 'middle'
+      ctx.textAlign = 'center'
+      for (const g of this.glyphs.values()) {
+        if (g.x < minX || g.x > maxX || g.y < minY || g.y > maxY) continue
+        ctx.fillStyle = g.fg
+        ctx.fillText(g.ch, g.x * cw + cw / 2, g.y * ch + ch / 2 + scale)
+      }
+    }
+    this.millis = this.millis * 0.85 + (performance.now() - t0) * 0.15
+  }
+
+  reset() {
+    this.key = ''
+  }
+}
+
+export function decodeBytes(b64: string): Uint8Array {
+  const bin = atob(b64)
+  const out = new Uint8Array(bin.length)
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i)
+  return out
+}

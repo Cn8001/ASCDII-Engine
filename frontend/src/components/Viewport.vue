@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { EventsOn, Viewport } from '../lib/api'
-import { decode, render, type Grid } from '../lib/cells'
+import { decodeBytes, Painter } from '../lib/cells'
 import { engineKey } from '../lib/keys'
 import { call, findNode, refresh, refreshProps, select, setFrame, store } from '../lib/store'
 import type { session } from '../wailsjs/go/models'
@@ -11,14 +11,51 @@ const host = ref<HTMLDivElement | null>(null)
 const canvas = ref<HTMLCanvasElement | null>(null)
 const cw = computed(() => store.cellPx)
 const ch = computed(() => store.cellPx * 2)
-let last: Grid | null = null
+let painter: Painter | null = null
+let last: { cols: number; rows: number; bytes: Uint8Array } | null = null
+let fetching = false
+let wanted = 0
 let off: (() => void) | null = null
+const paintMs = ref(0)
 let observer: ResizeObserver | null = null
+
+function paint(cols: number, rows: number, bytes: Uint8Array) {
+  if (!canvas.value) return
+  painter ??= new Painter(canvas.value)
+  last = { cols, rows, bytes }
+  painter.draw(cols, rows, bytes, { cw: cw.value, ch: ch.value, style: store.dots })
+  paintMs.value = painter.millis
+}
+
+// pull fetches the newest raw frame; frames that arrive while a fetch is in
+// flight are coalesced so the UI never queues behind the renderer.
+async function pull() {
+  if (fetching) return
+  fetching = true
+  try {
+    while (wanted) {
+      wanted = 0
+      const res = await fetch('/frame', { cache: 'no-store' })
+      const buf = new Uint8Array(await res.arrayBuffer())
+      if (buf.length < 12) continue
+      const head = new DataView(buf.buffer)
+      paint(head.getUint32(0, true), head.getUint32(4, true), buf.subarray(12))
+    }
+  } catch {
+    // a missed frame is replaced by the next one
+  } finally {
+    fetching = false
+  }
+}
 
 function draw(f: session.Frame) {
   setFrame(f)
-  last = decode(f.cols, f.rows, f.cells)
-  if (canvas.value) render(canvas.value, last, { cw: cw.value, ch: ch.value, style: store.dots })
+  if (f.cells) {
+    paint(f.cols, f.rows, decodeBytes(f.cells))
+    return
+  }
+  wanted = f.seq
+  pull()
 }
 
 function fit() {
@@ -31,7 +68,8 @@ function fit() {
 
 watch(() => [store.cellPx, store.dots], () => {
   fit()
-  if (last && canvas.value) render(canvas.value, last, { cw: cw.value, ch: ch.value, style: store.dots })
+  painter?.reset()
+  if (last) paint(last.cols, last.rows, last.bytes)
 })
 
 onMounted(async () => {
@@ -260,7 +298,7 @@ function setLive() {
     </div>
 
     <div class="pointer-events-none absolute right-2 top-10 rounded-md border border-ink-750 bg-ink-900/85 px-2 py-1 font-mono text-[10.5px] text-ink-400 backdrop-blur">
-      {{ store.frame.cols }}x{{ store.frame.rows }} · {{ store.frame.millis.toFixed(1) }}ms · {{ Math.round(store.frame.fps) }}fps
+      {{ store.frame.cols }}x{{ store.frame.rows }} · render {{ store.frame.millis.toFixed(1) }}ms · paint {{ paintMs.toFixed(1) }}ms · {{ Math.round(store.frame.fps) }}fps
     </div>
 
     <Transition enter-from-class="opacity-0 -translate-y-2" leave-to-class="opacity-0" enter-active-class="transition" leave-active-class="transition">

@@ -10,6 +10,7 @@ import (
 	"context"
 	"fmt"
 	"image/png"
+	"net/http"
 	"os"
 	"os/exec"
 	"runtime"
@@ -50,6 +51,7 @@ func run() error {
 		Packs:     []project.Pack{dragonfall.Pack()},
 		Templates: []session.Template{{Name: "empty"}, {Name: "dragonfall", FS: dragonfall.Template()}},
 		Players:   players.Default(),
+		Binary:    true,
 		Emit:      emitter{},
 		Now:       time.Now,
 	})
@@ -65,15 +67,32 @@ func run() error {
 		MinWidth:         980,
 		MinHeight:        620,
 		BackgroundColour: &options.RGBA{R: 14, G: 14, B: 14, A: 255},
-		AssetServer:      &assetserver.Options{Assets: frontend.Dist()},
+		AssetServer:      &assetserver.Options{Assets: frontend.Dist(), Middleware: frames(sess)},
 		OnStartup: func(ctx context.Context) {
 			appCtx.Set(ctx)
-			go sess.Run(ctx, 30)
+			go sess.Run(ctx, 60)
 		},
 		OnShutdown: func(context.Context) { sess.Close() },
 		Bind:       svc.All(),
 		Linux:      &linux.Options{Icon: icon.Bytes(), ProgramName: "ascdii-editor"},
 	})
+}
+
+// frames serves the latest frame as raw bytes; the frame event only says a
+// new one is ready, which keeps large grids out of JSON. It runs before the
+// asset server so the dev server's page fallback never answers it.
+func frames(sess *session.Session) assetserver.Middleware {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path != "/frame" {
+				next.ServeHTTP(w, r)
+				return
+			}
+			w.Header().Set("Content-Type", "application/octet-stream")
+			w.Header().Set("Cache-Control", "no-store")
+			_, _ = w.Write(sess.Raw())
+		})
+	}
 }
 
 type emitter struct{}

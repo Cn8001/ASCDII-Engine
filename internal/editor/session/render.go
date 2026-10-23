@@ -27,7 +27,8 @@ type Gizmo struct {
 type Frame struct {
 	Cols   int             `json:"cols"`
 	Rows   int             `json:"rows"`
-	Cells  string          `json:"cells"` // base64, 10 bytes per cell: rune u32 LE, fg rgb, bg rgb
+	Cells  string          `json:"cells,omitempty"` // base64 of Raw's cell bytes when frames ride in events
+	Seq    uint64          `json:"seq"`
 	Time   float64         `json:"time"`
 	Mode   Mode            `json:"mode"`
 	Millis float64         `json:"millis"`
@@ -36,7 +37,8 @@ type Frame struct {
 	View   string          `json:"view"`
 }
 
-func EncodeCells(g *cell.Grid) string {
+// cellBytes is the wire format: 10 bytes per cell, rune u32 LE, fg rgb, bg rgb.
+func cellBytes(g *cell.Grid) []byte {
 	cells := g.Cells()
 	b := make([]byte, len(cells)*10)
 	for i, c := range cells {
@@ -45,6 +47,11 @@ func EncodeCells(g *cell.Grid) string {
 		b[o+4], b[o+5], b[o+6] = c.FG.R, c.FG.G, c.FG.B
 		b[o+7], b[o+8], b[o+9] = c.BG.R, c.BG.G, c.BG.B
 	}
+	return b
+}
+
+func EncodeCells(g *cell.Grid) string {
+	b := cellBytes(g)
 	var out strings.Builder
 	out.Grow(base64.StdEncoding.EncodedLen(len(b)))
 	enc := base64.NewEncoder(base64.StdEncoding, &out)
@@ -121,8 +128,19 @@ func (s *Session) render() *Frame {
 	if s.viewMode == SceneView {
 		gz = s.gizmo(sc)
 	}
+	s.seq++
+	body := cellBytes(s.frame.Cells)
+	s.raw = make([]byte, 12+len(body))
+	binary.LittleEndian.PutUint32(s.raw[0:], uint32(s.frame.Cells.W))
+	binary.LittleEndian.PutUint32(s.raw[4:], uint32(s.frame.Cells.H))
+	binary.LittleEndian.PutUint32(s.raw[8:], uint32(s.seq))
+	copy(s.raw[12:], body)
+	cells := ""
+	if !s.d.Binary {
+		cells = EncodeCells(s.frame.Cells)
+	}
 	return &Frame{
-		Cols: s.frame.Cells.W, Rows: s.frame.Cells.H, Cells: EncodeCells(s.frame.Cells),
+		Seq: s.seq, Cols: s.frame.Cells.W, Rows: s.frame.Cells.H, Cells: cells,
 		Time: sc.Time, Mode: s.mode, Millis: float64(s.pipe.Total().Microseconds()) / 1000,
 		Passes: s.pipe.Infos(), Gizmo: gz, View: s.viewMode,
 	}
@@ -157,4 +175,12 @@ func (s *Session) Run(ctx context.Context, fps int) error {
 			}
 		}
 	}
+}
+
+// Raw is the latest frame: cols, rows and sequence as u32 LE, then the cells.
+// The editor serves it as a binary response, avoiding base64 and JSON.
+func (s *Session) Raw() []byte {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.raw
 }
