@@ -25,7 +25,6 @@ func TestUnit_OpenStarterAndPreview(t *testing.T) {
 		t.Fatal(err)
 	}
 	e.Scene().Add("crate", components.NewBox(geom.V3(8, 8, 8), color.RGB(176, 128, 80)))
-	e.Scene().Camera.Target = geom.V3(0, 0, 0)
 	var out bytes.Buffer
 
 	// Act

@@ -22,7 +22,7 @@ func main() {
 func run(ctx context.Context, args []string) error {
 	e := ascdii.New(ascdii.Options{})
 	s := e.Scene()
-	s.Camera.Span = 34
+	s.Add("camera", ascdii.CameraComponent(34))
 	s.Add("ground", ascdii.Ground(40, 40, ascdii.Hex("#46623e")))
 	s.Add("crate", ascdii.Box(ascdii.V3(2, 2, 2), ascdii.Hex("#b08050"))).At(-4, 0, 0).Blocking()
 	s.Add("pillar", ascdii.Cylinder(1, 5, ascdii.Hex("#9a9890"))).At(5, -3, 0).Blocking()

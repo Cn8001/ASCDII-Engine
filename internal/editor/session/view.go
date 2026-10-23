@@ -48,7 +48,19 @@ func (s *Session) camera() view.Camera {
 	if s.viewMode == SceneView {
 		return s.cam
 	}
-	return s.current().View()
+	if c, ok := s.current().View(); ok {
+		return c
+	}
+	return s.cam // a scene without a camera shows a notice; picks still need a view
+}
+
+// startView is where the editor camera begins: at the game camera, or at the
+// default view in scenes without one.
+func startView(sc *scene.Scene) view.Camera {
+	if c, ok := sc.View(); ok {
+		return c
+	}
+	return view.Default()
 }
 
 // moveCamera changes what navigation looks through; in the game view that
@@ -58,9 +70,12 @@ func (s *Session) moveCamera(fn func(c *view.Camera)) {
 		fn(&s.cam)
 		return
 	}
-	c := s.current().View()
+	c, ok := s.current().View()
+	if !ok {
+		return
+	}
 	fn(&c)
-	s.current().SetView(c)
+	_ = s.current().SetView(c) // the camera was just found
 }
 
 func (s *Session) view() view.View { return s.camera().View(s.frame.Buf.W, s.frame.Buf.H) }
@@ -118,7 +133,13 @@ func (s *Session) AlignGame() {
 	if s.play == nil {
 		s.checkpoint("")
 	}
-	s.current().SetView(s.cam)
+	sc := s.current()
+	if err := sc.SetView(s.cam); errors.Is(err, scene.ErrNoCamera) {
+		if c, err := s.reg.New("camera"); err == nil {
+			sc.Add("Main Camera", c)
+			_ = sc.SetView(s.cam) // the camera was just added
+		}
+	}
 	s.changed()
 }
 
@@ -287,7 +308,7 @@ func (s *Session) Key(name string) error {
 		return ErrNotPlaying
 	}
 	s.keys = append(s.keys, k)
-	s.sctx.Input.Apply(input.Event{Key: k, Down: true}, s.play.Time)
+	s.sctx.Input.Apply(input.Event{Key: k, Down: true, Exact: true}, s.play.Time)
 	return nil
 }
 
@@ -300,7 +321,7 @@ func (s *Session) KeyUp(name string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.play != nil {
-		s.sctx.Input.Apply(input.Event{Key: k}, s.play.Time)
+		s.sctx.Input.Apply(input.Event{Key: k, Exact: true}, s.play.Time)
 	}
 	return nil
 }

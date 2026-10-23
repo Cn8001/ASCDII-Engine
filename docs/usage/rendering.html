@@ -47,7 +47,7 @@
 
 <h2>Frame</h2>
 <ol class="steps">
-<li><b>Projection.</b> The game camera looks down at its pitch, 52 degrees in the Dragonfall sample. Ground depth shrinks with the sine of the pitch and height with its cosine, which produces the three quarter view. The camera is the scene's camera object, or the scene camera when there is none; see <a href="gameobjects.html#cameras">Cameras</a>.</li>
+<li><b>Projection.</b> The game camera looks down at its pitch, 52 degrees in the Dragonfall sample. Ground depth shrinks with the sine of the pitch and height with its cosine, which produces the three quarter view. The camera is the scene's camera object; a scene without one shows <b>No camera</b>. See <a href="gameobjects.html#cameras">Cameras</a>.</li>
 <li><b>Geometry.</b> Components draw into a buffer of dots, 2 by 4 per terminal cell, sampling textures per dot. Each dot stores its color, surface normal, depth, world position and the object that drew it. Sprites are vertical planes, so a figure in front of a wall covers it and one behind it is hidden, dot by dot. Strokes of the Braille brush are applied afterwards.</li>
 <li><b>Lighting.</b> Shadows are cast onto the ground, then every dot is lit by the sun, the sky and the scene's lights.</li>
 <li><b>Post processing.</b> Water glints, distance fog, an outline on depth edges, and a color grade with exposure, contrast, saturation, warmth and vignette.</li>
@@ -80,11 +80,21 @@
 <tr><td><code>fog</code></td><td>post</td><td>density, start, end, height</td><td>Fades distant and low areas into the fog color.</td></tr>
 <tr><td><code>outline</code></td><td>post</td><td>threshold, strength</td><td>Darkens the near side of depth edges.</td></tr>
 <tr><td><code>grade</code></td><td>post</td><td>exposure, contrast, saturation, warmth, vignette</td><td>Final color adjustment.</td></tr>
-<tr><td><code>braille</code></td><td>resolve</td><td>calm</td><td>Encodes dots into characters.</td></tr>
+<tr><td><code>braille</code></td><td>resolve</td><td>mode, calm</td><td>Encodes dots into characters, see <a href="#output-modes">Output modes</a>.</td></tr>
 <tr><td><code>cells</code></td><td>overlay</td><td></td><td>Writes text and glyph sprites.</td></tr>
 </table>
 <p>The Pipeline tab in the editor switches passes on and off, reorders them within their stage, edits their settings and shows the time each takes. Scripts reach the same passes through <code>pipeline</code>, see the <a href="lua-api.html">Lua API</a>. Turning off <code>braille</code> leaves only text; <code>fog</code>, <code>outline</code> and <code>grade</code> can be turned off to compare their effect.</p>
 <p>The editor adds three passes that appear only in the Scene view: <code>grid</code>, the ground grid; <code>colliders</code>, the collider outlines; and <code>cameraview</code>, the outline of the game camera's view.</p>
+
+<h2 id="output-modes">Output modes</h2>
+<p>The <code>mode</code> setting of the <code>braille</code> pass selects how dots become characters:</p>
+<table>
+<tr><th>Mode</th><th>Output</th></tr>
+<tr><td><code>braille</code></td><td>The default. Each cell shows a Braille character: 2 by 4 dots in a foreground color over a background color. Highest detail; the result depends on how the terminal's font draws Braille characters.</td></tr>
+<tr><td><code>blocks</code></td><td>Each cell shows the upper half block character <code>▀</code>: the average color of its top four dots above the average of its bottom four. Half the vertical detail and no dot pattern, but solid and independent of the font.</td></tr>
+</table>
+<figure><img src="img/game-blocks.png" alt="Dragonfall in blocks mode"><figcaption>The same frame as above in <code>blocks</code> mode.</figcaption></figure>
+<p>Players select block mode with <code>--blocks</code> or the environment variable <code>ASCDII_BLOCKS=1</code>; see <a href="cli.html">CLI reference</a>. Scripts switch it with <code>pipeline.pass("braille").mode = "blocks"</code>, and the editor's Pipeline tab previews it. Text and glyph sprites are written as characters in both modes.</p>
 
 <h2>Image quality</h2>
 <p>Braille images become restless when small color differences turn into random dot patterns. The following keep an image calm:</p>

@@ -172,17 +172,17 @@ log(a:len(), a:dist(b), a:dot(b), a:cross(b), a:lerp(b, 0.5))</code></pre>
 <tr><td><code>play_sound(sound, volume)</code></td><td>Plays a sound asset once, by path or from a field.</td></tr>
 <tr><td><code>quit()</code></td><td>Ends the game.</td></tr>
 </table>
-<p>Terminals report key presses but not releases; there a key counts as held for a short time after each press, extended by key repeat. In the editor, releases are exact.</p>
+<p>Key releases are exact in the editor and in terminals that report them: Windows Terminal (win32 input mode) and terminals with the kitty keyboard protocol, such as kitty, WezTerm and foot. The game enables both when it starts, so several keys can be held at once, for example <kbd>W</kbd> and <kbd>D</kbd> to move diagonally. Other terminals report only presses; there a key counts as held for a short time after each press, extended by key repeat, and only the most recently pressed key repeats.</p>
 
 <h2 id="camera">Camera</h2>
-<p>The global <code>camera</code> controls the game camera: the scene's camera object when it has one, otherwise the scene camera. See <a href="gameobjects.html#cameras">Cameras</a>.</p>
+<p>The global <code>camera</code> controls the game camera, the scene's camera object. In a scene without a camera its fields read as nil and setting them raises an error. See <a href="gameobjects.html#cameras">Cameras</a>.</p>
 <table>
 <tr><th>Field or function</th><th>Meaning</th></tr>
 <tr><td><code>camera.target</code></td><td>The point the camera looks at; on a camera object, its world position.</td></tr>
 <tr><td><code>camera.span</code></td><td>World units across the width of the view.</td></tr>
 <tr><td><code>camera.pitch</code>, <code>camera.yaw</code></td><td>Angle above the ground, and rotation around the up axis, in degrees.</td></tr>
 <tr><td><code>camera.anchorX</code>, <code>camera.anchorY</code></td><td>Screen position of the target, 0 to 1.</td></tr>
-<tr><td><code>camera.object</code></td><td>The camera's GameObject, or nil in scenes without one.</td></tr>
+<tr><td><code>camera.object</code></td><td>The camera's GameObject, or nil in a scene without a camera.</td></tr>
 <tr><td><code>camera.follow(obj, rate)</code></td><td>Moves the camera toward <code>obj</code> every frame; <code>camera.follow(nil)</code> stops.</td></tr>
 </table>
 <pre><code>camera.span = 24

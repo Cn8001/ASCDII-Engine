@@ -32,8 +32,20 @@ func (t *Terminal) Open(ctx context.Context) error {
 		return err
 	}
 	t.state = st
-	return t.pr.Enter(ctx)
+	if err := t.pr.Enter(ctx); err != nil {
+		return err
+	}
+	_, err = io.WriteString(t.out, releasesOn)
+	return err
 }
+
+// Terminals report key releases only when asked: the kitty keyboard
+// protocol (all keys as escape codes, with event types) and Windows
+// Terminal's win32 input mode. Terminals that know neither ignore both.
+const (
+	releasesOn  = "\x1b[>11u\x1b[?9001h"
+	releasesOff = "\x1b[<u\x1b[?9001l"
+)
 
 func (t *Terminal) Size() (int, int, error) { return Size(t.fd) }
 
@@ -42,23 +54,35 @@ func (t *Terminal) Present(ctx context.Context, f platform.Frame) error {
 }
 
 func (t *Terminal) Close(ctx context.Context) error {
+	_, werr := io.WriteString(t.out, releasesOff)
 	err := t.pr.Leave(ctx)
+	if err == nil {
+		err = werr
+	}
 	if rerr := Restore(t.fd, t.state); err == nil {
 		err = rerr
 	}
 	return err
 }
 
-// Events reports presses only; terminals never say when a key is released.
+// Events reports presses, and releases where the terminal supports one of
+// the protocols enabled in Open.
 func (t *Terminal) Events(ctx context.Context) <-chan input.Event {
-	keys := Keys(ctx, t.in)
 	out := make(chan input.Event, 64)
 	go func() {
 		defer close(out)
-		for k := range keys {
-			select {
-			case out <- input.Event{Key: k, Down: true}:
-			case <-ctx.Done():
+		buf := make([]byte, 256)
+		for {
+			n, err := t.in.Read(buf)
+			for _, e := range input.ParseEvents(buf[:n]) {
+				select {
+				case out <- e:
+				case <-ctx.Done():
+					return
+				default: // a stalled game drops keys rather than blocking input
+				}
+			}
+			if err != nil || ctx.Err() != nil {
 				return
 			}
 		}

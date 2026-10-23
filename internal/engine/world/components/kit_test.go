@@ -157,7 +157,7 @@ func TestUnit_MeshDrawsRotatedModel(t *testing.T) {
 	get := func() *scene.Scene { return s }
 	p := pipeline.New(time.Now, append(pipeline.Standard(), &scene.Geometry{Scene: get})...)
 	f := pipeline.NewFrame(60, 30)
-	s.Camera.Target, s.Camera.Span = geom.V3(0, 0, 2), 12
+	aim(s, geom.V3(0, 0, 2), 12)
 
 	// Act
 	scene.Render(p, f, s)
@@ -194,7 +194,7 @@ func TestUnit_TexturedRotatedBoxSamplesItsMaterial(t *testing.T) {
 	get := func() *scene.Scene { return s }
 	p := pipeline.New(time.Now, &scene.Geometry{Scene: get})
 	f := pipeline.NewFrame(60, 30)
-	s.Camera.Target, s.Camera.Span = geom.V3(0, 0, 2), 14
+	aim(s, geom.V3(0, 0, 2), 14)
 
 	// Act
 	scene.Render(p, f, s)
@@ -350,7 +350,7 @@ func TestUnit_DirectionalLightReplacesTheSun(t *testing.T) {
 		get := func() *scene.Scene { return s }
 		p := pipeline.New(time.Now, append(pipeline.Standard(), &scene.Geometry{Scene: get})...)
 		f := pipeline.NewFrame(30, 12)
-		s.Camera.Target, s.Camera.Span = geom.V3(0, 0, 0), 10
+		aim(s, geom.V3(0, 0, 0), 10)
 		scene.Render(p, f, s)
 		d := f.Buf.At(f.Buf.W/2, f.Buf.H/2)
 		return float64(d.Color.R)
@@ -376,7 +376,7 @@ func TestUnit_PaintRecolorsAndErasesOwnDots(t *testing.T) {
 	get := func() *scene.Scene { return s }
 	p := pipeline.New(time.Now, &scene.Geometry{Scene: get}, &scene.Painted{Scene: get})
 	f := pipeline.NewFrame(60, 30)
-	s.Camera.Target, s.Camera.Span = geom.V3(0, 0, 2), 12
+	aim(s, geom.V3(0, 0, 2), 12)
 	var back bytes.Buffer
 	_ = scene.Encode(&back, s)
 
@@ -417,4 +417,11 @@ func TestUnit_PrewarmedEmitterDrawsWithoutTicking(t *testing.T) {
 	if e.sim == nil || e.sim.Count() == 0 {
 		t.Fatal("a prewarmed emitter drew nothing before its first tick")
 	}
+}
+
+// aim adds a camera object looking at target with span world units across.
+func aim(s *scene.Scene, target geom.Vec3, span float64) {
+	c := NewCamera()
+	c.Span = span
+	s.Add("camera", c).Local.Pos = target
 }

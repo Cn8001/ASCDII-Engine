@@ -54,16 +54,14 @@ function folder(p: string) {
 
 <template>
   <div class="grid h-full place-items-center bg-ink-950 animate-fade">
+    <div class="flex flex-col items-center gap-8">
+    <header class="flex flex-col items-center gap-3">
+      <Logo :size="84" animate />
+      <div class="font-mono text-[15px] tracking-[.5em] text-ink-100">ASCDII ENGINE</div>
+      <div class="font-mono text-[11px] text-ink-500">{{ store.info?.engine }}</div>
+    </header>
     <div class="grid w-[860px] grid-cols-[1fr_320px] gap-6">
       <section class="animate-rise rounded-2xl border border-ink-750 bg-ink-900 p-6">
-        <div class="mb-6 flex items-center gap-3">
-          <Logo :size="40" />
-          <div>
-            <div class="text-[15px] font-semibold tracking-tight">ASCDII Engine</div>
-            <div class="font-mono text-[11px] text-ink-400">{{ store.info?.engine }}</div>
-          </div>
-        </div>
-
         <div class="label mb-2">New</div>
         <div class="mb-4 grid grid-cols-2 gap-3">
           <button
@@ -104,6 +102,7 @@ function folder(p: string) {
           <div v-if="!store.recent.length" class="px-2 py-6 text-center text-ink-500">-</div>
         </div>
       </section>
+    </div>
     </div>
   </div>
 </template>

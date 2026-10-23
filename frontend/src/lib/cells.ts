@@ -18,6 +18,7 @@ export function decode(cols: number, rows: number, b64: string): Grid {
 export type DotStyle = 'dots' | 'pixels'
 
 const BRAILLE = 0x2800
+const UPPER_HALF = 0x2580 // block mode: the top half in the foreground color
 
 function bit(x: number, y: number): number {
   return y === 3 ? 0x40 << x : 1 << (y + 3 * x)
@@ -60,6 +61,8 @@ export function paint(g: Grid, img: ImageData, p: Paint): { x: number; y: number
             for (let y = sy; y < ey; y++) px.fill(fg, y * W + sx, y * W + ex)
           }
         }
+      } else if (rune === UPPER_HALF) {
+        for (let y = 0; y < p.ch / 2; y++) px.fill(fg, (y0 + y) * W + x0, (y0 + y) * W + x0 + p.cw)
       } else if (rune !== 32 && rune !== 0 && rune !== BRAILLE) {
         out.push({ x: cx, y: cy, ch: String.fromCodePoint(rune), fg: `rgb(${b[o + 4]},${b[o + 5]},${b[o + 6]})` })
       }
@@ -180,6 +183,8 @@ export class Painter {
               for (let y = sy; y < ey; y++) px.fill(fg, y * W + sx, y * W + ex)
             }
           }
+        } else if (rune === UPPER_HALF) {
+          for (let y = 0; y < ch / 2; y++) px.fill(fg, (y0 + y) * W + x0, (y0 + y) * W + x0 + cw)
         } else if (rune !== 32 && rune !== 0 && rune !== BRAILLE) {
           this.glyphs.set(i, { x: cx, y: cy, ch: String.fromCodePoint(rune), fg: `rgb(${bytes[o + 4]},${bytes[o + 5]},${bytes[o + 6]})` })
         }

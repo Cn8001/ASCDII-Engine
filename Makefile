@@ -60,4 +60,4 @@ dist: players editor-linux editor-windows
 	cd $(BIN)/dist && python3 -m zipfile -c ascdii-$(VERSION)-windows-amd64.zip ascdii-$(VERSION)-windows-amd64
 
 clean:
-	rm -rf $(BIN) $(EDITOR)/build/bin
+	rm -rf $(BIN)/* $(EDITOR)/build/bin

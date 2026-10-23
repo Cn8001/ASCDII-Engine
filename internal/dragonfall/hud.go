@@ -34,7 +34,9 @@ func (h *HUD) Set(n string, v any) error { return h.bind().Set(n, v) }
 
 func (h *HUD) Tick(c *scene.Ctx, _ *scene.GameObject, _ float64) {
 	h.hour = c.Scene.Env.Hour
-	h.player = c.Scene.View().Target
+	if v, ok := c.Scene.View(); ok {
+		h.player = v.Target
+	}
 	c.Scene.Walk(func(e *scene.GameObject, _ bool) bool {
 		if e.Component("player") != nil {
 			h.player = e.Local.Pos

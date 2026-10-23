@@ -42,17 +42,17 @@
 <main>
 <div class="kicker">Reference</div>
 <h1>CLI reference</h1>
-<p class="lead"><code>ascdii</code> is the launcher, the command line tool and the game player. A copy that contains game data, as in a build, plays that game.</p>
+<p class="lead"><code>ascdii</code> starts the editor, provides the command line tools and is the game player. A copy that contains game data, as in a build, plays that game.</p>
 
-<h2>Launcher</h2>
-<p><code>ascdii</code> without arguments opens the launcher in the terminal. It lists the recent projects, followed by <b>Open project</b>, which accepts a folder or a <code>.ascdiiproj</code> path, and <b>New project</b>, which asks for a name, a location and a template. The selected project opens in the editor, and the launcher remains open for further projects. The arrow keys or <kbd>W</kbd> and <kbd>S</kbd> move the selection, <kbd>Enter</kbd> selects and <kbd>Esc</kbd> goes back. The editor uses the same list of recent projects and is always started from the launcher; started directly, it opens the launcher in a new terminal window.</p>
+<h2>Starting the editor</h2>
+<p><code>ascdii</code> without arguments opens the editor at its start screen, see <a href="install.html#starting">Install</a>. The editor is always started this way; started directly, it is restarted through <code>ascdii</code>.</p>
 
 <h2>Commands</h2>
 <table>
 <tr><th>Command</th><th>Function</th></tr>
 <tr><td><code>ascdii new &lt;dir&gt; [-name N] [-template dragonfall]</code></td><td>Creates a project. Without a template, the project contains a manifest and a start scene with a camera.</td></tr>
-<tr><td><code>ascdii run &lt;dir&gt;</code></td><td>Plays a project folder in the terminal.</td></tr>
-<tr><td><code>ascdii preview &lt;dir&gt; [-size 160x50] [-time 2] [-hour 22] [-plain]</code></td><td>Prints one frame after simulating <code>-time</code> seconds, at an optional time of day; <code>-plain</code> omits colors.</td></tr>
+<tr><td><code>ascdii run &lt;dir&gt; [--blocks]</code></td><td>Plays a project folder in the terminal; <code>--blocks</code> draws half blocks instead of Braille, see <a href="rendering.html#output-modes">Output modes</a>.</td></tr>
+<tr><td><code>ascdii preview &lt;dir&gt; [-size 160x50] [-time 2] [-hour 22] [-plain] [-blocks]</code></td><td>Prints one frame after simulating <code>-time</code> seconds, at an optional time of day; <code>-plain</code> omits colors, <code>-blocks</code> uses half blocks.</td></tr>
 <tr><td><code>ascdii build &lt;dir&gt; [-out path] [-player path] [-single]</code></td><td>Builds a game folder with the player, <code>data/game.pak</code> and <code>SHA256SUMS</code>; <code>-single</code> builds one executable. The player defaults to this <code>ascdii</code>. See <a href="building.html">Build</a>.</td></tr>
 <tr><td><code>ascdii pack list &lt;dir&gt;</code></td><td>Lists installed packages and the built in packages that are not installed.</td></tr>
 <tr><td><code>ascdii pack install &lt;dir&gt; &lt;file | name&gt;</code></td><td>Installs a <code>.ascdiipack</code> file or a built in package such as <code>dragonfall</code>.</td></tr>
@@ -61,7 +61,7 @@
 <tr><td><code>ascdii version</code></td><td>Prints the engine version.</td></tr>
 <tr><td><code>ascdii help</code></td><td>Prints the list of commands.</td></tr>
 </table>
-<p>A built game accepts <code>--preview [-size 160x50] [-time 2]</code> to print one frame instead of starting.</p>
+<p>A built game accepts <code>--blocks</code>, and <code>--preview [-size 160x50] [-time 2]</code> to print one frame instead of starting. The environment variable <code>ASCDII_BLOCKS=1</code> selects block mode for every game.</p>
 
 <h2>Make targets</h2>
 <p>For working on the engine from source; see <a href="install.html#building-from-source">Building from source</a>.</p>
@@ -71,7 +71,7 @@
 <tr><td><code>make cli</code></td><td>Builds <code>bin/ascdii</code>.</td></tr>
 <tr><td><code>make players</code></td><td>Builds the Linux and Windows players into <code>bin/</code>, next to the editor, for builds on both platforms.</td></tr>
 <tr><td><code>make editor-linux</code>, <code>make editor-windows</code></td><td>Builds the editor and copies it into <code>bin/</code>, next to <code>ascdii</code>.</td></tr>
-<tr><td><code>make editor-dev</code></td><td>Runs the editor with hot reload, without the launcher.</td></tr>
+<tr><td><code>make editor-dev</code></td><td>Runs the editor with hot reload; it does not need to be started by <code>ascdii</code>.</td></tr>
 <tr><td><code>make dist</code></td><td>Builds the release archives in <code>bin/dist</code>.</td></tr>
 <tr><td><code>make hello</code>, <code>make dragonfall</code></td><td>Runs the two examples in the terminal.</td></tr>
 <tr><td><code>make template</code></td><td>Regenerates the Dragonfall template from its Go source.</td></tr>

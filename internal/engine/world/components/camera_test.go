@@ -11,7 +11,6 @@ import (
 func TestUnit_CameraObjectDrivesTheViewAndMovesWithItsParent(t *testing.T) {
 	// Arrange
 	s := scene.New("t")
-	s.Camera = view.Camera{Target: geom.V3(1, 1, 0), Span: 99}
 	hero := s.Add("hero", nil).At(10, 5, 0)
 	cam := NewCamera()
 	cam.Span = 20
@@ -19,15 +18,15 @@ func TestUnit_CameraObjectDrivesTheViewAndMovesWithItsParent(t *testing.T) {
 	o.Local.Rot.Z = 30
 
 	// Act
-	before := s.View()
+	before, _ := s.View()
 	hero.Local.Pos = geom.V3(20, 5, 0)
-	after := s.View()
+	after, _ := s.View()
 	o.Visible = false
-	fallback := s.View()
+	_, shown := s.View()
 
 	// Assert
-	if before.Target != geom.V3(10, 7, 0) || before.Span != 20 || before.Yaw != 30 || after.Target != geom.V3(20, 7, 0) || fallback.Span != 99 {
-		t.Fatalf("before %+v after %+v fallback %+v", before, after, fallback)
+	if before.Target != geom.V3(10, 7, 0) || before.Span != 20 || before.Yaw != 30 || after.Target != geom.V3(20, 7, 0) || shown {
+		t.Fatalf("before %+v after %+v hidden camera shown %v", before, after, shown)
 	}
 }
 

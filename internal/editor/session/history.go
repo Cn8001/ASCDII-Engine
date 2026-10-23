@@ -37,12 +37,12 @@ func (s *Session) checkpoint(label string) {
 }
 
 func (s *Session) restore(snap []byte) error {
-	cam, t := s.edit.Camera, s.edit.Time
+	t := s.edit.Time
 	sc, err := scene.Decode(bytes.NewReader(snap), s.reg, s.lib)
 	if err != nil {
 		return err
 	}
-	sc.Camera, sc.Time = cam, t
+	sc.Time = t
 	s.edit = sc
 	if _, err := sc.ByID(s.sel); err != nil {
 		s.sel = 0

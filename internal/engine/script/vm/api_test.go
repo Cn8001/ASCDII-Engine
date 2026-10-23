@@ -208,6 +208,8 @@ function start(self)
   env.hour = 22
   time_scale(0.5)
 end`})
+	cam := components.NewCamera()
+	w.s.Add("Main Camera", cam)
 	w.s.Add("fx", w.script(t, "scripts/fx.lua"))
 
 	// Act
@@ -217,7 +219,7 @@ end`})
 
 	// Assert
 	fog, _ := w.c.Pipeline.Pass("fog")
-	if fog.(*pipeline.Fog).Density != .9 || w.c.Pipeline.Enabled("outline") || w.s.Camera.Span != 12 || w.s.Env.Hour != 22 {
+	if fog.(*pipeline.Fog).Density != .9 || w.c.Pipeline.Enabled("outline") || cam.Span != 12 || w.s.Env.Hour != 22 {
 		t.Fatalf("settings not applied, logs %v", w.log.lines)
 	}
 	if math.Abs(w.s.Time-before-1.0/120) > 1e-9 {
@@ -251,7 +253,9 @@ function on_destroy(self) gone = true; log("bye") end`})
 	o := w.s.Add("d", w.script(t, "scripts/d.lua"))
 	w.run(1)
 	f := pipeline.NewFrame(40, 20)
-	w.s.Camera.Target, w.s.Camera.Span = geom.V3(0, 0, 1), 10
+	cam := components.NewCamera()
+	cam.Span = 10
+	w.s.Add("Main Camera", cam).At(0, 0, 1)
 
 	// Act
 	scene.Render(w.c.Pipeline, f, w.s)
