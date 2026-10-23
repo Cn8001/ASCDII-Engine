@@ -5,14 +5,13 @@ import (
 	"unicode/utf8"
 
 	"github.com/Cn8001/ASCDII-Engine/internal/dragonfall/realm"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/cell"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/color"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/draw"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/geom"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/kit"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/pipeline"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/prop"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/scene"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/color"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/geom"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/prop"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/render/cell"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/render/pipeline"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/world/components"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/world/scene"
 )
 
 // HUD is screen space text: a top bar, a key strip, a minimap and help.
@@ -30,16 +29,14 @@ func (*HUD) Kind() string { return "df.hud" }
 func (h *HUD) bind() *prop.Binder {
 	return prop.Bind().String("title", &h.Title).Bool("showMap", &h.ShowMap).Bool("showHelp", &h.ShowHelp).Int("seed", &h.Seed, 0, 99999)
 }
-func (h *HUD) Props() []prop.Prop                  { return h.bind().Props() }
-func (h *HUD) Set(n string, v any) error           { return h.bind().Set(n, v) }
-func (h *HUD) Bounds(scene.Transform) geom.AABB    { return geom.AABB{} }
-func (h *HUD) Draw(*draw.Context, scene.Transform) {}
+func (h *HUD) Props() []prop.Prop        { return h.bind().Props() }
+func (h *HUD) Set(n string, v any) error { return h.bind().Set(n, v) }
 
-func (h *HUD) Tick(c *scene.Ctx, _ *scene.Entity, _ float64) {
+func (h *HUD) Tick(c *scene.Ctx, _ *scene.GameObject, _ float64) {
 	h.hour = c.Scene.Env.Hour
 	h.player = c.Scene.Camera.Target
-	c.Scene.Walk(func(e *scene.Entity, _ bool) bool {
-		if e.Behaviour("player") != nil {
+	c.Scene.Walk(func(e *scene.GameObject, _ bool) bool {
+		if e.Component("player") != nil {
 			h.player = e.Local.Pos
 		}
 		return true
@@ -57,7 +54,7 @@ func (h *HUD) DrawCells(f *pipeline.Frame, _ scene.Transform) {
 	g.Fill(0, g.H-1, g.W, 1, cell.Cell{Rune: ' ', BG: bg})
 	g.Text(2, 0, "◆ "+h.Title, accent, bg)
 	phase := "DAY"
-	if kit.IsNight(h.hour) {
+	if components.IsNight(h.hour) {
 		phase = "NIGHT"
 	}
 	right := fmt.Sprintf("%s  %d,%d  %s", realm.Zone(h.player.X, h.player.Y), int(h.player.X), int(h.player.Y), phase)

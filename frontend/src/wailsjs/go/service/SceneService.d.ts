@@ -5,7 +5,7 @@ import {prop} from '../models';
 
 export function Add(arg1:number,arg2:string):Promise<number>;
 
-export function AddBehaviour(arg1:number,arg2:string):Promise<void>;
+export function AddComponent(arg1:number,arg2:string):Promise<string>;
 
 export function Apply(arg1:number,arg2:string):Promise<void>;
 
@@ -13,13 +13,17 @@ export function Duplicate(arg1:number):Promise<number>;
 
 export function Kinds():Promise<session.Kinds>;
 
+export function MoveComponent(arg1:number,arg2:number,arg3:number):Promise<void>;
+
 export function Props(arg1:number):Promise<Array<prop.Prop>>;
 
 export function Remove(arg1:number):Promise<void>;
 
-export function RemoveBehaviour(arg1:number,arg2:string):Promise<void>;
+export function RemoveComponent(arg1:number,arg2:number):Promise<void>;
 
 export function Reparent(arg1:number,arg2:number,arg3:number):Promise<void>;
+
+export function ResetComponent(arg1:number,arg2:number):Promise<void>;
 
 export function Revert(arg1:number,arg2:string):Promise<void>;
 
@@ -32,6 +36,8 @@ export function Select(arg1:number):Promise<void>;
 export function Selected():Promise<number>;
 
 export function SetProp(arg1:number,arg2:string,arg3:any):Promise<void>;
+
+export function SetRef(arg1:number,arg2:string,arg3:number,arg4:string):Promise<void>;
 
 export function SetSceneProp(arg1:string,arg2:any):Promise<void>;
 

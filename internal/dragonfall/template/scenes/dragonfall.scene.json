@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "name": "Dragonfall",
   "camera": {
     "target": [
@@ -57,8 +57,9 @@
       ]
     }
   ],
-  "entities": [
+  "objects": [
     {
+      "fid": 1,
       "name": "terrain",
       "solid": true,
       "pos": [
@@ -66,15 +67,18 @@
         0,
         0
       ],
-      "node": {
-        "kind": "df.terrain",
-        "props": {
-          "seed": 2026,
-          "water": -0.9
+      "components": [
+        {
+          "kind": "df.terrain",
+          "props": {
+            "seed": 2026,
+            "water": -0.9
+          }
         }
-      }
+      ]
     },
     {
+      "fid": 2,
       "name": "forest",
       "solid": true,
       "pos": [
@@ -82,48 +86,57 @@
         0,
         0
       ],
-      "node": {
-        "kind": "df.forest",
-        "props": {
-          "density": 1,
-          "seed": 2026,
-          "sway": 0.35
+      "components": [
+        {
+          "kind": "df.forest",
+          "props": {
+            "density": 1,
+            "seed": 2026,
+            "sway": 0.35
+          }
         }
-      }
+      ]
     },
     {
+      "fid": 3,
       "name": "grass",
       "pos": [
         0,
         0,
         0
       ],
-      "node": {
-        "kind": "df.grass",
-        "props": {
-          "density": 0.85,
-          "detail": false,
-          "seed": 2026
+      "components": [
+        {
+          "kind": "df.grass",
+          "props": {
+            "density": 0.85,
+            "detail": false,
+            "seed": 2026
+          }
         }
-      }
+      ]
     },
     {
+      "fid": 4,
       "name": "bridge",
       "pos": [
         122,
         84,
         0
       ],
-      "node": {
-        "kind": "df.bridge",
-        "props": {
-          "length": 9,
-          "width": 6,
-          "wood": "#846240"
+      "components": [
+        {
+          "kind": "df.bridge",
+          "props": {
+            "length": 9,
+            "width": 6,
+            "wood": "#846240"
+          }
         }
-      }
+      ]
     },
     {
+      "fid": 5,
       "name": "castle",
       "solid": true,
       "pos": [
@@ -131,17 +144,20 @@
         70,
         0
       ],
-      "node": {
-        "kind": "df.castle",
-        "props": {
-          "banner": "#b0383e",
-          "roof": "#3e5266",
-          "stone": "#76787c",
-          "torches": true
+      "components": [
+        {
+          "kind": "df.castle",
+          "props": {
+            "banner": "#b0383e",
+            "roof": "#3e5266",
+            "stone": "#76787c",
+            "torches": true
+          }
         }
-      }
+      ]
     },
     {
+      "fid": 6,
       "name": "dragon",
       "solid": true,
       "pos": [
@@ -150,14 +166,14 @@
         0
       ],
       "flip": true,
-      "node": {
-        "kind": "df.dragon",
-        "props": {
-          "awake": false,
-          "fire": true
-        }
-      },
-      "behaviours": [
+      "components": [
+        {
+          "kind": "df.dragon",
+          "props": {
+            "awake": false,
+            "fire": true
+          }
+        },
         {
           "kind": "toggle",
           "props": {
@@ -175,20 +191,21 @@
       ]
     },
     {
+      "fid": 7,
       "name": "hero",
       "pos": [
         114,
         79.5,
         0
       ],
-      "node": {
-        "kind": "df.hero",
-        "props": {
-          "speed": 1,
-          "walking": false
-        }
-      },
-      "behaviours": [
+      "components": [
+        {
+          "kind": "df.hero",
+          "props": {
+            "speed": 1,
+            "walking": false
+          }
+        },
         {
           "kind": "player",
           "props": {
@@ -208,6 +225,7 @@
       ]
     },
     {
+      "fid": 8,
       "name": "road",
       "pos": [
         0,
@@ -216,6 +234,7 @@
       ],
       "children": [
         {
+          "fid": 9,
           "name": "lantern 1",
           "solid": true,
           "pos": [
@@ -226,6 +245,7 @@
           "prefab": "01a160e8-5000-7dc8-8295-00ff6a1eb491"
         },
         {
+          "fid": 10,
           "name": "lantern 2",
           "solid": true,
           "pos": [
@@ -236,6 +256,7 @@
           "prefab": "01a160e8-5000-7dc8-8295-00ff6a1eb491"
         },
         {
+          "fid": 11,
           "name": "lantern 3",
           "solid": true,
           "pos": [
@@ -246,6 +267,7 @@
           "prefab": "01a160e8-5000-7dc8-8295-00ff6a1eb491"
         },
         {
+          "fid": 12,
           "name": "lantern 4",
           "solid": true,
           "pos": [
@@ -258,21 +280,22 @@
       ]
     },
     {
+      "fid": 13,
       "name": "crystal",
       "pos": [
         110,
         106,
         0.6
       ],
-      "node": {
-        "kind": "blob",
-        "props": {
-          "color": "#8cd6e8",
-          "glow": 0.8,
-          "radius": 0.9
-        }
-      },
-      "behaviours": [
+      "components": [
+        {
+          "kind": "blob",
+          "props": {
+            "color": "#8cd6e8",
+            "glow": 0.8,
+            "radius": 0.9
+          }
+        },
         {
           "kind": "script",
           "props": {
@@ -282,41 +305,45 @@
       ],
       "children": [
         {
+          "fid": 14,
           "name": "shine",
           "pos": [
             0,
             0,
             1.2
           ],
-          "node": {
-            "kind": "light",
-            "props": {
-              "color": "#78c8ff",
-              "flicker": 0.05,
-              "intensity": 1.2,
-              "radius": 12
+          "components": [
+            {
+              "kind": "light",
+              "props": {
+                "color": "#78c8ff",
+                "flicker": 0.05,
+                "intensity": 1.2,
+                "radius": 12
+              }
             }
-          }
+          ]
         }
       ]
     },
     {
+      "fid": 15,
       "name": "hud",
       "pos": [
         0,
         0,
         0
       ],
-      "node": {
-        "kind": "df.hud",
-        "props": {
-          "seed": 2026,
-          "showHelp": false,
-          "showMap": false,
-          "title": "DRAGONFALL"
-        }
-      },
-      "behaviours": [
+      "components": [
+        {
+          "kind": "df.hud",
+          "props": {
+            "seed": 2026,
+            "showHelp": false,
+            "showMap": false,
+            "title": "DRAGONFALL"
+          }
+        },
         {
           "kind": "toggle",
           "props": {
@@ -336,13 +363,14 @@
       ]
     },
     {
+      "fid": 16,
       "name": "rules",
       "pos": [
         0,
         0,
         0
       ],
-      "behaviours": [
+      "components": [
         {
           "kind": "daynight",
           "props": {

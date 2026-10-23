@@ -5,6 +5,8 @@ import {session} from '../models';
 
 export function AddSprite(arg1:string):Promise<number>;
 
+export function Import(arg1:Array<string>,arg2:string):Promise<Array<string>>;
+
 export function List():Promise<Array<asset.Entry>>;
 
 export function NewScript(arg1:string):Promise<string>;

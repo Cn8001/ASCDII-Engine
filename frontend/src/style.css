@@ -57,6 +57,9 @@ html, body, #app {
   overflow: hidden;
 }
 
+[data-drop] { --wails-drop-target: drop; }
+.wails-drop-target-active { box-shadow: inset 0 0 0 2px var(--color-amber-glow); background-color: color-mix(in srgb, var(--color-amber-glow) 5%, transparent); }
+
 * { scrollbar-width: thin; scrollbar-color: var(--color-ink-600) transparent; }
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-thumb { background: var(--color-ink-700); border-radius: 8px; }

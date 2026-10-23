@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/asset"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/project"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/scene"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/version"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/assets/asset"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/project"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/version"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/world/scene"
 )
 
 // TemplateFiles renders every generated file of the template project.

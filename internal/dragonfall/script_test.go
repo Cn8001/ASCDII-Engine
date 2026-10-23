@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/geom"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/scene"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/geom"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/world/scene"
 )
 
 func TestUnit_DragonScriptHintsNearby(t *testing.T) {

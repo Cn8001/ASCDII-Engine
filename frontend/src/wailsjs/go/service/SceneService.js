@@ -6,8 +6,8 @@ export function Add(arg1, arg2) {
   return window['go']['service']['SceneService']['Add'](arg1, arg2);
 }
 
-export function AddBehaviour(arg1, arg2) {
-  return window['go']['service']['SceneService']['AddBehaviour'](arg1, arg2);
+export function AddComponent(arg1, arg2) {
+  return window['go']['service']['SceneService']['AddComponent'](arg1, arg2);
 }
 
 export function Apply(arg1, arg2) {
@@ -22,6 +22,10 @@ export function Kinds() {
   return window['go']['service']['SceneService']['Kinds']();
 }
 
+export function MoveComponent(arg1, arg2, arg3) {
+  return window['go']['service']['SceneService']['MoveComponent'](arg1, arg2, arg3);
+}
+
 export function Props(arg1) {
   return window['go']['service']['SceneService']['Props'](arg1);
 }
@@ -30,12 +34,16 @@ export function Remove(arg1) {
   return window['go']['service']['SceneService']['Remove'](arg1);
 }
 
-export function RemoveBehaviour(arg1, arg2) {
-  return window['go']['service']['SceneService']['RemoveBehaviour'](arg1, arg2);
+export function RemoveComponent(arg1, arg2) {
+  return window['go']['service']['SceneService']['RemoveComponent'](arg1, arg2);
 }
 
 export function Reparent(arg1, arg2, arg3) {
   return window['go']['service']['SceneService']['Reparent'](arg1, arg2, arg3);
+}
+
+export function ResetComponent(arg1, arg2) {
+  return window['go']['service']['SceneService']['ResetComponent'](arg1, arg2);
 }
 
 export function Revert(arg1, arg2) {
@@ -60,6 +68,10 @@ export function Selected() {
 
 export function SetProp(arg1, arg2, arg3) {
   return window['go']['service']['SceneService']['SetProp'](arg1, arg2, arg3);
+}
+
+export function SetRef(arg1, arg2, arg3, arg4) {
+  return window['go']['service']['SceneService']['SetRef'](arg1, arg2, arg3, arg4);
 }
 
 export function SetSceneProp(arg1, arg2) {

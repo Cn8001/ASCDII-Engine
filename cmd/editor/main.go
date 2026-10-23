@@ -30,8 +30,8 @@ import (
 	"github.com/Cn8001/ASCDII-Engine/internal/editor/recent"
 	"github.com/Cn8001/ASCDII-Engine/internal/editor/service"
 	"github.com/Cn8001/ASCDII-Engine/internal/editor/session"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/project"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/version"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/project"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/version"
 )
 
 func main() {
@@ -74,7 +74,9 @@ func run() error {
 		},
 		OnShutdown: func(context.Context) { sess.Close() },
 		Bind:       svc.All(),
-		Linux:      &linux.Options{Icon: icon.Bytes(), ProgramName: "ascdii-editor"},
+		// Webview drops stay on, so drags inside the editor keep working.
+		DragAndDrop: &options.DragAndDrop{EnableFileDrop: true},
+		Linux:       &linux.Options{Icon: icon.Bytes(), ProgramName: "ascdii-editor"},
 	})
 }
 

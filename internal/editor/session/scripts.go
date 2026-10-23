@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/asset"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/project"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/assets/asset"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/project"
 )
 
 const scriptTemplate = `-- %s

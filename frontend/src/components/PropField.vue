@@ -4,9 +4,10 @@ import { Assets } from '../lib/api'
 import { assetPath, call, store } from '../lib/store'
 import type { prop } from '../wailsjs/go/models'
 import Icon from './Icon.vue'
+import RefField from './RefField.vue'
 
 const props = defineProps<{ p: prop.Prop; keyable?: boolean }>()
-const emit = defineEmits<{ set: [name: string, value: unknown]; key: [name: string]; menu: [e: MouseEvent, name: string] }>()
+const emit = defineEmits<{ set: [name: string, value: unknown]; ref: [name: string, target: number, key: string]; key: [name: string]; menu: [e: MouseEvent, name: string] }>()
 
 const label = computed(() => {
   const n = props.p.name
@@ -21,6 +22,7 @@ const vec = computed(() => (Array.isArray(props.p.value) ? (props.p.value as num
 const refs = (kind: string) => store.assets.filter((a) => a.kind === kind).map((a) => ({ value: a.guid || a.path, label: a.path }))
 const arts = computed(() => refs('art'))
 const scripts = computed(() => refs('script'))
+const models = computed(() => refs('model'))
 
 function num(v: unknown): number {
   return typeof v === 'number' ? v : Number(v) || 0
@@ -121,6 +123,13 @@ function scrub(e: PointerEvent, axis = -1) {
         <option value="">-</option>
         <option v-for="a in arts" :key="a.value" :value="a.value">{{ a.label }}</option>
         <option v-if="p.value && !arts.some((a) => a.value === p.value)" :value="p.value">{{ assetPath(String(p.value)) }}</option>
+      </select>
+
+      <RefField v-else-if="p.type === 'object' || p.type === 'component' || p.type === 'prefab'" :p="p" @ref="(n, t, k) => emit('ref', n, t, k)" @set="(n, v) => emit('set', n, v)" />
+
+      <select v-else-if="p.type === 'model'" class="field" :value="p.value" :disabled="p.locked" @change="set(($event.target as HTMLSelectElement).value)">
+        <option value="">-</option>
+        <option v-for="a in models" :key="a.value" :value="a.value">{{ a.label.replace('models/', '') }}</option>
       </select>
 
       <div v-else-if="p.type === 'script'" class="flex items-center gap-1">

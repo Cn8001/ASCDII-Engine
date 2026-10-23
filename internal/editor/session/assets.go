@@ -6,11 +6,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/asset"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/cell"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/kit"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/project"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/scene"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/assets/asset"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/render/cell"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/project"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/world/components"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/world/scene"
 )
 
 type Preview struct {
@@ -75,7 +75,7 @@ func (s *Session) AddSprite(name string) (uint64, error) {
 	}
 	sc := s.current()
 	file := s.lib.Resolve(name)
-	e := scene.NewEntity(strings.TrimSuffix(filepath.Base(file), filepath.Ext(file)), kit.NewSprite(s.lib, s.lib.Ref(file)))
+	e := scene.NewGameObject(strings.TrimSuffix(filepath.Base(file), filepath.Ext(file)), components.NewSprite(s.lib, s.lib.Ref(file)))
 	e.Local.Pos = s.spawnPoint()
 	got, err := sc.Graft(nil, e, -1)
 	if err != nil {

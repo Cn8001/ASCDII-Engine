@@ -6,7 +6,7 @@ import (
 	"math"
 	"sync"
 
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/noise"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/noise"
 )
 
 type Kind uint8

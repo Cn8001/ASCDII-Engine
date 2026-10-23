@@ -24,7 +24,7 @@ export const store = reactive({
   info: null as session.Info | null,
   recent: [] as string[],
   tree: [] as session.Node[],
-  kinds: { nodes: [], behaviours: [], prefabs: [] } as session.Kinds,
+  kinds: { components: [] as session.Kind[], prefabs: [] as string[], models: [] as string[] },
   selected: 0,
   props: [] as prop.Prop[],
   sceneProps: [] as prop.Prop[],
@@ -130,6 +130,15 @@ let lastFrame = performance.now()
 // assetPath shows a GUID reference as the file it points at.
 export function assetPath(ref: string): string {
   return store.assets.find((a) => a.guid === ref)?.path ?? ref
+}
+
+// allNodes is the hierarchy flattened, depth first.
+export function allNodes(nodes = store.tree, out: session.Node[] = []): session.Node[] {
+  for (const n of nodes) {
+    out.push(n)
+    allNodes(n.children ?? [], out)
+  }
+  return out
 }
 
 export function findNode(id: number, nodes = store.tree): session.Node | undefined {

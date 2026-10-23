@@ -1,6 +1,7 @@
 {
-  "version": 1,
+  "version": 2,
   "root": {
+    "fid": 1,
     "name": "lantern",
     "solid": true,
     "pos": [
@@ -8,83 +9,94 @@
       0,
       0
     ],
-    "node": {
-      "kind": "cylinder",
-      "props": {
-        "color": "#5c4634",
-        "height": 3,
-        "radius": 0.14,
-        "segments": 14
+    "components": [
+      {
+        "kind": "cylinder",
+        "props": {
+          "color": "#5c4634",
+          "height": 3,
+          "radius": 0.14,
+          "segments": 14
+        }
       }
-    },
+    ],
     "children": [
       {
+        "fid": 2,
         "name": "cage",
         "pos": [
           0,
           0,
           2.6
         ],
-        "node": {
-          "kind": "box",
-          "props": {
-            "emissive": 0.85,
-            "side": "#ffc46e",
-            "size": [
-              0.55,
-              0.55,
-              0.7
-            ],
-            "top": "#ffdc7b"
+        "components": [
+          {
+            "kind": "box",
+            "props": {
+              "emissive": 0.85,
+              "side": "#ffc46e",
+              "size": [
+                0.55,
+                0.55,
+                0.7
+              ],
+              "top": "#ffdc7b"
+            }
           }
-        }
+        ]
       },
       {
+        "fid": 3,
         "name": "flame",
         "pos": [
           0,
           0,
           3.3
         ],
-        "node": {
-          "kind": "emitter",
-          "props": {
-            "active": true,
-            "dir": [
-              0,
-              0,
-              1
-            ],
-            "emissive": 1,
-            "end": "#c8461e",
-            "glow": 0,
-            "gravity": -1.5,
-            "life": 0.6,
-            "rate": 18,
-            "seed": 11,
-            "size": 0.5,
-            "speed": 1.1,
-            "spread": 0.3,
-            "start": "#ffdc8c"
+        "components": [
+          {
+            "kind": "emitter",
+            "props": {
+              "active": true,
+              "dir": [
+                0,
+                0,
+                1
+              ],
+              "emissive": 1,
+              "end": "#c8461e",
+              "glow": 0,
+              "gravity": -1.5,
+              "life": 0.6,
+              "rate": 18,
+              "seed": 11,
+              "size": 0.5,
+              "speed": 1.1,
+              "spread": 0.3,
+              "start": "#ffdc8c"
+            }
           }
-        }
+        ]
       },
       {
+        "fid": 4,
         "name": "glow",
         "pos": [
           0,
           0,
           3.4
         ],
-        "node": {
-          "kind": "light",
-          "props": {
-            "color": "#ffb060",
-            "flicker": 0.25,
-            "intensity": 1.5,
-            "radius": 9
+        "components": [
+          {
+            "kind": "light",
+            "props": {
+              "color": "#ffb060",
+              "flicker": 0.25,
+              "intensity": 1.5,
+              "radius": 9
+            }
           }
-        }
+        ]
       }
     ]
   }

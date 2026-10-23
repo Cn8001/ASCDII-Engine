@@ -13,8 +13,8 @@ import (
 	"github.com/Cn8001/ASCDII-Engine/internal/editor/players"
 	"github.com/Cn8001/ASCDII-Engine/internal/editor/recent"
 	"github.com/Cn8001/ASCDII-Engine/internal/editor/session"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/project"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/scene"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/project"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/world/scene"
 )
 
 type fakeDialogs struct{ file, dir string }
@@ -100,7 +100,7 @@ func TestUnit_ServicesRoundTrip(t *testing.T) {
 	}
 	found := false
 	for _, p := range props {
-		if p.Name == "radius" && p.Value.(float64) == 3 {
+		if p.Name == "cone.radius" && p.Value.(float64) == 3 {
 			found = true
 		}
 	}

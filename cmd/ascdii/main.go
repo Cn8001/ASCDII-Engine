@@ -15,14 +15,14 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Cn8001/ASCDII-Engine/cmd/launcher/menu"
 	"github.com/Cn8001/ASCDII-Engine/internal/dragonfall"
 	"github.com/Cn8001/ASCDII-Engine/internal/editor/recent"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/app"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/bundle"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/guid"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/project"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/version"
-	"github.com/Cn8001/ASCDII-Engine/internal/launcher"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/guid"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/app"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/bundle"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/project"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/version"
 )
 
 const usage = `usage:
@@ -58,7 +58,7 @@ func run(ctx context.Context, args []string) error {
 		return err
 	}
 	if len(args) == 0 {
-		return menu(ctx)
+		return launch(ctx)
 	}
 	switch args[0] {
 	case "help", "-h", "--help":
@@ -84,13 +84,13 @@ func run(ctx context.Context, args []string) error {
 	return errors.New(usage)
 }
 
-// menu is what a double click on the binary opens.
-func menu(ctx context.Context) error {
+// launch is what a double click on the binary opens.
+func launch(ctx context.Context) error {
 	store, err := recent.Default()
 	if err != nil {
 		return err
 	}
-	return launcher.Run(ctx, os.Stdin, os.Stdout, launcher.Deps{
+	return menu.Run(ctx, os.Stdin, os.Stdout, menu.Deps{
 		Version:   "v" + version.Engine,
 		Demo:      dragonfall.Template(),
 		Templates: map[string]fs.FS{"dragonfall": dragonfall.Template(), "empty": nil},

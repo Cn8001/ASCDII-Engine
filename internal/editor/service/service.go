@@ -12,12 +12,12 @@ import (
 	"github.com/Cn8001/ASCDII-Engine/internal/editor/players"
 	"github.com/Cn8001/ASCDII-Engine/internal/editor/recent"
 	"github.com/Cn8001/ASCDII-Engine/internal/editor/session"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/asset"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/input"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/pipeline"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/project"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/prop"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/scene"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/assets/asset"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/input"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/prop"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/render/pipeline"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/project"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/world/scene"
 )
 
 // Context holds the Wails app context, which only exists after startup.
@@ -104,6 +104,8 @@ func Code(err error) string {
 		{session.ErrNotPlaying, "not_playing"},
 		{session.ErrBadAxis, "bad_axis"},
 		{session.ErrNotInstance, "not_instance"},
+		{session.ErrUnsupported, "unsupported"},
+		{session.ErrNotReference, "not_reference"},
 		{asset.ErrExists, "exists"},
 		{session.ErrUnknownTemplate, "unknown_template"},
 		{project.ErrNoManifest, "no_manifest"},

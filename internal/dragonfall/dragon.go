@@ -3,14 +3,14 @@ package dragonfall
 import (
 	"math"
 
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/anim"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/color"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/draw"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/fx"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/geom"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/light"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/prop"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/scene"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/color"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/geom"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/prop"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/render/draw"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/render/light"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/world/anim"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/world/fx"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/world/scene"
 )
 
 const dragonScale = .1
@@ -62,10 +62,10 @@ func (d *Dragon) bind() *prop.Binder {
 func (d *Dragon) Props() []prop.Prop        { return d.bind().Props() }
 func (d *Dragon) Set(n string, v any) error { return d.bind().Set(n, v) }
 func (d *Dragon) Bounds(t scene.Transform) geom.AABB {
-	return geom.Footprint(t.Pos, geom.V3(9, 4, 10).Scale(scaleOf(t)))
+	return geom.Footprint(t.Pos, t.Size(geom.V3(9, 4, 10)))
 }
 
-func (d *Dragon) Tick(_ *scene.Ctx, _ *scene.Entity, dt float64) {
+func (d *Dragon) Tick(_ *scene.Ctx, _ *scene.GameObject, dt float64) {
 	target := 0.0
 	if d.Awake {
 		target = 1
@@ -74,7 +74,7 @@ func (d *Dragon) Tick(_ *scene.Ctx, _ *scene.Entity, dt float64) {
 }
 
 func (d *Dragon) Draw(c *draw.Context, t scene.Transform) {
-	k := scaleOf(t)
+	k := t.Uniform()
 	c.Shadow(t.Pos, 6*k, 3*k, .7)
 	s := c.Sprite(t.Pos, dragonScale*k, t.Flip)
 	if !s.Visible(160) {

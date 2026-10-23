@@ -15,15 +15,15 @@ import (
 	"time"
 
 	"github.com/Cn8001/ASCDII-Engine/internal/editor/players"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/app"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/asset"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/guid"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/input"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/pipeline"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/project"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/scene"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/version"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/view"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/assets/asset"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/guid"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/input"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/render/pipeline"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/render/view"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/app"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/project"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/version"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/world/scene"
 )
 
 var (
@@ -101,8 +101,13 @@ func New(d Deps) *Session {
 	s.cam = s.edit.Camera
 	s.pipe = app.NewPipeline(s.current, d.Now)
 	s.frame = pipeline.NewFrame(120, 40)
-	s.sctx.Log = func(level, source, msg string) { s.Log(s.appCtx, level, source, msg) }
+	s.resetCtx()
 	return s
+}
+
+// resetCtx starts a run from scratch: no Lua state or time scale carried over.
+func (s *Session) resetCtx() {
+	s.sctx = scene.Ctx{Pipeline: s.pipe, Input: input.NewState(), Log: func(level, source, msg string) { s.Log(s.appCtx, level, source, msg) }}
 }
 
 func (s *Session) current() *scene.Scene {

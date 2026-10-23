@@ -21,6 +21,7 @@ brand:
 
 cli:
 	go build -o $(BIN)/ascdii ./cmd/ascdii
+	go build -o $(BIN)/launcher ./cmd/launcher
 
 # Players are the ascdii binary per platform; builds and the editor append projects to them.
 players:

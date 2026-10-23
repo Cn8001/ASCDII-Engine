@@ -8,11 +8,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/cell"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/geom"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/pipeline"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/raster"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/scene"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/geom"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/render/cell"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/render/pipeline"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/render/raster"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/world/scene"
 )
 
 const FrameEvent = "frame"
@@ -101,6 +101,7 @@ func (s *Session) Tick(dt float64) (*Frame, error) {
 		s.sctx.Scene, s.sctx.Quit = s.play, false
 		err = s.play.Update(&s.sctx, dt, s.keys)
 		s.keys = s.keys[:0]
+		s.sctx.Input.EndFrame()
 		if s.sctx.Quit {
 			s.stop()
 		}

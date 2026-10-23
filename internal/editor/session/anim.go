@@ -3,9 +3,9 @@ package session
 import (
 	"fmt"
 
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/anim"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/prop"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/scene"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/prop"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/world/anim"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/world/scene"
 )
 
 type Clip struct {
@@ -43,7 +43,8 @@ func (s *Session) Clips(id uint64) ([]Clip, error) {
 // AddKey stores the property's current value at time t on the entity's first
 // clip, creating a looping clip when there is none.
 func (s *Session) AddKey(id uint64, name string, t float64) error {
-	return s.edit1(id, "", func(sc *scene.Scene, e *scene.Entity) error {
+	return s.edit1(id, "", func(sc *scene.Scene, e *scene.GameObject) error {
+		name := e.Resolve(name)
 		p, ok := prop.Get(e, name)
 		if !ok {
 			return fmt.Errorf("%w: %s", prop.ErrUnknownProp, name)

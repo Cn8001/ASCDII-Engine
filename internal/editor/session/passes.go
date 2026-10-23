@@ -3,8 +3,8 @@ package session
 import (
 	"fmt"
 
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/pipeline"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/prop"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/prop"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/render/pipeline"
 )
 
 func (s *Session) Passes() []pipeline.Info {

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { assetKind, type FileDrop } from '../lib/filedrop'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { EventsOn, Viewport } from '../lib/api'
 import { decodeBytes, Painter } from '../lib/cells'
@@ -220,17 +221,34 @@ function key(e: KeyboardEvent) {
   }
 }
 
+function keyUp(e: KeyboardEvent) {
+  const k = playing.value ? engineKey(e) : null
+  if (k) Viewport.KeyUp(k)
+}
+
 async function drop(e: DragEvent) {
   const data = e.dataTransfer?.getData('text/asset')
   if (!data) return
   const [kind, ...rest] = data.split(':')
   const path = rest.join(':')
-  if (kind !== 'prefab' && kind !== 'art') return
-  const p = local(e)
-  const id = await call(() => Viewport.Drop(`${kind}:${path}`, p.x / cw.value, p.y / ch.value))
+  if (kind !== 'prefab' && kind !== 'art' && kind !== 'model') return
+  await place(`${kind}:${path}`, local(e))
+}
+
+async function place(kind: string, p: { x: number; y: number }) {
+  const id = await call(() => Viewport.Drop(kind, p.x / cw.value, p.y / ch.value))
   if (id !== undefined) {
     await refresh()
     await select(id)
+  }
+}
+
+// fileDrop places files dropped from the OS where they land.
+async function fileDrop(e: Event) {
+  const d = (e as CustomEvent<FileDrop>).detail
+  for (const p of d.paths) {
+    const kind = assetKind(p)
+    if (kind === 'model' || kind === 'prefab' || kind === 'art') await place(`${kind}:${p}`, local({ clientX: d.x, clientY: d.y } as MouseEvent))
   }
 }
 
@@ -255,6 +273,7 @@ function setLive() {
     class="relative h-full w-full overflow-hidden bg-ink-950 outline-none transition-shadow duration-300"
     :class="playing ? 'shadow-[inset_0_0_0_1px_var(--color-amber-soft)]' : ''"
     @keydown="key"
+    @keyup="keyUp"
     @contextmenu.prevent
   >
     <canvas
@@ -265,8 +284,10 @@ function setLive() {
       @pointermove="move"
       @pointerup="up"
       @wheel.prevent="wheel"
+      data-drop="viewport"
       @dragover.prevent
       @drop.prevent="drop"
+      @filedrop="fileDrop"
     />
     <svg v-if="store.view === 'scene' && edges.length" class="pointer-events-none absolute left-0 top-8 h-full w-full overflow-visible">
       <line v-for="(l, i) in edges" :key="i" :x1="l[0]" :y1="l[1]" :x2="l[2]" :y2="l[3]" stroke="var(--color-amber-glow)" stroke-opacity=".45" stroke-width="1" stroke-dasharray="3 3" />

@@ -3,12 +3,12 @@ package dragonfall
 import (
 	"math"
 
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/anim"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/color"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/draw"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/geom"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/prop"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/scene"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/color"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/geom"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/prop"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/render/draw"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/world/anim"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/world/scene"
 )
 
 const heroScale = .057 // 73 art pixels make a 4.2 unit tall knight
@@ -64,10 +64,10 @@ func (h *Hero) bind() *prop.Binder {
 func (h *Hero) Props() []prop.Prop        { return h.bind().Props() }
 func (h *Hero) Set(n string, v any) error { return h.bind().Set(n, v) }
 func (h *Hero) Bounds(t scene.Transform) geom.AABB {
-	return geom.Footprint(geom.V3(t.Pos.X, t.Pos.Y, 0), geom.V3(1.6, 1, 4.3).Scale(scaleOf(t)))
+	return geom.Footprint(geom.V3(t.Pos.X, t.Pos.Y, 0), t.Size(geom.V3(1.6, 1, 4.3)))
 }
 
-func (h *Hero) Tick(_ *scene.Ctx, _ *scene.Entity, dt float64) {
+func (h *Hero) Tick(_ *scene.Ctx, _ *scene.GameObject, dt float64) {
 	target := 0.0
 	if h.Walking {
 		target = 1
@@ -84,7 +84,7 @@ func (h *Hero) pose(t float64, airborne bool) anim.Pose {
 }
 
 func (h *Hero) Draw(c *draw.Context, t scene.Transform) {
-	k := scaleOf(t)
+	k := t.Uniform()
 	ground := geom.V3(t.Pos.X, t.Pos.Y, 0)
 	c.Shadow(ground, 1.2*k*(1-math.Min(.5, t.Pos.Z*.08)), .7*k, .65)
 	s := c.Sprite(t.Pos, heroScale*k, t.Flip)

@@ -5,8 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/bundle"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/project"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/bundle"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/project"
 )
 
 func (s *Session) Targets() []string { return s.d.Players.Available() }

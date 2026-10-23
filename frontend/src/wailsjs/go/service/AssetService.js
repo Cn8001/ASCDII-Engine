@@ -6,6 +6,10 @@ export function AddSprite(arg1) {
   return window['go']['service']['AssetService']['AddSprite'](arg1);
 }
 
+export function Import(arg1, arg2) {
+  return window['go']['service']['AssetService']['Import'](arg1, arg2);
+}
+
 export function List() {
   return window['go']['service']['AssetService']['List']();
 }

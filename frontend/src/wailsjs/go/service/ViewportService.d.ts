@@ -12,6 +12,8 @@ export function Focus(arg1:number):Promise<void>;
 
 export function Key(arg1:string):Promise<void>;
 
+export function KeyUp(arg1:string):Promise<void>;
+
 export function Orbit(arg1:number,arg2:number):Promise<void>;
 
 export function Pan(arg1:number,arg2:number):Promise<void>;

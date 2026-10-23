@@ -22,6 +22,10 @@ export function Key(arg1) {
   return window['go']['service']['ViewportService']['Key'](arg1);
 }
 
+export function KeyUp(arg1) {
+  return window['go']['service']['ViewportService']['KeyUp'](arg1);
+}
+
 export function Orbit(arg1, arg2) {
   return window['go']['service']['ViewportService']['Orbit'](arg1, arg2);
 }

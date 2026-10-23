@@ -4,12 +4,12 @@ import (
 	"math"
 
 	"github.com/Cn8001/ASCDII-Engine/internal/dragonfall/realm"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/color"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/draw"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/geom"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/noise"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/prop"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/scene"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/color"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/geom"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/noise"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/prop"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/render/draw"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/world/scene"
 )
 
 // Terrain turns the realm into a height field: raised crags, a sunken river

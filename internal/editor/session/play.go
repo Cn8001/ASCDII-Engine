@@ -1,6 +1,6 @@
 package session
 
-import "github.com/Cn8001/ASCDII-Engine/internal/engine/scene"
+import "github.com/Cn8001/ASCDII-Engine/internal/engine/world/scene"
 
 // Play runs a copy of the edited scene so playing never changes the file.
 func (s *Session) Play() error {
@@ -18,6 +18,7 @@ func (s *Session) Play() error {
 		return err
 	}
 	s.play, s.mode, s.keys = c, Play, nil
+	s.resetCtx()
 	s.touch()
 	return nil
 }

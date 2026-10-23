@@ -5,13 +5,13 @@ import (
 
 	"github.com/Cn8001/ASCDII-Engine/internal/dragonfall/realm"
 	"github.com/Cn8001/ASCDII-Engine/internal/dragonfall/vegetation"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/color"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/draw"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/geom"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/kit"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/noise"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/prop"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/scene"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/color"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/geom"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/noise"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/prop"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/render/draw"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/world/components"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/world/scene"
 )
 
 const bladeScale = .06 // world units per blade art pixel, matching the hero
@@ -30,14 +30,13 @@ func (*Grass) Kind() string { return "df.grass" }
 func (g *Grass) bind() *prop.Binder {
 	return prop.Bind().Int("seed", &g.Seed, 0, 99999).Float("density", &g.Density, 0, 1).Bool("detail", &g.Detail)
 }
-func (g *Grass) Props() []prop.Prop               { return g.bind().Props() }
-func (g *Grass) Set(n string, v any) error        { return g.bind().Set(n, v) }
-func (g *Grass) Bounds(scene.Transform) geom.AABB { return geom.AABB{} }
+func (g *Grass) Props() []prop.Prop        { return g.bind().Props() }
+func (g *Grass) Set(n string, v any) error { return g.bind().Set(n, v) }
 
-func (g *Grass) Tick(c *scene.Ctx, _ *scene.Entity, dt float64) {
+func (g *Grass) Tick(c *scene.Ctx, _ *scene.GameObject, dt float64) {
 	g.field.Step(dt)
-	c.Scene.Walk(func(e *scene.Entity, _ bool) bool {
-		p, ok := e.Behaviour("player").(*kit.Player)
+	c.Scene.Walk(func(e *scene.GameObject, _ bool) bool {
+		p, ok := e.Component("player").(*components.Player)
 		if ok && p.Moving() && e.Local.Pos.Z < .3 {
 			dx := 1.0
 			if e.Local.Flip {

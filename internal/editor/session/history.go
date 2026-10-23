@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"time"
 
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/scene"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/world/scene"
 )
 
 const historyLimit = 100
