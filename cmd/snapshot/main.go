@@ -12,8 +12,10 @@ import (
 	"strings"
 
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/dragonfall"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/prop"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/platform/headless"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/cell"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/pipeline"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/app"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/project"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/scene"
@@ -35,6 +37,7 @@ func run(ctx context.Context) error {
 	rows := flag.Int("rows", 50, "rows")
 	secs := flag.Float64("time", 1, "seconds to simulate")
 	hour := flag.Float64("hour", -1, "override time of day")
+	blocks := flag.Bool("blocks", false, "half blocks instead of Braille")
 	var sets, off []string
 	flag.Func("off", "render pass to disable, repeatable", func(v string) error { off = append(off, v); return nil })
 	flag.Func("set", "entity:prop=json, repeatable", func(v string) error { sets = append(sets, v); return nil })
@@ -46,6 +49,17 @@ func run(ctx context.Context) error {
 	e.Resize(*cols, *rows)
 	if *hour >= 0 {
 		e.Scene().Env.Hour = *hour
+	}
+	if *blocks {
+		p, err := e.Pipeline().Pass("braille")
+		if err != nil {
+			return err
+		}
+		if ed, ok := p.(prop.Editable); ok {
+			if err := ed.Set("mode", pipeline.ModeBlocks); err != nil {
+				return err
+			}
+		}
 	}
 	for _, name := range off {
 		if err := e.Pipeline().SetEnabled(name, false); err != nil {

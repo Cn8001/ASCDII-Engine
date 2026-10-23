@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/prop"
 	"image"
 	stdcolor "image/color"
 	"image/png"
@@ -330,10 +331,10 @@ func TestUnit_SceneSettingsAreEditable(t *testing.T) {
 
 	// Assert
 	s.mu.Lock()
-	hour, span := s.edit.Env.Hour, s.edit.Camera.Span
+	hour := s.edit.Env.Hour
 	s.mu.Unlock()
-	if err != nil || errCam != nil || hour != 3 || span != 20 {
-		t.Fatalf("err %v %v hour %f span %f", err, errCam, hour, span)
+	if err != nil || hour != 3 || !errors.Is(errCam, prop.ErrUnknownProp) {
+		t.Fatalf("err %v hour %f camera %v", err, hour, errCam)
 	}
 }
 
@@ -341,14 +342,15 @@ func TestUnit_EditorCameraLeavesGameCameraAlone(t *testing.T) {
 	// Arrange
 	s, _, _ := newSession(t, "")
 	s.mu.Lock()
-	game := s.edit.Camera
+	game, _ := s.edit.View()
 	s.mu.Unlock()
 
 	// Act
 	s.Pan(5, 3)
 	s.Orbit(30, 5)
 	s.mu.Lock()
-	after, editor := s.edit.Camera, s.cam
+	after, _ := s.edit.View()
+	editor := s.cam
 	s.mu.Unlock()
 
 	// Assert
@@ -1053,5 +1055,25 @@ func TestUnit_ColliderHandlesShowAndDragResizesOneSide(t *testing.T) {
 	}
 	if left := col.Offset.X - col.Size.X/2; math.Abs(left+1) > 1e-9 {
 		t.Fatalf("the left side moved to %f", left)
+	}
+}
+
+func TestUnit_DragMovesAChildInItsParentsSpace(t *testing.T) {
+	// Arrange
+	s, _, _ := newSession(t, "")
+	parent, _ := s.Add(0, "box")
+	child, _ := s.Add(parent, "blob")
+	errSet := s.SetProp(parent, "rot", []any{0.0, 0.0, 90.0})
+	sc := s.current()
+	c, _ := sc.ByID(child)
+	before, worldBefore := c.Local.Pos, c.World().Pos
+
+	// Act
+	err := s.Drag(child, "free", 10, 10, 14, 10)
+
+	// Assert
+	after, worldAfter := c.Local.Pos, c.World().Pos
+	if errSet != nil || err != nil || after == before || worldAfter.X <= worldBefore.X || math.Abs(worldAfter.Y-worldBefore.Y) > 1e-6 {
+		t.Fatalf("err %v %v local %+v -> %+v world %+v -> %+v", errSet, err, before, after, worldBefore, worldAfter)
 	}
 }

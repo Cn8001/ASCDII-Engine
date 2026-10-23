@@ -84,7 +84,7 @@
 <ul>
 <li>The game uses the first enabled camera on a visible object, in Hierarchy order. Disabling a camera component, or hiding its object, switches to the next one.</li>
 <li>As a child of another object, the camera moves with it. A camera that is a child of the player is not moved by the player's <code>follow</code> setting.</li>
-<li>New projects and the Dragonfall template contain a <b>Main Camera</b> object. Scenes without a camera object use the scene camera, which is edited by selecting <b>Scene</b> in the Hierarchy.</li>
+<li>New projects, new scenes and the Dragonfall template contain a <b>Main Camera</b> object. A scene without a camera shows <b>No camera</b> in the Game view and in builds.</li>
 <li>In the Scene view, the area the camera shows is outlined in amber. <b>Align</b> moves the camera to the current Scene view.</li>
 <li>Scripts reach the camera through the <code>camera</code> global; <code>camera.object</code> is the camera's GameObject. See <a href="lua-api.html#camera">Camera</a> in the Lua API.</li>
 </ul>

@@ -1,11 +1,14 @@
 <script setup lang="ts">
 // Same mark as internal/editor/brand: one Braille cell with extruded lit dots.
-withDefaults(defineProps<{ size?: number; plate?: boolean }>(), { size: 20, plate: true })
+// animate lights the dots one after another, as the launcher did in the terminal.
+withDefaults(defineProps<{ size?: number; plate?: boolean; animate?: boolean }>(), { size: 20, plate: true, animate: false })
 
 const lit = new Set(['1,0', '0,1', '1,1', '0,2', '0,3', '1,3'])
 const cols = [37, 60]
 const rows = [21, 40, 59, 78]
 const dots = cols.flatMap((x, c) => rows.map((y, r) => ({ x, y, on: lit.has(`${c},${r}`) })))
+const order = dots.filter((d) => d.on).sort((a, b) => a.y - b.y || a.x - b.x)
+const delay = (d: (typeof dots)[number]) => `${0.25 + order.indexOf(d) * 0.09}s`
 </script>
 
 <template>
@@ -22,8 +25,12 @@ const dots = cols.flatMap((x, c) => rows.map((y, r) => ({ x, y, on: lit.has(`${c
     </defs>
     <rect v-if="plate" width="100" height="100" rx="22" fill="url(#plate)" />
     <template v-for="d in dots" :key="d.x + '-' + d.y">
-      <circle v-if="d.on" :cx="d.x + 2.8" :cy="d.y + 2.8" r="7.4" fill="#6b481c" />
-      <circle :cx="d.x" :cy="d.y" r="7.4" :fill="d.on ? 'url(#dot)' : '#2e2c29'" />
+      <circle v-if="animate && d.on" :cx="d.x" :cy="d.y" r="7.4" fill="#2e2c29" />
+      <g v-if="d.on" :style="animate ? { animation: `dotlight .25s ${delay(d)} both ease-out` } : undefined">
+        <circle :cx="d.x + 2.8" :cy="d.y + 2.8" r="7.4" fill="#6b481c" />
+        <circle :cx="d.x" :cy="d.y" r="7.4" fill="url(#dot)" />
+      </g>
+      <circle v-else :cx="d.x" :cy="d.y" r="7.4" fill="#2e2c29" />
     </template>
   </svg>
 </template>

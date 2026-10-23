@@ -1,6 +1,8 @@
 package scene
 
 import (
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/color"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/cell"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/pipeline"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/view"
 )
@@ -73,10 +75,24 @@ func (c *Cells) Run(f *pipeline.Frame) {
 	})
 }
 
-// Render binds the scene camera, time and environment, then runs the pipeline.
+// Render binds the game camera, time and environment, then runs the
+// pipeline; a scene without a camera shows a notice instead.
 func Render(p *pipeline.Pipeline, f *pipeline.Frame, s *Scene) {
-	f.Begin(s.View(), s.Time, s.Env)
+	c, ok := s.View()
+	if !ok {
+		noCamera(f)
+		return
+	}
+	f.Begin(c, s.Time, s.Env)
 	p.Render(f)
+}
+
+func noCamera(f *pipeline.Frame) {
+	bg := color.RGB(14, 14, 14)
+	f.Buf.Clear(bg)
+	f.Cells.Clear(cell.Cell{Rune: ' ', FG: bg, BG: bg})
+	msg := "No camera"
+	f.Cells.Text((f.Cells.W-len(msg))/2, f.Cells.H/2, msg, color.RGB(150, 146, 140), bg)
 }
 
 // Pick maps a cell to the entity drawn nearest there.

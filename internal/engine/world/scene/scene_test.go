@@ -3,7 +3,9 @@ package scene
 import (
 	"bytes"
 	"errors"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/view"
 	"math"
+	"strings"
 	"testing"
 	"time"
 
@@ -22,6 +24,19 @@ type crate struct {
 }
 
 func newCrate() Component { return &crate{Size: geom.V3(2, 2, 2), Tint: color.RGB(160, 110, 60)} }
+
+// eye is a minimal camera component; the real one lives in components.
+type eye struct{ c view.Camera }
+
+func (*eye) Kind() string          { return "eye" }
+func (*eye) Props() []prop.Prop    { return nil }
+func (*eye) Set(string, any) error { return nil }
+func (e *eye) View(t Transform) view.Camera {
+	c := e.c
+	c.Target = t.Pos
+	return c
+}
+func (e *eye) Place(o *GameObject, c view.Camera) { e.c, o.Local.Pos = c, c.Target }
 
 func (c *crate) Kind() string { return "crate" }
 func (c *crate) bind() *prop.Binder {
@@ -240,8 +255,9 @@ func TestUnit_GeometryPassTagsEntities(t *testing.T) {
 	// Arrange
 	s := New("t")
 	box := s.Add("box", newCrate())
-	s.Camera.Target = geom.V3(0, 0, 0)
-	s.Camera.Span = 12
+	cam := view.Default()
+	cam.Span = 12
+	s.Add("camera", &eye{c: cam})
 	get := func() *Scene { return s }
 	p := pipeline.New(time.Now, append(pipeline.Standard(), &Geometry{Scene: get}, &Cells{Scene: get})...)
 	f := pipeline.NewFrame(24, 10)
@@ -254,6 +270,29 @@ func TestUnit_GeometryPassTagsEntities(t *testing.T) {
 	// Assert
 	if err != nil || hit != box {
 		t.Fatalf("picked %+v err %v", hit, err)
+	}
+}
+
+func TestUnit_RenderWithoutCameraShowsNotice(t *testing.T) {
+	// Arrange
+	s := New("t")
+	s.Add("box", newCrate())
+	get := func() *Scene { return s }
+	p := pipeline.New(time.Now, append(pipeline.Standard(), &Geometry{Scene: get}, &Cells{Scene: get})...)
+	f := pipeline.NewFrame(24, 10)
+
+	// Act
+	Render(p, f, s)
+	var text []rune
+	for x := 0; x < f.Cells.W; x++ {
+		c, _ := f.Cells.At(x, f.Cells.H/2)
+		text = append(text, c.Rune)
+	}
+	_, ok := s.View()
+
+	// Assert
+	if ok || !strings.Contains(string(text), "No camera") || !errors.Is(s.SetView(view.Default()), ErrNoCamera) {
+		t.Fatalf("view %v row %q", ok, string(text))
 	}
 }
 

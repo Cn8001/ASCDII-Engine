@@ -250,14 +250,32 @@ func (g *Grade) rows(b *raster.Buffer, cx, cy float64, lo, hi int) {
 }
 
 // Braille encodes dots into glyphs; Calm is how different two colors in one
-// cell must be before they are drawn as dots instead of a flat block.
-type Braille struct{ Calm float64 }
+// cell must be before they are drawn as dots instead of a flat block. In
+// blocks mode cells become two solid halves instead, for terminals whose
+// fonts draw Braille badly.
+type Braille struct {
+	Calm float64
+	Mode string // braille or blocks
+}
 
-func NewBraille() *Braille { return &Braille{Calm: 520} }
+const (
+	ModeBraille = "braille"
+	ModeBlocks  = "blocks"
+)
 
-func (*Braille) Name() string                { return "braille" }
-func (*Braille) Stage() Stage                { return Resolve }
-func (b *Braille) bind() *prop.Binder        { return prop.Bind().Float("calm", &b.Calm, 0, 6000) }
+func NewBraille() *Braille { return &Braille{Calm: 520, Mode: ModeBraille} }
+
+func (*Braille) Name() string { return "braille" }
+func (*Braille) Stage() Stage { return Resolve }
+func (b *Braille) bind() *prop.Binder {
+	return prop.Bind().Enum("mode", &b.Mode, ModeBraille, ModeBlocks).Float("calm", &b.Calm, 0, 6000)
+}
 func (b *Braille) Props() []prop.Prop        { return b.bind().Props() }
 func (b *Braille) Set(n string, v any) error { return b.bind().Set(n, v) }
-func (b *Braille) Run(f *Frame)              { braille.Resolve(f.Buf, f.Cells, int(b.Calm)) }
+func (b *Braille) Run(f *Frame) {
+	if b.Mode == ModeBlocks {
+		braille.ResolveBlocks(f.Buf, f.Cells)
+		return
+	}
+	braille.Resolve(f.Buf, f.Cells, int(b.Calm))
+}

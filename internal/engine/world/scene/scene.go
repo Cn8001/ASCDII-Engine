@@ -10,7 +10,6 @@ import (
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/input"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/prop"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/light"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/view"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/anim"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/physics"
 )
@@ -23,7 +22,6 @@ type Prefabs interface {
 type Scene struct {
 	Name    string
 	Root    *GameObject
-	Camera  view.Camera
 	Env     light.Env
 	Clips   []anim.Clip
 	Time    float64
@@ -33,7 +31,7 @@ type Scene struct {
 }
 
 func New(name string) *Scene {
-	s := &Scene{Name: name, Camera: view.Default(), Env: light.DefaultEnv(), newFIDs: RandomFIDs()}
+	s := &Scene{Name: name, Env: light.DefaultEnv(), newFIDs: RandomFIDs()}
 	s.Root = &GameObject{Name: "root", Visible: true, scene: s}
 	return s
 }

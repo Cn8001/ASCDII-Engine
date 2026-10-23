@@ -1,18 +1,6 @@
 {
   "version": 2,
   "name": "Dragonfall",
-  "camera": {
-    "target": [
-      114,
-      79.5,
-      0
-    ],
-    "span": 38,
-    "pitch": 52,
-    "yaw": 0,
-    "anchorX": 0.5,
-    "anchorY": 0.6
-  },
   "env": {
     "hour": 16.5,
     "auto": true,

@@ -432,13 +432,6 @@ func (s *Session) SceneProps() []prop.Prop {
 	defer s.mu.Unlock()
 	sc := s.current()
 	var out []prop.Prop
-	// A scene with a camera object edits the camera on that object instead.
-	if o, _ := sc.MainCamera(); o == nil {
-		for _, p := range sc.Camera.Props() {
-			p.Name, p.Group = "camera."+p.Name, "camera"
-			out = append(out, p)
-		}
-	}
 	for _, p := range sc.Env.Props() {
 		p.Name, p.Group = "env."+p.Name, "environment"
 		out = append(out, p)
@@ -455,8 +448,6 @@ func (s *Session) SetSceneProp(name string, v any) error {
 	}
 	var err error
 	switch {
-	case strings.HasPrefix(name, "camera."):
-		err = sc.Camera.Set(strings.TrimPrefix(name, "camera."), v)
 	case strings.HasPrefix(name, "env."):
 		err = sc.Env.Set(strings.TrimPrefix(name, "env."), v)
 	default:

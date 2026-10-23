@@ -105,7 +105,7 @@ func New(d Deps) *Session {
 	}
 	reg, lib := project.Registry(d.Modules)
 	s := &Session{d: d, reg: reg, lib: lib, edit: scene.New("untitled"), mode: Edit, live: false, gizmos: true, dirty: true, viewMode: SceneView, appCtx: context.Background()}
-	s.cam = s.edit.View()
+	s.cam = startView(s.edit)
 	s.pipe = app.NewPipeline(s.current, d.Now)
 	s.pipe.Add(pipeline.Func("grid", pipeline.Geometry, s.grid))
 	s.pipe.Add(pipeline.Func("colliders", pipeline.Post, s.colliders))
@@ -218,7 +218,7 @@ func (s *Session) migrate(ctx context.Context, metas int) {
 }
 
 func (s *Session) load(sc *scene.Scene, path string) {
-	s.edit, s.play, s.scenePath, s.cam = sc, nil, path, sc.View()
+	s.edit, s.play, s.scenePath, s.cam = sc, nil, path, startView(sc)
 	s.mode, s.sel, s.unsaved, s.keys = Edit, 0, false, nil
 	s.hist = history{}
 	s.active = -1

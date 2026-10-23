@@ -1,13 +1,17 @@
 package scene
 
 import (
+	"errors"
+
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/geom"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/prop"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/view"
 )
 
+var ErrNoCamera = errors.New("the scene has no camera")
+
 // Viewer is a camera component. The first enabled one on a visible object
-// decides what the game shows; scenes without one use Scene.Camera.
+// decides what the game shows; a scene without one shows nothing.
 type Viewer interface {
 	View(t Transform) view.Camera
 	Place(o *GameObject, c view.Camera)
@@ -32,55 +36,64 @@ func (s *Scene) MainCamera() (*GameObject, Viewer) {
 	return obj, cam
 }
 
-// View is what the game shows.
-func (s *Scene) View() view.Camera {
-	if o, c := s.MainCamera(); o != nil {
-		return c.View(o.World())
+// View is what the game shows; ok is false without a camera.
+func (s *Scene) View() (c view.Camera, ok bool) {
+	if o, v := s.MainCamera(); o != nil {
+		return v.View(o.World()), true
 	}
-	return s.Camera
+	return view.Camera{}, false
 }
 
-// SetView points the game camera: it moves the camera object, or sets the
-// scene camera when there is none.
-func (s *Scene) SetView(c view.Camera) {
-	if o, v := s.MainCamera(); o != nil {
-		v.Place(o, c)
-		return
+// SetView points the game camera by moving the camera object.
+func (s *Scene) SetView(c view.Camera) error {
+	o, v := s.MainCamera()
+	if o == nil {
+		return ErrNoCamera
 	}
-	s.Camera = c
+	v.Place(o, c)
+	return nil
 }
 
 // FollowView moves the game camera toward target at rate. A camera object
 // that is a child of follower already moves with it, so it is left alone.
 func (s *Scene) FollowView(follower *GameObject, target geom.Vec3, dt, rate float64) {
-	if o, _ := s.MainCamera(); o != nil {
-		for p := o.Parent(); p != nil; p = p.Parent() {
-			if p == follower {
-				return
-			}
+	o, v := s.MainCamera()
+	if o == nil {
+		return
+	}
+	for p := o.Parent(); p != nil; p = p.Parent() {
+		if p == follower {
+			return
 		}
 	}
-	c := s.View()
+	c := v.View(o.World())
 	c.Follow(target, dt, rate)
-	s.SetView(c)
+	v.Place(o, c)
 }
 
-// CameraProps edits whichever camera is in use through the scene camera's
-// property names, for scripts and tools that address "the camera".
-func (s *Scene) CameraProps() prop.Editable { return cameraProps{s} }
+// CameraProps edits the camera in use through the view's property names, for
+// scripts and tools that address "the camera"; nil without one.
+func (s *Scene) CameraProps() prop.Editable {
+	if o, _ := s.MainCamera(); o == nil {
+		return nil
+	}
+	return cameraProps{s}
+}
 
 type cameraProps struct{ s *Scene }
 
 func (c cameraProps) Props() []prop.Prop {
-	v := c.s.View()
+	v, _ := c.s.View()
 	return v.Props()
 }
 
 func (c cameraProps) Set(name string, value any) error {
-	v := c.s.View()
+	v, ok := c.s.View()
+	if !ok {
+		return ErrNoCamera
+	}
 	if err := v.Set(name, value); err != nil {
 		return err
 	}
-	c.s.SetView(v)
-	return nil
+	return c.s.SetView(v)
 }

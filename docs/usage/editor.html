@@ -42,7 +42,7 @@
 <main>
 <div class="kicker">Guides</div>
 <h1>The editor</h1>
-<p class="lead">A reference for every part of the editor window. The editor is started from the <code>ascdii</code> launcher; see <a href="install.html">Install</a>.</p>
+<p class="lead">A reference for every part of the editor window. The editor is started by <code>ascdii</code>; see <a href="install.html#starting">Install</a>.</p>
 <figure><img src="img/editor-main.png" alt="Editor layout"><figcaption>Hierarchy on the left, the Scene view in the center, Inspector and Pipeline on the right, Project, Console and Animation below.</figcaption></figure>
 
 <h2>Window title</h2>
@@ -63,11 +63,11 @@
 <li>The context menu provides Create, Focus, Duplicate, Save as Prefab, Unpack and Delete. The <b>+</b> button opens the Create menu.</li>
 <li>Rows can be dragged onto object slots in the Inspector to fill references. Project tiles and files from the file manager can be dropped onto rows to add models, prefabs and scripts, or to apply a material.</li>
 <li>Prefab instances are marked with an amber package icon; their inner objects are listed in italics.</li>
-<li>Selecting <b>Scene</b> at the top shows the environment in the Inspector: time of day, sun, ambient light, sky and fog. Scenes without a camera object also show the scene camera there.</li>
+<li>Selecting <b>Scene</b> at the top shows the environment in the Inspector: time of day, sun, ambient light, sky and fog.</li>
 </ul>
 
 <h2>Scene and Game views</h2>
-<p>The <b>Scene</b> view has an editor camera of its own; navigating it never changes the game. The <b>Game</b> view shows the game camera, which is what players see. <b>Align</b> moves the game camera to the current Scene view; in a scene with a camera object it moves that object.</p>
+<p>The <b>Scene</b> view has an editor camera of its own; navigating it never changes the game. The <b>Game</b> view shows the game camera, which is what players see. <b>Align</b> moves the camera object to the current Scene view, and creates a Main Camera first in a scene without one. A scene without a camera shows <b>No camera</b> in the Game view.</p>
 <table>
 <tr><th>Action</th><th>Input</th></tr>
 <tr><td>Pan</td><td>Left drag on empty ground, or middle drag</td></tr>

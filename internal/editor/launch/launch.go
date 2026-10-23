@@ -1,6 +1,6 @@
 // Package launch is the handshake between ascdii and the editor: the editor
 // is always opened from ascdii, which marks the process it starts. Opened
-// any other way, the editor hands over to ascdii instead.
+// any other way, the editor asks ascdii to open it again.
 package launch
 
 import (
@@ -59,42 +59,12 @@ func StartEditor(ctx context.Context, editor, manifest string) error {
 	return cmd.Process.Release()
 }
 
-// OpenCLI opens ascdii in a new terminal window, for an editor that was
-// started directly.
-func OpenCLI(ctx context.Context, cli string) error {
-	ctx = context.WithoutCancel(ctx)
-	var cmd *exec.Cmd
-	switch runtime.GOOS {
-	case "windows":
-		cmd = exec.CommandContext(ctx, "cmd", "/c", "start", "", cli)
-	case "darwin":
-		cmd = exec.CommandContext(ctx, "open", "-a", "Terminal", cli)
-	default:
-		// Tried in order: the program and the flag the command follows.
-		terminals := [][2]string{
-			{"x-terminal-emulator", "-e"}, {"gnome-terminal", "--"}, {"konsole", "-e"}, {"xfce4-terminal", "-x"},
-			{"wezterm", "start"}, {"kitty", ""}, {"alacritty", "-e"}, {"foot", ""}, {"xterm", "-e"},
-		}
-		if t := os.Getenv("TERMINAL"); t != "" {
-			cmd = exec.CommandContext(ctx, t, "-e", cli)
-			break
-		}
-		for _, t := range terminals {
-			if p, err := exec.LookPath(t[0]); err == nil {
-				args := []string{cli}
-				if t[1] != "" {
-					args = []string{t[1], cli}
-				}
-				cmd = exec.CommandContext(ctx, p, args...)
-				break
-			}
-		}
-	}
-	if cmd == nil {
-		return fmt.Errorf("terminal: %w", ErrNotFound)
-	}
+// Relaunch starts ascdii, which starts the editor again with the launcher's
+// mark, for an editor that was opened directly.
+func Relaunch(ctx context.Context, cli string) error {
+	cmd := exec.CommandContext(context.WithoutCancel(ctx), cli)
 	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("open %s: %w", CLI, err)
+		return fmt.Errorf("start %s: %w", CLI, err)
 	}
 	return cmd.Process.Release()
 }

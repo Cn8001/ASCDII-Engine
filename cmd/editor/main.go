@@ -103,7 +103,7 @@ func run() error {
 	})
 }
 
-// handOver opens ascdii, the launcher, for an editor started directly.
+// handOver asks ascdii to start the editor, for an editor started directly.
 func handOver() error {
 	self, err := os.Executable()
 	if err != nil {
@@ -113,7 +113,7 @@ func handOver() error {
 	if err != nil {
 		return fmt.Errorf("the editor opens from %s: %w", launch.CLI, err)
 	}
-	return launch.OpenCLI(context.Background(), cli)
+	return launch.Relaunch(context.Background(), cli)
 }
 
 // frames serves the latest frame as raw bytes; the frame event only says a

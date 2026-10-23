@@ -3,6 +3,9 @@ package terminal
 import (
 	"bytes"
 	"context"
+	"fmt"
+	"io"
+	"os"
 	"strings"
 	"testing"
 
@@ -68,20 +71,26 @@ func TestUnit_PreviewPlainHasNoEscapes(t *testing.T) {
 	}
 }
 
-func TestUnit_KeysDecodesStream(t *testing.T) {
+func TestUnit_EventsDecodeStreamWithReleases(t *testing.T) {
 	// Arrange
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, _ = w.WriteString("a\x1b[B\x1b[119;1:3u")
+	_ = w.Close()
 
 	// Act
-	ch := Keys(ctx, strings.NewReader("a\x1b[B"))
-	var got []input.Key
-	for k := range ch {
-		got = append(got, k)
+	var got []input.Event
+	for e := range New(r, io.Discard).Events(ctx) {
+		got = append(got, e)
 	}
 
 	// Assert
-	if len(got) != 2 || got[0] != 'a' || got[1] != input.Down {
+	want := []input.Event{{Key: 'a', Down: true}, {Key: input.Down, Down: true}, {Key: 'w', Exact: true}}
+	if fmt.Sprint(got) != fmt.Sprint(want) {
 		t.Fatalf("got %v", got)
 	}
 }

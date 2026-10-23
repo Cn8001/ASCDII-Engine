@@ -8,7 +8,6 @@ import (
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/geom"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/prop"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/light"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/view"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/anim"
 )
 
@@ -43,7 +42,6 @@ type entityDoc struct {
 type sceneDoc struct {
 	Version  int         `json:"version"`
 	Name     string      `json:"name"`
-	Camera   view.Camera `json:"camera"`
 	Env      light.Env   `json:"env"`
 	Clips    []anim.Clip `json:"clips,omitempty"`
 	Entities []entityDoc `json:"objects"`
@@ -113,7 +111,7 @@ func docOf(e *GameObject, expand bool) entityDoc {
 }
 
 func Encode(w io.Writer, s *Scene) error {
-	doc := sceneDoc{Version: Version, Name: s.Name, Camera: s.Camera, Env: s.Env, Entities: []entityDoc{}}
+	doc := sceneDoc{Version: Version, Name: s.Name, Env: s.Env, Entities: []entityDoc{}}
 	for _, c := range s.Clips {
 		if !c.Transient {
 			doc.Clips = append(doc.Clips, c)
@@ -138,7 +136,7 @@ func Decode(r io.Reader, reg *Registry, prefabs Prefabs) (*Scene, error) {
 		return nil, fmt.Errorf("decode scene: %w", err)
 	}
 	s := New(doc.Name)
-	s.Camera, s.Env, s.Clips = doc.Camera, doc.Env, doc.Clips
+	s.Env, s.Clips = doc.Env, doc.Clips
 	s.UsePrefabs(prefabs)
 	for _, d := range append(doc.Entities, doc.Legacy...) {
 		e, err := s.build(d, reg)

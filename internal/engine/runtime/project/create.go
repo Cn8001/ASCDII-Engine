@@ -137,9 +137,8 @@ func FileName(name string) string {
 // Starter is the scene a new empty project opens with.
 func Starter(name string) *scene.Scene {
 	s := scene.New(name)
-	s.Camera.Span = 40
 	cam := components.NewCamera()
-	cam.Span = s.Camera.Span
+	cam.Span = 40
 	s.Add("Main Camera", cam)
 	return s
 }

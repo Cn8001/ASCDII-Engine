@@ -38,7 +38,7 @@ func notes() map[string]note {
 		"water": {"A water surface with animated glints and reflections of the sky.", map[string]string{
 			"width": "Size along X.", "depth": "Size along Y.", "color": "Base color.",
 		}},
-		"camera": {"Makes its object the game camera. The object's position is the point the camera looks at and its rotation around Z turns the view; as a child of another object the camera moves with it. The first enabled camera on a visible object is used.", map[string]string{
+		"camera": {"Makes its object the game camera. The object's position is the point the camera looks at and its rotation around Z turns the view; as a child of another object the camera moves with it. The first enabled camera on a visible object is used; a scene without one shows No camera.", map[string]string{
 			"span": "World units across the width of the view; smaller values zoom in.", "pitch": "Angle above the ground in degrees; 90 looks straight down.",
 			"anchorX": "Horizontal screen position of the target, 0 left to 1 right.", "anchorY": "Vertical screen position of the target, 0 top to 1 bottom.",
 		}},

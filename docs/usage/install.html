@@ -42,7 +42,7 @@
 <main>
 <div class="kicker">Start</div>
 <h1>Install</h1>
-<p class="lead">ASCDII Engine consists of two programs: <code>ascdii</code>, the launcher and command line tool, and <code>ascdii-editor</code>, the desktop editor. The editor is always started from <code>ascdii</code>.</p>
+<p class="lead">ASCDII Engine consists of two programs: <code>ascdii</code>, which starts the editor and provides the command line tools and the game player, and <code>ascdii-editor</code>, the desktop editor.</p>
 
 <h2>Requirements</h2>
 <table>
@@ -64,19 +64,23 @@
 <li>Optionally, add that folder to <code>PATH</code> to run <code>ascdii</code> from any location.</li>
 </ol>
 
-<h2>Starting the engine</h2>
+<h2 id="starting">Starting the engine</h2>
+<figure><img src="img/editor-start.png" alt="Start screen"><figcaption>The start screen: templates for a new project on the left, recent projects on the right.</figcaption></figure>
 <ol class="steps">
-<li>Run <code>ascdii</code>. The launcher opens in the terminal and lists recent projects.</li>
-<li>Select a recent project, <b>Open project</b> or <b>New project</b>. The selected project opens in the editor; the launcher remains available for further projects.</li>
+<li>Run <code>ascdii</code>, for example with a double click. The editor opens at its start screen.</li>
+<li>To create a project, select a template, enter a name, choose the location with <b>Location</b> and press <b>Create</b>. To continue, select a recent project, or press <b>Open</b> to choose a <code>.ascdiiproj</code> file.</li>
 </ol>
-<p>Starting <code>ascdii-editor</code> directly opens the launcher instead.</p>
+<p>The start screen returns when a project is closed. Starting <code>ascdii-editor</code> directly also works: it restarts itself through <code>ascdii</code>.</p>
 
 <h2>Terminal requirements</h2>
 <figure><img src="img/terminal.png" alt="Dragonfall in a terminal"><figcaption>Dragonfall rendered by a terminal emulator. Each cell holds one Braille character with a foreground and a background color.</figcaption></figure>
-<p>Games and the launcher require a terminal with 24 bit color and a font that includes the Braille block (U+2800 to U+28FF). Supported terminals include Windows Terminal, WezTerm, Kitty, Alacritty, GNOME Terminal, iTerm2 and the Visual Studio Code terminal. A window of at least 120 by 40 cells is recommended.</p>
+<p>Games require a terminal with 24 bit color and a font that includes the Braille block (U+2800 to U+28FF). Supported terminals include Windows Terminal, WezTerm, Kitty, Alacritty, GNOME Terminal, iTerm2 and the Visual Studio Code terminal. A window of at least 120 by 40 cells is recommended.</p>
 <pre><code>ascdii version
 ascdii run ~/games/demo</code></pre>
-<div class="tip"><b>Windows console</b>The legacy Windows console host does not support 24 bit color. Use Windows Terminal.</div>
+<p>The appearance depends on how the terminal's font draws Braille characters. Many fonts draw them as small dots with wide gaps, which makes the image look sparse and dark; a smaller font size gives more columns and more detail. Terminals whose fonts draw Braille poorly can run games in block mode, which uses half block characters instead and does not depend on the font:</p>
+<pre><code>ascdii run ~/games/demo --blocks
+Quest\Quest.exe --blocks</code></pre>
+<div class="tip"><b>Windows</b>Use Windows Terminal; the legacy Windows console host does not support 24 bit color.</div>
 <div class="note"><b>Distributing games</b>Built games run on their own and require only a terminal. See <a href="building.html">Build</a>.</div>
 
 <h2 id="building-from-source">Building from source</h2>
@@ -94,7 +98,7 @@ make players          <span class="c"># ascdii for every platform, so builds can
 make editor-linux     <span class="c"># ascdii-editor for Linux</span>
 make editor-windows   <span class="c"># ascdii-editor for Windows</span>
 make dist             <span class="c"># the archives listed under Installation, in bin/dist</span></code></pre>
-<p>All programs are written to <code>bin/</code>; <code>bin/ascdii</code> starts the launcher, which finds the editor next to it. Windows programs are cross compiled from Linux and WSL without additional toolchains. <code>make editor-dev</code> starts the editor with hot reload and without the launcher, and serves it at <code>http://localhost:34115</code> for browser developer tools.</p>
+<p>All programs are written to <code>bin/</code>; <code>bin/ascdii</code> starts the editor next to it. Windows programs are cross compiled from Linux and WSL without additional toolchains. <code>make editor-dev</code> starts the editor with hot reload and without the launcher, and serves it at <code>http://localhost:34115</code> for browser developer tools.</p>
 <nav class="pager"><a class="prev" href="index.html"><small>Previous</small>Welcome</a><a class="next" href="first-game.html"><small>Next</small>Your first game</a></nav>
 </main>
 </div>

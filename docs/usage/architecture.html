@@ -56,10 +56,10 @@
   script/    vm (Lua: VM, scripts, fields, API)
   platform/  the backend contract, terminal, headless, speaker (sound output)
   runtime/   app, loop, bundle, project (manifest, modules), pack (packages), version
-internal/editor/   session, service (the Wails boundary), launch (the launcher handshake),
+internal/editor/   session, service (the Wails boundary), launch (how ascdii starts the editor),
                    players (finds the ascdii binaries builds start from), recent, brand
 internal/dragonfall/  the sample: a code module and a package
-cmd/      ascdii (CLI, player and the launcher in ascdii/menu), editor (Wails), snapshot (PNG renders),
+cmd/      ascdii (CLI and player; starts the editor), editor (Wails), snapshot (PNG renders),
           docref (component reference for the docs), brand (icons), hello
 docs/     usage (these pages), nav.py (rewrites their navigation)</code></pre>
 <p>Dependencies point one way: <code>core</code> ← <code>render</code> ← <code>world</code> ← <code>script</code>; <code>assets</code> uses core, render and world types, and <code>runtime</code> combines them. The editor and content modules depend on the engine; the engine never depends on them. No package keeps state: registries, libraries and VMs are created at startup and passed in.</p>
@@ -106,7 +106,7 @@ docs/     usage (these pages), nav.py (rewrites their navigation)</code></pre>
 
 <h2>The editor</h2>
 <p><code>editor/session</code> owns the open project, the edited scene, a cloned scene during play, the undo history and the render loop. <code>editor/service</code> is the boundary to the Vue interface: Wails binds its methods, and every error leaves it with a stable code such as <code>not_found:</code> or <code>prefab_locked:</code>. Frames reach the interface as raw bytes from a small HTTP handler rather than as JSON, so a 220 by 60 view remains cheap at 60 frames per second.</p>
-<p>The editor starts only from the <code>ascdii</code> launcher (<code>editor/launch</code>): the launcher sets <code>ASCDII_LAUNCHER</code> to its own path when it starts the editor, and an editor started without it opens the launcher in a terminal and exits. The path also tells the editor where to find the players for builds. Editors built for <code>wails dev</code> skip the check.</p>
+<p>The editor is always started by <code>ascdii</code> (<code>editor/launch</code>): <code>ascdii</code> sets <code>ASCDII_LAUNCHER</code> to its own path when it starts the editor, which also tells the editor where to find the players for builds. An editor started without it starts <code>ascdii</code>, which starts the editor again, and exits. Editors built for <code>wails dev</code> skip the check.</p>
 <nav class="pager"><a class="prev" href="go-api.html"><small>Previous</small>Go API</a><span></span></nav>
 </main>
 </div>

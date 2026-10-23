@@ -99,3 +99,24 @@ func TestUnit_FlatMergesNearColors(t *testing.T) {
 		t.Fatalf("noisy %U calm %U edge %U", noisy.Rune, calm.Rune, edge.Rune)
 	}
 }
+
+func TestUnit_ResolveBlocksAveragesEachHalf(t *testing.T) {
+	// Arrange
+	b := raster.New(1, 1)
+	b.Clear(color.RGB(0, 0, 0))
+	for x := 0; x < 2; x++ {
+		for y := 0; y < 2; y++ {
+			b.Plot(x, y, raster.Frag{Albedo: color.RGB(200, 100, 0), Depth: 1})
+		}
+	}
+	g := cell.New(1, 1)
+
+	// Act
+	ResolveBlocks(b, g)
+
+	// Assert
+	c, _ := g.At(0, 0)
+	if c.Rune != UpperHalf || c.FG != color.RGB(200, 100, 0) || c.BG != color.RGB(0, 0, 0) {
+		t.Fatalf("got %+v", c)
+	}
+}

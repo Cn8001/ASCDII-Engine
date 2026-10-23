@@ -11,14 +11,15 @@ desktop app.
 make test                       # go vet + go test -race
 make hello                      # smallest program, see cmd/hello
 make dragonfall                 # the sample game in the terminal
-make cli players editor-linux   # bin/: the ascdii launcher, players, the editor
-bin/ascdii                      # launcher: recent projects open in the editor
-make editor-dev                 # editor with hot reload, without the launcher
+make cli players editor-linux   # bin/: ascdii, the players and the editor
+bin/ascdii                      # opens the editor at its start screen
+make editor-dev                 # editor with hot reload
 ```
 
 ```go
 e := ascdii.New(ascdii.Options{})
 s := e.Scene()
+s.Add("camera", ascdii.CameraComponent(34))
 s.Add("ground", ascdii.Ground(40, 40, ascdii.Hex("#46623e")))
 s.Add("crate", ascdii.Box(ascdii.V3(2, 2, 2), ascdii.Hex("#b08050"))).Blocking()
 s.Add("hero", ascdii.Blob(.8, ascdii.Hex("#e8b04b"))).At(0, 5, 0).With(ascdii.Player())
@@ -67,9 +68,8 @@ release.
 ## Editor
 
 `make editor-linux` and `make editor-windows` write `cmd/editor/build/bin/`
-and copy the editor next to `bin/ascdii`. The editor is started from the
-`ascdii` launcher, which lists recent projects and opens the chosen one; started
-directly, it opens the launcher instead. `make editor-dev` skips the launcher.
+and copy the editor next to `bin/ascdii`, which starts it at its start screen;
+started directly, the editor restarts itself through `ascdii`.
 The editor has a GameObject menu, a Hierarchy (drag to reparent, right click to
 create, duplicate, save as prefab), a live 2.5D viewport with move, rotate and
 scale tools, an Inspector with component cards and reference slots, a Project
@@ -109,6 +109,6 @@ rendering, building and the Go API.
 `pkg/ascdii` is the only public package. The engine lives in
 `internal/engine/{core,render,world,assets,script,platform,runtime}`, the
 sample content in `internal/dragonfall`, the editor backend in
-`internal/editor`, the UI in `frontend/`, programs in `cmd/` (the terminal
-menu is `cmd/ascdii/menu`). `docs/usage/architecture.html` explains the modules
+`internal/editor`, the UI in `frontend/`, programs in `cmd/` (the editor
+is started by `cmd/ascdii`). `docs/usage/architecture.html` explains the modules
 and the display backend contract. See `CLAUDE.md` for rules.

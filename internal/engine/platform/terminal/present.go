@@ -11,7 +11,6 @@ import (
 	"strconv"
 
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/color"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/input"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/cell"
 )
 
@@ -148,26 +147,3 @@ func WritePreview(ctx context.Context, w io.Writer, g *cell.Grid, plain bool) er
 }
 
 // Keys reads raw input until r fails or ctx ends. Keys are dropped rather than
-// blocking when the game falls behind.
-func Keys(ctx context.Context, r io.Reader) <-chan input.Key {
-	out := make(chan input.Key, 64)
-	go func() {
-		defer close(out)
-		buf := make([]byte, 64)
-		for {
-			n, err := r.Read(buf)
-			for _, k := range input.Parse(buf[:n]) {
-				select {
-				case out <- k:
-				case <-ctx.Done():
-					return
-				default:
-				}
-			}
-			if err != nil || ctx.Err() != nil {
-				return
-			}
-		}
-	}()
-	return out
-}

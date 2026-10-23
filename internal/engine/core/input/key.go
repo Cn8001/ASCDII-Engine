@@ -5,7 +5,9 @@ package input
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
+	"unicode"
 	"unicode/utf8"
 )
 
@@ -96,4 +98,109 @@ func skipSequence(b []byte) []byte {
 		}
 	}
 	return nil
+}
+
+// ParseEvents decodes one read into key transitions. Sequences of the kitty
+// keyboard protocol and of Windows Terminal's win32 input mode carry releases
+// and become exact events; everything else is a press as in Parse.
+func ParseEvents(b []byte) []Event {
+	var out []Event
+	for len(b) > 0 {
+		if b[0] == 27 && len(b) > 2 && b[1] == '[' {
+			end := 2
+			for end < len(b) && (b[end] < 0x40 || b[end] > 0x7e) {
+				end++
+			}
+			if end < len(b) {
+				if e, ok := csiEvent(string(b[2:end]), b[end]); ok {
+					if e.Key != 0 {
+						out = append(out, e)
+					}
+					b = b[end+1:]
+					continue
+				}
+			}
+		}
+		j := 1
+		for j < len(b) && b[j] != 27 {
+			j++
+		}
+		for _, k := range Parse(b[:j]) {
+			out = append(out, Event{Key: k, Down: true})
+		}
+		b = b[j:]
+	}
+	return out
+}
+
+// csiEvent reads the parameters and final byte of a CSI sequence that
+// reports a key with its press or release; ok is false for other sequences.
+func csiEvent(params string, final byte) (Event, bool) {
+	fields := strings.Split(params, ";")
+	num := func(i, sub int) int {
+		if i >= len(fields) {
+			return 0
+		}
+		parts := strings.Split(fields[i], ":")
+		if sub >= len(parts) {
+			return 0
+		}
+		n, err := strconv.Atoi(parts[sub])
+		if err != nil {
+			return 0
+		}
+		return n
+	}
+	switch {
+	case final == 'u' && params != "" && params[0] != '?' && params[0] != '>':
+		code, mods, ev := num(0, 0), num(1, 0), num(1, 1)
+		k := kittyKey(code, mods)
+		return Event{Key: k, Down: ev != 3, Exact: true}, true
+	case final == '_' && len(fields) >= 4:
+		return Event{Key: winKey(num(0, 0), num(2, 0)), Down: num(3, 0) == 1, Exact: true}, true
+	case final >= 'A' && final <= 'D' && strings.Contains(params, ":"):
+		k := map[byte]Key{'A': Up, 'B': Down, 'C': Right, 'D': Left}[final]
+		return Event{Key: k, Down: num(1, 1) != 3, Exact: true}, true
+	}
+	return Event{}, false
+}
+
+// kittyKey maps a kitty protocol key code; modifiers count only for Ctrl+C.
+func kittyKey(code, mods int) Key {
+	ctrl := mods > 0 && (mods-1)&4 != 0
+	switch {
+	case ctrl && (code == 'c' || code == 'C'):
+		return CtrlC
+	case code == 13:
+		return Enter
+	case code == 27:
+		return Escape
+	case code == 9:
+		return Tab
+	case code == 127 || code == 8:
+		return Backspace
+	case code >= 32 && code < 57344:
+		return Key(unicode.ToLower(rune(code)))
+	}
+	return 0 // modifier and function keys the engine does not name
+}
+
+// winKey maps a Windows virtual key code, or the character it typed.
+func winKey(vk, char int) Key {
+	switch {
+	case vk >= 'A' && vk <= 'Z':
+		if char == 3 {
+			return CtrlC
+		}
+		return Key(unicode.ToLower(rune(vk)))
+	case vk >= '0' && vk <= '9':
+		return Key(vk)
+	}
+	if k, ok := map[int]Key{0x25: Left, 0x26: Up, 0x27: Right, 0x28: Down, 0x0d: Enter, 0x1b: Escape, 0x09: Tab, 0x08: Backspace, 0x20: ' '}[vk]; ok {
+		return k
+	}
+	if char >= 32 {
+		return Key(unicode.ToLower(rune(char)))
+	}
+	return 0
 }

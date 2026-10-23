@@ -86,17 +86,30 @@ func (p *Player) Key(c *scene.Ctx, e *scene.GameObject, k input.Key) bool {
 
 func (p *Player) Update(c *scene.Ctx, e *scene.GameObject, dt float64) {
 	now := c.Scene.Time
+	held := func(i int) bool { return p.held[i] > now }
+	// With releases known every held key counts, so diagonals work; without
+	// them only the timers of the latest presses do.
+	if in := c.Input; in != nil && in.Exact() {
+		keys := [4]struct {
+			name  string
+			arrow input.Key
+		}{{p.Up, input.Up}, {p.Down, input.Down}, {p.Left, input.Left}, {p.Right, input.Right}}
+		held = func(i int) bool {
+			k, err := input.ParseName(keys[i].name)
+			return in.Down(keys[i].arrow, now) || err == nil && in.Down(k, now)
+		}
+	}
 	var d geom.Vec2
-	if p.held[0] > now {
+	if held(0) {
 		d.Y--
 	}
-	if p.held[1] > now {
+	if held(1) {
 		d.Y++
 	}
-	if p.held[2] > now {
+	if held(2) {
 		d.X--
 	}
-	if p.held[3] > now {
+	if held(3) {
 		d.X++
 	}
 	p.moving = d != (geom.Vec2{})

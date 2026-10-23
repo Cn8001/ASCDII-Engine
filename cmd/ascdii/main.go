@@ -12,15 +12,16 @@ import (
 	"os/signal"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strconv"
 	"strings"
 
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/cmd/ascdii/menu"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/dragonfall"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/editor/launch"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/editor/recent"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/guid"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/prop"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/platform/speaker"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/pipeline"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/app"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/bundle"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/project"
@@ -28,10 +29,10 @@ import (
 )
 
 const usage = `usage:
-  ascdii                      launcher: recent projects open in the editor
+  ascdii                      the editor: templates and recent projects
   ascdii new <dir> [-name N] [-template dragonfall]
-  ascdii run <dir>
-  ascdii preview <dir> [-size 160x50] [-time 2] [-hour 22] [-plain]
+  ascdii run <dir> [--blocks]
+  ascdii preview <dir> [-size 160x50] [-time 2] [-hour 22] [-plain] [-blocks]
   ascdii build <dir> [-out path] [-player path] [-single]
   ascdii pack list|install|remove|export ...
   ascdii version
@@ -63,7 +64,7 @@ func run(ctx context.Context, args []string) error {
 		return play(ctx, fsys, args)
 	}
 	if len(args) == 0 {
-		return mainMenu(ctx)
+		return edit(ctx, "")
 	}
 	switch args[0] {
 	case "help", "-h", "--help":
@@ -92,22 +93,8 @@ func run(ctx context.Context, args []string) error {
 	return errors.New(usage)
 }
 
-// mainMenu is what a double click on the binary opens.
-func mainMenu(ctx context.Context) error {
-	store, err := recent.Default()
-	if err != nil {
-		return err
-	}
-	return menu.Run(ctx, os.Stdin, os.Stdout, menu.Deps{
-		Version:   "v" + version.Engine,
-		Templates: map[string]fs.FS{"dragonfall": dragonfall.Template(), "empty": nil},
-		Recent:    store,
-		Help:      usage,
-		Edit:      edit,
-	})
-}
-
-// edit starts the editor on a project; the editor only opens from here.
+// edit starts the editor, which opens its start screen without a manifest;
+// the editor only opens from here.
 func edit(ctx context.Context, manifest string) error {
 	self, err := os.Executable()
 	if err != nil {
@@ -128,7 +115,25 @@ func play(ctx context.Context, fsys fs.FS, args []string) error {
 	if err != nil {
 		return err
 	}
+	if slices.Contains(args, "--blocks") || os.Getenv("ASCDII_BLOCKS") != "" {
+		if err := blocks(e); err != nil {
+			return err
+		}
+	}
 	return e.Run(ctx, os.Stdin, os.Stdout)
+}
+
+// blocks draws half blocks instead of Braille, for terminals whose fonts
+// draw Braille badly.
+func blocks(e *app.Engine) error {
+	p, err := e.Pipeline().Pass("braille")
+	if err != nil {
+		return err
+	}
+	if ed, ok := p.(prop.Editable); ok {
+		return ed.Set("mode", pipeline.ModeBlocks)
+	}
+	return nil
 }
 
 func split(args []string) (string, []string) {
@@ -180,6 +185,7 @@ func preview(ctx context.Context, fsys fs.FS, args []string) error {
 	secs := fl.Float64("time", 1, "seconds to simulate")
 	plain := fl.Bool("plain", false, "no colors")
 	hour := fl.Float64("hour", -1, "time of day override")
+	block := fl.Bool("blocks", false, "half blocks instead of Braille")
 	if err := fl.Parse(args); err != nil {
 		return err
 	}
@@ -192,6 +198,11 @@ func preview(ctx context.Context, fsys fs.FS, args []string) error {
 		return err
 	}
 	e.Resize(cols, rows)
+	if *block {
+		if err := blocks(e); err != nil {
+			return err
+		}
+	}
 	if *hour >= 0 {
 		e.Scene().Env.Hour = *hour
 	}

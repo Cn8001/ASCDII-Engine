@@ -56,7 +56,8 @@ var (
 )
 
 // WritePNG draws cells as a terminal would: 8x16 pixel cells, Braille dots as
-// 3x3 squares, other glyphs as a block in the foreground color.
+// 3x3 squares, the upper half block as such, other glyphs as a block in the
+// foreground color.
 func WritePNG(ctx context.Context, w io.Writer, g *cell.Grid) error {
 	if err := ctx.Err(); err != nil {
 		return err
@@ -86,6 +87,12 @@ func WritePNG(ctx context.Context, w io.Writer, g *cell.Grid) error {
 								img.SetRGBA(cx*cw+dx*4+x, cy*ch+dy*4+y, fg)
 							}
 						}
+					}
+				}
+			case c.Rune == braille.UpperHalf:
+				for y := 0; y < ch/2; y++ {
+					for x := 0; x < cw; x++ {
+						img.SetRGBA(cx*cw+x, cy*ch+y, fg)
 					}
 				}
 			case c.Rune != ' ':
