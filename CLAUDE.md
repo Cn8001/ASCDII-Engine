@@ -47,8 +47,11 @@ engine never imports either.
 - Tests use the standard library, sit next to their subject, run under `-race`,
   are named `TestUnit_Behaviour` and use Arrange / Act / Assert comments.
 - Add a dependency in the same commit that uses it. Standard library first.
-- Embedded files (`frontend/dist`, templates) are the only package
-  level values; they are read-only build artefacts.
+- Embedded files (`frontend/dist`, templates) and the linker-set game data
+  key (`bundle.pakSecret`) are the only package level values; they are
+  read-only build artefacts.
+- The game data key comes from `.env` (`ASCDII_PAK_SECRET`, git ignored,
+  written by the first `make`); never put a real key in the source.
 
 ## Assets
 
