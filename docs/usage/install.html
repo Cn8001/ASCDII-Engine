@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Install | ASCDII Engine</title>
+<link rel="icon" href="img/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="layout">
+<aside class="side">
+<a class="brand" href="index.html"><img src="img/logo.svg" alt=""><span>ASCDII Engine<small>0.0.1 docs</small></span></a>
+<h4>Start</h4>
+<a href="index.html">Welcome</a>
+<a href="install.html" class="on">Install</a>
+<a href="first-game.html">Your first game</a>
+<h4>Guides</h4>
+<a href="editor.html">The editor</a>
+<a href="scenes.html">Scenes and prefabs</a>
+<a href="animation.html">Animation</a>
+<a href="scripting.html">Lua scripting</a>
+<a href="rendering.html">Rendering</a>
+<a href="building.html">Build and release</a>
+<h4>Reference</h4>
+<a href="cli.html">CLI reference</a>
+<a href="go-api.html">Go API</a>
+</aside>
+<main>
+<div class="kicker">Start</div>
+<h1>Install</h1>
+<p class="lead">The engine and editor build from one Go module. You need Go, Node and the Wails CLI. Everything else is vendored or generated.</p>
+<h2>Requirements</h2>
+<table>
+<tr><th>Tool</th><th>Version</th><th>Used for</th></tr>
+<tr><td>Go</td><td>1.24 or newer</td><td>Engine, CLI, editor backend</td></tr>
+<tr><td>Node.js</td><td>20 or newer</td><td>Editor interface (Vue, Vite, Tailwind)</td></tr>
+<tr><td>Wails CLI</td><td>v2.17</td><td>Desktop editor builds: <code>go install github.com/wailsapp/wails/v2/cmd/wails@v2.17.0</code></td></tr>
+<tr><td>WebKitGTK 4.1</td><td>Linux and WSL only</td><td>The editor window: <code>sudo apt install libwebkit2gtk-4.1-dev</code></td></tr>
+</table>
+<div class="note"><b>Windows</b>Games and the editor run natively on Windows. You can also build both from WSL: the Windows executables are cross compiled, no extra toolchain needed.</div>
+
+<h2>Build everything</h2>
+<pre><code><span class="c"># tests and vet for the whole module</span>
+make test
+
+<span class="c"># the ascdii CLI and game player</span>
+make cli
+
+<span class="c"># player binaries the editor uses to build games</span>
+make players
+
+<span class="c"># the editor, for this machine and for Windows</span>
+make editor-linux
+make editor-windows</code></pre>
+<p>The editor lands in <code>cmd/editor/build/bin/</code>. Run <code>ascdii-editor</code> on Linux or WSL, or <code>ascdii-editor.exe</code> on Windows.</p>
+<div class="tip"><b>Always run make players first</b>The editor embeds the player binaries it appends your game to. Without them the Build window shows the platforms as unavailable.</div>
+
+<h2>Develop the editor</h2>
+<pre><code>make editor-dev</code></pre>
+<p>This starts the editor with hot reload for the interface. The same session is also reachable from a browser at <code>http://localhost:34115</code>, which is handy for the developer tools.</p>
+
+<h2>Check your terminal</h2>
+<p>Games need a terminal with truecolor and a font that has the Braille block (U+2800 to U+28FF). Windows Terminal, WezTerm, Kitty, Alacritty and the VS Code terminal all work. A window of about 120x40 cells or larger looks best.</p>
+<pre><code>ascdii version
+ascdii new ~/games/demo -template dragonfall
+ascdii run ~/games/demo</code></pre>
+<nav class="pager"><a class="prev" href="index.html"><small>Previous</small>Welcome</a><a class="next" href="first-game.html"><small>Next</small>Your first game</a></nav>
+</main>
+</div>
+</body>
+</html>

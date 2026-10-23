@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Build and release | ASCDII Engine</title>
+<link rel="icon" href="img/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="layout">
+<aside class="side">
+<a class="brand" href="index.html"><img src="img/logo.svg" alt=""><span>ASCDII Engine<small>0.0.1 docs</small></span></a>
+<h4>Start</h4>
+<a href="index.html">Welcome</a>
+<a href="install.html">Install</a>
+<a href="first-game.html">Your first game</a>
+<h4>Guides</h4>
+<a href="editor.html">The editor</a>
+<a href="scenes.html">Scenes and prefabs</a>
+<a href="animation.html">Animation</a>
+<a href="scripting.html">Lua scripting</a>
+<a href="rendering.html">Rendering</a>
+<a href="building.html" class="on">Build and release</a>
+<h4>Reference</h4>
+<a href="cli.html">CLI reference</a>
+<a href="go-api.html">Go API</a>
+</aside>
+<main>
+<div class="kicker">Guides</div>
+<h1>Build and release</h1>
+<p class="lead">A build is the ascdii player with your project packed onto its end. One file per platform, nothing to install.</p>
+<figure><img src="img/editor-build.png" alt="Build window"></figure>
+
+<h2>From the editor</h2>
+<ol class="steps">
+<li>Press <b>Build</b> in the toolbar or <kbd>Ctrl</kbd>+<kbd>B</kbd>.</li>
+<li>Choose the platforms. Both are on by default.</li>
+<li>Check the version and press <b>Build</b>. Unsaved changes are saved first, so the build always matches the editor.</li>
+<li>Press <b>Show</b> to open the output folder.</li>
+</ol>
+<p>The result in <code>build/release/&lt;name&gt;-&lt;version&gt;/</code>:</p>
+<pre><code>Dragonfall-0.1.0-linux-amd64
+Dragonfall-0.1.0-linux-amd64.zip
+Dragonfall-0.1.0-windows-amd64.exe
+Dragonfall-0.1.0-windows-amd64.exe.zip
+SHA256SUMS</code></pre>
+<p>The version you enter is stored in the manifest, so the next build starts from it.</p>
+
+<h2>From the command line</h2>
+<pre><code><span class="c"># one executable for this machine</span>
+ascdii build ~/games/quest
+
+<span class="c"># a release for every player found in bin/players</span>
+ascdii release ~/games/quest -version 0.2.0 -players bin/players</code></pre>
+
+<h2>Publish on GitHub</h2>
+<pre><code>git tag v0.2.0
+git push --tags
+gh release create v0.2.0 build/release/Quest-0.2.0/* --title "Quest 0.2.0"</code></pre>
+<p>Players download the file for their platform and run it in a terminal. The checksums let them verify the download.</p>
+
+<h2>Running a built game</h2>
+<pre><code>./Quest-0.2.0-linux-amd64
+Quest-0.2.0-windows-amd64.exe
+
+<span class="c"># a still frame without a terminal, for screenshots or CI</span>
+./Quest-0.2.0-linux-amd64 --preview -size 160x50 -time 2</code></pre>
+<div class="note"><b>Versions</b>The engine is 0.0.1. Empty projects start at 0.0.1, projects from the Dragonfall template at 0.1.0. The manifest also records the engine version the project was last saved with.</div>
+<nav class="pager"><a class="prev" href="rendering.html"><small>Previous</small>Rendering</a><a class="next" href="cli.html"><small>Next</small>CLI reference</a></nav>
+</main>
+</div>
+</body>
+</html>

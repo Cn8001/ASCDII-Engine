@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Animation | ASCDII Engine</title>
+<link rel="icon" href="img/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="layout">
+<aside class="side">
+<a class="brand" href="index.html"><img src="img/logo.svg" alt=""><span>ASCDII Engine<small>0.0.1 docs</small></span></a>
+<h4>Start</h4>
+<a href="index.html">Welcome</a>
+<a href="install.html">Install</a>
+<a href="first-game.html">Your first game</a>
+<h4>Guides</h4>
+<a href="editor.html">The editor</a>
+<a href="scenes.html">Scenes and prefabs</a>
+<a href="animation.html" class="on">Animation</a>
+<a href="scripting.html">Lua scripting</a>
+<a href="rendering.html">Rendering</a>
+<a href="building.html">Build and release</a>
+<h4>Reference</h4>
+<a href="cli.html">CLI reference</a>
+<a href="go-api.html">Go API</a>
+</aside>
+<main>
+<div class="kicker">Guides</div>
+<h1>Animation</h1>
+<p class="lead">Any property you can edit in the Inspector can be animated. Clips are sampled from scene time, so scrubbing is exact and playback never drifts.</p>
+<figure><img src="img/editor-animation.png" alt="Animation window"><figcaption>The Animation tab with the crystal's bob clip: one track for pos.z with two keys, playing back and forth.</figcaption></figure>
+
+<h2>Concepts</h2>
+<ul>
+<li>A <b>clip</b> belongs to an entity and has a play mode: <code>once</code>, <code>loop</code> or <code>pingpong</code>.</li>
+<li>A <b>track</b> animates one property, such as <code>pos.z</code>, <code>color</code> or <code>glow</code>. Numbers, vectors and colors blend smoothly; switches change at the key.</li>
+<li>A <b>key</b> is a value at a time, with an <b>ease</b> toward the next key: <code>linear</code>, <code>in</code>, <code>out</code>, <code>inout</code>, <code>step</code>, <code>back</code> or <code>elastic</code>.</li>
+</ul>
+
+<h2>Tutorial: a floating lantern</h2>
+<ol class="steps">
+<li>Select a lantern and open the <b>Animation</b> tab (<kbd>Ctrl</kbd>+<kbd>6</kbd>).</li>
+<li>Press <b>REC</b>. While it is red, every change you make in the Inspector becomes a key at the playhead.</li>
+<li>Click the ruler at <b>0</b> to move the playhead there, then nudge <code>pos</code> z to 0. A clip appears with its first key.</li>
+<li>Click the ruler at <b>1.5</b> and set <code>pos</code> z to 2.</li>
+<li>Press REC again to stop recording, and press the play button in the Animation tab to preview. Switch the clip to <code>pingpong</code> so it bobs up and down.</li>
+<li>Click a key to select it and pick an ease, for example <code>inout</code>. Drag keys sideways to retime them; they snap to 0.05 seconds. The trash button deletes the selected key.</li>
+</ol>
+<div class="tip"><b>Without REC</b>Hover a property in the Inspector and click the diamond at the end of its row to key just that property. Double click a track lane to add a key at that time.</div>
+
+<h2>A window of its own</h2>
+<p>Press the float button at the right of the Animation header to turn it into a window you can move and resize over the view. The editor remembers where you left it. The arrow in its title bar docks it back.</p>
+<figure><img src="img/editor-floating.png" alt="Floating Animation window"></figure>
+
+<h2>Animation from scripts</h2>
+<p>Scripts can start tweens at runtime, for doors, pickups and UI. They use the same easing and are never saved into the scene.</p>
+<pre><code>tween(self, "pos.z", 4, 0.6, "out")</code></pre>
+<nav class="pager"><a class="prev" href="scenes.html"><small>Previous</small>Scenes and prefabs</a><a class="next" href="scripting.html"><small>Next</small>Lua scripting</a></nav>
+</main>
+</div>
+</body>
+</html>

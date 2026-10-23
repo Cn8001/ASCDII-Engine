@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The editor | ASCDII Engine</title>
+<link rel="icon" href="img/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="layout">
+<aside class="side">
+<a class="brand" href="index.html"><img src="img/logo.svg" alt=""><span>ASCDII Engine<small>0.0.1 docs</small></span></a>
+<h4>Start</h4>
+<a href="index.html">Welcome</a>
+<a href="install.html">Install</a>
+<a href="first-game.html">Your first game</a>
+<h4>Guides</h4>
+<a href="editor.html" class="on">The editor</a>
+<a href="scenes.html">Scenes and prefabs</a>
+<a href="animation.html">Animation</a>
+<a href="scripting.html">Lua scripting</a>
+<a href="rendering.html">Rendering</a>
+<a href="building.html">Build and release</a>
+<h4>Reference</h4>
+<a href="cli.html">CLI reference</a>
+<a href="go-api.html">Go API</a>
+</aside>
+<main>
+<div class="kicker">Guides</div>
+<h1>The editor</h1>
+<p class="lead">A guided tour of every panel. The layout follows Unity on purpose, so most of it should feel familiar.</p>
+<figure><img src="img/editor-main.png" alt="Editor layout"></figure>
+
+<h2>Toolbar</h2>
+<p>Left: the logo, the project name and version, buttons to open another project or close this one and return to the start screen, and the scene picker. The key next to it marks the open scene as the one a build starts with. Center: <b>Play</b>, <b>Step</b> (one frame while paused) and <b>Stop</b>. Right: undo, redo, save (a dot means unsaved changes) and <b>Build</b>.</p>
+
+<h2>Hierarchy</h2>
+<ul>
+<li>Every entity of the scene in a tree. Drag rows onto each other to parent them; drop on empty space to move to the root.</li>
+<li>Double click a name to rename. The eye hides an entity and its children.</li>
+<li>Right click for Add, Focus, Duplicate, Save prefab, Unpack and Delete.</li>
+<li>Prefab instances show a package icon in amber; their inner entities are listed in italics and cannot be edited directly.</li>
+<li>Select <b>Scene</b> at the top to edit the camera and the environment: time of day, sun, ambient light, sky and fog.</li>
+</ul>
+
+<h2>Scene and Game views</h2>
+<p>The <b>Scene</b> view has its own free camera, so looking around never changes your game. The <b>Game</b> view shows the scene camera, which is what players see. <b>Align</b> copies the Scene view into the game camera.</p>
+<table>
+<tr><th>Action</th><th>Input</th></tr>
+<tr><td>Pan</td><td>Left drag, or middle drag</td></tr>
+<tr><td>Orbit</td><td>Right drag</td></tr>
+<tr><td>Zoom</td><td>Wheel</td></tr>
+<tr><td>Select</td><td>Click</td></tr>
+<tr><td>Move on one axis</td><td>Drag the red (X), green (Y) or amber (height) arrow</td></tr>
+<tr><td>Move freely</td><td>Drag the square handle</td></tr>
+<tr><td>Place an asset</td><td>Drop a prefab or art tile from the Project window</td></tr>
+</table>
+<p>The view toolbar switches between <b>dots</b> (what a terminal shows) and <b>pixels</b> (the colors before Braille encoding), picks the cell size (smaller cells give more resolution) and toggles <b>Live</b>.</p>
+
+<h2>Inspector</h2>
+<p>Components are cards: <b>Transform</b> first, then the node (box, light, hero and so on), then behaviours. Behaviours have a checkbox to switch them off without losing their settings, and an X to remove them. <b>Add Component</b> searches behaviours and your Lua scripts, and can create a new script on the spot.</p>
+<p>Number labels are scrub handles: drag them sideways, hold <kbd>Shift</kbd> for fine steps. The diamond at the end of a row records an animation key for that property.</p>
+
+<h2>Pipeline</h2>
+<p>The second tab on the right lists the render passes by stage with a toggle, live timings and their settings. Drag passes to reorder them inside their stage. <a href="rendering.html">Rendering</a> covers what each one does.</p>
+
+<h2>Project, Console and Animation</h2>
+<figure><img src="img/editor-project.png" alt="Project window"><figcaption>The Project window: folders on the left, tiles on the right. Drag tiles into the view or onto the Hierarchy.</figcaption></figure>
+<ul>
+<li><b>Project</b>: scenes, prefabs, art and scripts of the project folder. Double click opens a scene, places a prefab or sprite, or opens a script in your code editor. <b>Create</b> makes a script or a scene. Files you change outside the editor are picked up automatically.</li>
+<li><b>Console</b>: messages from scripts and the engine. Filter by level, see repeats collapsed with a count, double click a script error to jump to the line.</li>
+<li><b>Animation</b>: clips and keys of the selection. It can float as its own window. See <a href="animation.html">Animation</a>.</li>
+</ul>
+
+<h2>Shortcuts</h2>
+<table>
+<tr><th>Keys</th><th>Action</th></tr>
+<tr><td><kbd>Space</kbd></td><td>Play or pause</td></tr>
+<tr><td><kbd>Esc</kbd></td><td>Stop</td></tr>
+<tr><td><kbd>Ctrl</kbd>+<kbd>S</kbd></td><td>Save scene</td></tr>
+<tr><td><kbd>Ctrl</kbd>+<kbd>Z</kbd>, <kbd>Ctrl</kbd>+<kbd>Y</kbd></td><td>Undo, redo</td></tr>
+<tr><td><kbd>Ctrl</kbd>+<kbd>D</kbd></td><td>Duplicate selection</td></tr>
+<tr><td><kbd>Del</kbd></td><td>Delete selection</td></tr>
+<tr><td><kbd>F</kbd></td><td>Frame selection</td></tr>
+<tr><td><kbd>Ctrl</kbd>+<kbd>6</kbd></td><td>Open the Animation tab</td></tr>
+<tr><td><kbd>Ctrl</kbd>+<kbd>B</kbd></td><td>Build</td></tr>
+</table>
+<div class="note"><b>Code editor</b>Scripts open in VS Code when the <code>code</code> command is available, otherwise in the system default program. Set <code>ASCDII_EDITOR</code> to use another one, for example <code>ASCDII_EDITOR="subl {file}:{line}"</code>.</div>
+<nav class="pager"><a class="prev" href="first-game.html"><small>Previous</small>Your first game</a><a class="next" href="scenes.html"><small>Next</small>Scenes and prefabs</a></nav>
+</main>
+</div>
+</body>
+</html>

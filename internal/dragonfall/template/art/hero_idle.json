@@ -1,0 +1,63 @@
+{
+  "name": "dragonfall_hero_idle",
+  "pivot": [
+    4,
+    7
+  ],
+  "palette": {
+    ".": {
+      "transparent": true
+    },
+    "h": {
+      "glyph": "^",
+      "fg": "#B7C6D1",
+      "bg": "#14252D"
+    },
+    "f": {
+      "glyph": "o",
+      "fg": "#F1D4B0",
+      "bg": "#14252D"
+    },
+    "e": {
+      "glyph": ":",
+      "fg": "#30231E",
+      "bg": "#D3B38A"
+    },
+    "b": {
+      "glyph": "#",
+      "fg": "#B9C0C9",
+      "bg": "#14252D"
+    },
+    "a": {
+      "glyph": "/",
+      "fg": "#A6B5BF",
+      "bg": "#14252D"
+    },
+    "c": {
+      "glyph": "~",
+      "fg": "#3FA8A0",
+      "bg": "#14252D"
+    },
+    "l": {
+      "glyph": "|",
+      "fg": "#D7E2E8",
+      "bg": "#14252D"
+    },
+    "s": {
+      "glyph": "!",
+      "fg": "#D6B45A",
+      "bg": "#14252D"
+    }
+  },
+  "rows": [
+    "...hhh...",
+    "..hfffe..",
+    "...bbbb..",
+    "..abbbba.",
+    ".ccbbbbcc",
+    ".cclll.cc",
+    "..c.l.c..",
+    "..l...l..",
+    "..s...s.."
+  ]
+}

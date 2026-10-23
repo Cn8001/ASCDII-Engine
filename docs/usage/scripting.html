@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lua scripting | ASCDII Engine</title>
+<link rel="icon" href="img/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="layout">
+<aside class="side">
+<a class="brand" href="index.html"><img src="img/logo.svg" alt=""><span>ASCDII Engine<small>0.0.1 docs</small></span></a>
+<h4>Start</h4>
+<a href="index.html">Welcome</a>
+<a href="install.html">Install</a>
+<a href="first-game.html">Your first game</a>
+<h4>Guides</h4>
+<a href="editor.html">The editor</a>
+<a href="scenes.html">Scenes and prefabs</a>
+<a href="animation.html">Animation</a>
+<a href="scripting.html" class="on">Lua scripting</a>
+<a href="rendering.html">Rendering</a>
+<a href="building.html">Build and release</a>
+<h4>Reference</h4>
+<a href="cli.html">CLI reference</a>
+<a href="go-api.html">Go API</a>
+</aside>
+<main>
+<div class="kicker">Guides</div>
+<h1>Lua scripting</h1>
+<p class="lead">Game logic lives in Lua files in your project's scripts folder. Write them in your own code editor; the engine reloads a script the moment you save it.</p>
+<h2>Your first script</h2>
+<ol class="steps">
+<li>Select an entity, press <b>Add Component</b> and choose <b>New script</b>. Name it <code>door</code>. The editor creates <code>scripts/door.lua</code>, attaches it and opens it in your code editor.</li>
+<li>Replace the file with the code below and save.</li>
+<li>Press play, walk close to the door and press <kbd>E</kbd>.</li>
+</ol>
+<pre><code><span class="c">-- scripts/door.lua</span>
+<span class="k">function</span> start(self)
+  self.open = false
+<span class="k">end</span>
+
+<span class="k">function</span> key(self, k)
+  <span class="k">if</span> k == <span class="s">"e"</span> <span class="k">then</span>
+    self.open = <span class="k">not</span> self.open
+    tween(self, <span class="s">"pos.z"</span>, self.open <span class="k">and</span> 4 <span class="k">or</span> 0, 0.6)
+    <span class="k">return true</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+
+<span class="k">function</span> update(self, dt)
+  <span class="k">local</span> hero = find(<span class="s">"hero"</span>)
+  <span class="k">if</span> hero <span class="k">and</span> dist(self, hero) &lt; 3 <span class="k">then</span>
+    say(<span class="s">"press E"</span>, 0.3)
+  <span class="k">end</span>
+<span class="k">end</span></code></pre>
+<p><code>self</code> is the entity the script is attached to. Its methods come from the engine; any other field you set on it, like <code>self.open</code>, is your own state.</p>
+
+<h2>Hooks</h2>
+<table>
+<tr><th>Hook</th><th>When</th></tr>
+<tr><td><code>start(self)</code></td><td>Once, before the first update, and again after a reload.</td></tr>
+<tr><td><code>update(self, dt)</code></td><td>Every simulation step; <code>dt</code> is in seconds.</td></tr>
+<tr><td><code>key(self, k)</code></td><td>On a key press. Names are letters, <code>space</code>, <code>enter</code>, <code>up</code>, <code>down</code>, <code>left</code>, <code>right</code>. Return <code>true</code> to stop other behaviours from also handling it.</td></tr>
+</table>
+
+<h2>Entity methods</h2>
+<table>
+<tr><th>Method</th><th>Does</th></tr>
+<tr><td><code>e:get(prop)</code></td><td>Read any Inspector property: <code>"awake"</code>, <code>"pos"</code>, <code>"glow"</code>, <code>"player.speed"</code>. Vectors come back as tables with x, y, z; colors as hex strings.</td></tr>
+<tr><td><code>e:set(prop, value)</code></td><td>Write a property, with the same names.</td></tr>
+<tr><td><code>e:pos()</code></td><td>Returns x, y, z.</td></tr>
+<tr><td><code>e:moveTo(x, y, z)</code>, <code>e:move(dx, dy, dz)</code></td><td>Place or nudge. z is optional.</td></tr>
+<tr><td><code>e:name()</code></td><td>The entity name.</td></tr>
+<tr><td><code>e:tween(prop, to, seconds, ease)</code></td><td>Animate from the current value.</td></tr>
+<tr><td><code>e:say(text, seconds)</code></td><td>Show a floating label over the entity.</td></tr>
+<tr><td><code>e:destroy()</code></td><td>Remove the entity.</td></tr>
+</table>
+
+<h2>Global functions</h2>
+<table>
+<tr><th>Function</th><th>Does</th></tr>
+<tr><td><code>find(name)</code></td><td>The first entity with that name, or nil.</td></tr>
+<tr><td><code>dist(a, b)</code></td><td>Distance on the ground between two entities.</td></tr>
+<tr><td><code>tween(e, prop, to, seconds, ease)</code></td><td>Same as <code>e:tween</code>.</td></tr>
+<tr><td><code>say(text, seconds)</code></td><td>Floating label over the script's own entity. Calling it every frame with the same text just keeps it visible.</td></tr>
+<tr><td><code>spawn(prefab, x, y, z)</code></td><td>Instantiate a prefab, returns the new entity.</td></tr>
+<tr><td><code>log(...)</code></td><td>Write to the Console.</td></tr>
+<tr><td><code>time()</code></td><td>Scene time in seconds.</td></tr>
+<tr><td><code>hour()</code>, <code>setHour(h)</code></td><td>Read or set the time of day, 0 to 24.</td></tr>
+<tr><td><code>quit()</code></td><td>End the game.</td></tr>
+</table>
+<p>The standard Lua <code>math</code>, <code>string</code> and <code>table</code> libraries are available. Scripts run in a sandbox: there is no file, network or OS access.</p>
+
+<h2>Errors and hot reload</h2>
+<p>A runtime error stops only that script and appears in the Console with the file and line, for example <code>scripts/door.lua:12: attempt to index a nil value</code>. Double click it to jump to the line. Fix the file, save, and the script reloads and runs <code>start</code> again.</p>
+<div class="note"><b>Scripts and play mode</b>Scripts run in play mode and in built games. In the editor's Live preview they do not run, so editing never moves things by logic.</div>
+<nav class="pager"><a class="prev" href="animation.html"><small>Previous</small>Animation</a><a class="next" href="rendering.html"><small>Next</small>Rendering</a></nav>
+</main>
+</div>
+</body>
+</html>

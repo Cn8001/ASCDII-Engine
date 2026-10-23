@@ -1,0 +1,364 @@
+{
+  "version": 1,
+  "name": "Dragonfall",
+  "camera": {
+    "target": [
+      114,
+      79.5,
+      0
+    ],
+    "span": 38,
+    "pitch": 52,
+    "yaw": 0,
+    "anchorX": 0.5,
+    "anchorY": 0.6
+  },
+  "env": {
+    "hour": 16.5,
+    "auto": true,
+    "sun": {
+      "dir": [
+        -0.7953758126547955,
+        0.4734997167553263,
+        0.37838516735774613
+      ],
+      "color": "#ffe3c2",
+      "intensity": 1.05
+    },
+    "ambient": {
+      "sky": "#c3c8c9",
+      "ground": "#605846",
+      "intensity": 0.58
+    },
+    "sky": "#8095a0",
+    "fog": "#abb0b0",
+    "exposure": 1
+  },
+  "clips": [
+    {
+      "name": "bob",
+      "target": "crystal",
+      "mode": "pingpong",
+      "tracks": [
+        {
+          "prop": "pos.z",
+          "keys": [
+            {
+              "t": 0,
+              "v": 0.6,
+              "ease": "inout"
+            },
+            {
+              "t": 2.2,
+              "v": 1.6
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "entities": [
+    {
+      "name": "terrain",
+      "solid": true,
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "node": {
+        "kind": "df.terrain",
+        "props": {
+          "seed": 2026,
+          "water": -0.9
+        }
+      }
+    },
+    {
+      "name": "forest",
+      "solid": true,
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "node": {
+        "kind": "df.forest",
+        "props": {
+          "density": 1,
+          "seed": 2026,
+          "sway": 0.35
+        }
+      }
+    },
+    {
+      "name": "grass",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "node": {
+        "kind": "df.grass",
+        "props": {
+          "density": 0.85,
+          "detail": false,
+          "seed": 2026
+        }
+      }
+    },
+    {
+      "name": "bridge",
+      "pos": [
+        122,
+        84,
+        0
+      ],
+      "node": {
+        "kind": "df.bridge",
+        "props": {
+          "length": 9,
+          "width": 6,
+          "wood": "#846240"
+        }
+      }
+    },
+    {
+      "name": "castle",
+      "solid": true,
+      "pos": [
+        104,
+        70,
+        0
+      ],
+      "node": {
+        "kind": "df.castle",
+        "props": {
+          "banner": "#b0383e",
+          "roof": "#3e5266",
+          "stone": "#76787c",
+          "torches": true
+        }
+      }
+    },
+    {
+      "name": "dragon",
+      "solid": true,
+      "pos": [
+        143,
+        73,
+        0
+      ],
+      "flip": true,
+      "node": {
+        "kind": "df.dragon",
+        "props": {
+          "awake": false,
+          "fire": true
+        }
+      },
+      "behaviours": [
+        {
+          "kind": "toggle",
+          "props": {
+            "key": "e",
+            "prop": "awake",
+            "target": ""
+          }
+        },
+        {
+          "kind": "script",
+          "props": {
+            "file": "01a160e8-5000-7f01-bcef-4e2bc1400b4b"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hero",
+      "pos": [
+        114,
+        79.5,
+        0
+      ],
+      "node": {
+        "kind": "df.hero",
+        "props": {
+          "speed": 1,
+          "walking": false
+        }
+      },
+      "behaviours": [
+        {
+          "kind": "player",
+          "props": {
+            "down": "s",
+            "follow": true,
+            "followRate": 5,
+            "gravity": 26,
+            "jump": "space",
+            "jumpSpeed": 9,
+            "left": "a",
+            "radius": 0.6,
+            "right": "d",
+            "speed": 7,
+            "up": "w"
+          }
+        }
+      ]
+    },
+    {
+      "name": "road",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "children": [
+        {
+          "name": "lantern 1",
+          "solid": true,
+          "pos": [
+            100,
+            76.3,
+            0
+          ],
+          "prefab": "01a160e8-5000-7dc8-8295-00ff6a1eb491"
+        },
+        {
+          "name": "lantern 2",
+          "solid": true,
+          "pos": [
+            110,
+            78,
+            0
+          ],
+          "prefab": "01a160e8-5000-7dc8-8295-00ff6a1eb491"
+        },
+        {
+          "name": "lantern 3",
+          "solid": true,
+          "pos": [
+            118,
+            79.2,
+            0
+          ],
+          "prefab": "01a160e8-5000-7dc8-8295-00ff6a1eb491"
+        },
+        {
+          "name": "lantern 4",
+          "solid": true,
+          "pos": [
+            130,
+            79.4,
+            0
+          ],
+          "prefab": "01a160e8-5000-7dc8-8295-00ff6a1eb491"
+        }
+      ]
+    },
+    {
+      "name": "crystal",
+      "pos": [
+        110,
+        106,
+        0.6
+      ],
+      "node": {
+        "kind": "blob",
+        "props": {
+          "color": "#8cd6e8",
+          "glow": 0.8,
+          "radius": 0.9
+        }
+      },
+      "behaviours": [
+        {
+          "kind": "script",
+          "props": {
+            "file": "01a160e8-5000-77a9-954f-5209fb1ab95f"
+          }
+        }
+      ],
+      "children": [
+        {
+          "name": "shine",
+          "pos": [
+            0,
+            0,
+            1.2
+          ],
+          "node": {
+            "kind": "light",
+            "props": {
+              "color": "#78c8ff",
+              "flicker": 0.05,
+              "intensity": 1.2,
+              "radius": 12
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "hud",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "node": {
+        "kind": "df.hud",
+        "props": {
+          "seed": 2026,
+          "showHelp": false,
+          "showMap": false,
+          "title": "DRAGONFALL"
+        }
+      },
+      "behaviours": [
+        {
+          "kind": "toggle",
+          "props": {
+            "key": "m",
+            "prop": "showMap",
+            "target": ""
+          }
+        },
+        {
+          "kind": "toggle",
+          "props": {
+            "key": "h",
+            "prop": "showHelp",
+            "target": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "rules",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "behaviours": [
+        {
+          "kind": "daynight",
+          "props": {
+            "day": 16.5,
+            "key": "t",
+            "night": 0.5,
+            "speed": 7
+          }
+        },
+        {
+          "kind": "quit",
+          "props": {
+            "key": "q"
+          }
+        }
+      ]
+    }
+  ]
+}
