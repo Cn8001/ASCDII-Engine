@@ -159,6 +159,9 @@ func (v *VM) installGlobals() {
 			if err != nil {
 				L.RaiseError("%v", err)
 			}
+			if L.GetTop() >= 3 {
+				v.setParent(L, o, L.Get(3), true)
+			}
 			L.Push(v.handle(o))
 			return 1
 		},

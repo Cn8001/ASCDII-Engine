@@ -1,8 +1,10 @@
 package vm
 
 import (
-	lua "github.com/yuin/gopher-lua"
+	"math"
 	"slices"
+
+	lua "github.com/yuin/gopher-lua"
 
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/geom"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/prop"
@@ -112,16 +114,32 @@ func (v *VM) field(o *scene.GameObject, k string) (lua.LValue, bool) {
 		return lua.LBool(o.Visible), true
 	case "solid":
 		return lua.LBool(o.Solid), true
-	case "position":
-		return v.toLua(o.Local.Pos), true
-	case "world_position":
+	case "position", "world_position":
 		return v.toLua(o.World().Pos), true
+	case "local_position":
+		return v.toLua(o.Local.Pos), true
 	case "rotation":
+		return v.toLua(o.World().Rot), true
+	case "local_rotation":
 		return v.toLua(o.Local.Rot), true
-	case "scale":
+	case "scale", "local_scale":
 		return v.toLua(o.Local.Scale), true
+	case "world_scale":
+		return v.toLua(o.World().Scale), true
+	case "forward":
+		return v.toLua(o.World().Dir(geom.V3(1, 0, 0))), true
+	case "right":
+		return v.toLua(o.World().Dir(geom.V3(0, 1, 0))), true
+	case "up":
+		return v.toLua(o.World().Dir(geom.V3(0, 0, 1))), true
 	case "parent":
 		return v.handle(o.Parent()), true
+	case "root":
+		r := o
+		for r.Parent() != nil && r.Parent() != v.ctx.Scene.Root {
+			r = r.Parent()
+		}
+		return v.handle(r), true
 	case "prefab":
 		if o.Prefab == "" {
 			return lua.LNil, true
@@ -150,7 +168,7 @@ func (v *VM) setField(L *lua.LState, o *scene.GameObject, k string, val lua.LVal
 		o.Visible = lua.LVAsBool(val)
 	case "solid":
 		o.Solid = lua.LVAsBool(val)
-	case "position", "rotation", "scale":
+	case "position", "rotation", "local_position", "local_rotation", "scale", "local_scale":
 		t, ok := val.(*lua.LTable)
 		if !ok {
 			L.RaiseError("%s needs a vec3", k)
@@ -158,26 +176,39 @@ func (v *VM) setField(L *lua.LState, o *scene.GameObject, k string, val lua.LVal
 		p := toVec(t)
 		switch k {
 		case "position":
-			o.Local.Pos = p
+			w := o.World()
+			w.Pos = p
+			o.SetWorld(w)
 		case "rotation":
+			w := o.World()
+			w.Rot = p
+			o.SetWorld(w)
+		case "local_position":
+			o.Local.Pos = p
+		case "local_rotation":
 			o.Local.Rot = p
 		default:
 			o.Local.Scale = p
 		}
 	case "parent":
-		var parent uint64
-		if t, ok := val.(*lua.LTable); ok {
-			if p := v.objectOf(t); p != nil {
-				parent = p.ID
-			}
-		}
-		if err := v.ctx.Scene.Reparent(o.ID, parent, -1); err != nil {
-			L.RaiseError("%v", err)
-		}
+		v.setParent(L, o, val, true)
 	default:
 		return false
 	}
 	return true
+}
+
+// setParent moves o under the object behind val, or to the top for nil.
+func (v *VM) setParent(L *lua.LState, o *scene.GameObject, val lua.LValue, keepWorld bool) {
+	var parent uint64
+	if t, ok := val.(*lua.LTable); ok {
+		if p := v.objectOf(t); p != nil {
+			parent = p.ID
+		}
+	}
+	if err := v.ctx.Scene.Reparent(o.ID, parent, -1, keepWorld); err != nil {
+		L.RaiseError("%v", err)
+	}
 }
 
 func (v *VM) installObject() {
@@ -328,13 +359,62 @@ func (v *VM) installMethods() {
 		},
 		"move": func(L *lua.LState) int {
 			o := v.checkObject(L, 1)
-			o.Local.Pos = o.Local.Pos.Add(v.checkVec(L, 2))
+			w := o.World()
+			w.Pos = w.Pos.Add(v.checkVec(L, 2))
+			o.SetWorld(w)
 			return 0
 		},
 		"move_to": func(L *lua.LState) int {
 			o := v.checkObject(L, 1)
-			o.Local.Pos = v.checkVec(L, 2)
+			w := o.World()
+			w.Pos = v.checkVec(L, 2)
+			o.SetWorld(w)
 			return 0
+		},
+		"set_parent": func(L *lua.LState) int {
+			v.setParent(L, v.checkObject(L, 1), L.Get(2), L.OptBool(3, true))
+			return 0
+		},
+		"translate": func(L *lua.LState) int {
+			o := v.checkObject(L, 1)
+			d := v.checkVec(L, 2)
+			w := o.World()
+			if L.OptString(3, "self") != "world" {
+				d = w.Dir(d)
+			}
+			w.Pos = w.Pos.Add(d)
+			o.SetWorld(w)
+			return 0
+		},
+		"rotate": func(L *lua.LState) int {
+			o := v.checkObject(L, 1)
+			o.Local.Rot = o.Local.Rot.Add(v.checkVec(L, 2))
+			return 0
+		},
+		"look_at": func(L *lua.LState) int {
+			o := v.checkObject(L, 1)
+			var at geom.Vec3
+			if t, ok := L.Get(2).(*lua.LTable); ok && v.objectOf(t) != nil {
+				at = v.objectOf(t).World().Pos
+			} else {
+				at = v.checkVec(L, 2)
+			}
+			w := o.World()
+			d := at.Sub(w.Pos)
+			if d.X != 0 || d.Y != 0 {
+				w.Rot.Z = math.Atan2(d.Y, d.X) * 180 / math.Pi
+				o.SetWorld(w)
+			}
+			return 0
+		},
+		"transform_point": func(L *lua.LState) int {
+			L.Push(v.toLua(v.checkObject(L, 1).World().Apply(v.checkVec(L, 2))))
+			return 1
+		},
+		"inverse_transform_point": func(L *lua.LState) int {
+			w := v.checkObject(L, 1).World()
+			L.Push(v.toLua(w.Inward(v.checkVec(L, 2).Sub(w.Pos))))
+			return 1
 		},
 		"distance": func(L *lua.LState) int {
 			a, b := v.checkObject(L, 1).World().Pos, v.checkObject(L, 2).World().Pos

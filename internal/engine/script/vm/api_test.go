@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	lua "github.com/yuin/gopher-lua"
+
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/animator"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/asset"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/color"
@@ -286,6 +288,35 @@ end`})
 	// Assert
 	if o.Local.Pos != geom.V3(3, 4, 4) || o.Component(Kind).(*Script).self.RawGetString("len").String() != "3" {
 		t.Fatalf("pos %+v logs %v", o.Local.Pos, w.log.lines)
+	}
+}
+
+func TestUnit_ParentingKeepsWorldPosition(t *testing.T) {
+	// Arrange
+	w := newWorld(t, map[string]string{"scripts/p.lua": `
+function start(self)
+  local arm = find("arm")
+  self.before = self.position
+  self:set_parent(arm)
+  self.after = self.position
+  self.local_pos = self.local_position
+  arm.local_rotation = vec3(0, 0, 90)
+  self.turned = self.position
+  self.forward_x = self.forward.x
+end`})
+	arm := w.s.Add("arm", nil).At(10, 0, 0)
+	o := w.s.Add("p", w.script(t, "scripts/p.lua")).At(12, 0, 0)
+
+	// Act
+	w.run(1)
+	self := o.Component(Kind).(*Script).self
+	vec := func(k string) geom.Vec3 { return toVec(self.RawGetString(k).(*lua.LTable)) }
+
+	// Assert
+	near := func(a, b geom.Vec3) bool { return a.Sub(b).Len() < 1e-9 }
+	if o.Parent() != arm || !near(vec("after"), geom.V3(12, 0, 0)) || !near(vec("local_pos"), geom.V3(2, 0, 0)) ||
+		!near(vec("turned"), geom.V3(10, 2, 0)) || math.Abs(float64(self.RawGetString("forward_x").(lua.LNumber))) > 1e-9 {
+		t.Fatalf("after %+v local %+v turned %+v logs %v", vec("after"), vec("local_pos"), vec("turned"), w.log.lines)
 	}
 }
 

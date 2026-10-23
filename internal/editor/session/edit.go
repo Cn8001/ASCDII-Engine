@@ -355,7 +355,7 @@ func (s *Session) Remove(id uint64) error {
 }
 
 func (s *Session) Reparent(id, parent uint64, index int) error {
-	return s.edit1(id, "", func(sc *scene.Scene, e *scene.GameObject) error { return sc.Reparent(e.ID, parent, index) })
+	return s.edit1(id, "", func(sc *scene.Scene, e *scene.GameObject) error { return sc.Reparent(e.ID, parent, index, true) })
 }
 
 func (s *Session) Unpack(id uint64) error {
