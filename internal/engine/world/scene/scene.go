@@ -12,6 +12,7 @@ import (
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/light"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/view"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/anim"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/physics"
 )
 
 // Prefabs resolves a prefab name to a fresh entity tree.
@@ -143,7 +144,9 @@ func (s *Scene) Blocked(p geom.Vec2, ignore *GameObject) bool {
 		if e == ignore {
 			return false
 		}
-		if e.Solid {
+		if solid, ok := colliding(e, p); ok {
+			hit = solid
+		} else if e.Solid {
 			hit = blocks(e, p)
 		}
 		return !hit
@@ -153,6 +156,23 @@ func (s *Scene) Blocked(p geom.Vec2, ignore *GameObject) bool {
 
 // blocks asks components with a precise shape first; an object with none
 // blocks with its bounds.
+// colliding answers for objects with colliders, whose shapes replace the
+// Solid flag; ok is false when o has none.
+func colliding(o *GameObject, p geom.Vec2) (bool, bool) {
+	t, has := o.World(), false
+	for _, c := range o.Components {
+		col, isCol := c.(Collider)
+		if !isCol || !o.Enabled(c) || col.IsTrigger() {
+			continue
+		}
+		has = true
+		if physics.Contains(col.Shape(o, t), p) {
+			return true, true
+		}
+	}
+	return false, has
+}
+
 func blocks(o *GameObject, p geom.Vec2) bool {
 	t, precise := o.World(), false
 	for _, c := range o.Components {
@@ -201,11 +221,20 @@ func (s *Scene) Update(c *Ctx, dt float64, keys []input.Key) error {
 	return s.ApplyClips()
 }
 
+func driven(o *GameObject) bool {
+	for _, c := range o.Components {
+		if d, ok := c.(ClipDriver); ok && o.Enabled(c) && d.DrivesClips() {
+			return true
+		}
+	}
+	return false
+}
+
 func (s *Scene) ApplyClips() error {
 	var errs []error
 	for _, c := range s.Clips {
 		e := s.Find(c.Target)
-		if e == nil {
+		if e == nil || driven(e) {
 			continue
 		}
 		if err := c.Apply(s.Time, e); err != nil {

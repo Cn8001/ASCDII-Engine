@@ -47,6 +47,7 @@ func (s *Shadows) Set(n string, v any) error {
 // Run stretches contact shadows away from the sun and darkens only dots lying
 // near the caster's ground plane, so the caster never shadows itself.
 func (s *Shadows) Run(f *Frame) {
+	f.useSun()
 	sun := f.Env.Sun.Dir.Norm()
 	lean := geom.V2(-sun.X, -sun.Y).Scale(1 / math.Max(sun.Z, .35))
 	for _, c := range f.Ctx.Shadows {
@@ -83,6 +84,7 @@ type Lit struct{}
 func (*Lit) Name() string { return "lighting" }
 func (*Lit) Stage() Stage { return Lighting }
 func (*Lit) Run(f *Frame) {
+	f.useSun()
 	sh := light.NewShader(f.Env, f.Ctx.Lights, f.Time)
 	dots, w := f.Buf.Dots(), f.Buf.W
 	par.Rows(f.Buf.H, func(lo, hi int) {

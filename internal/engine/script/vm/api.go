@@ -187,6 +187,19 @@ func (v *VM) installGlobals() {
 			L.Push(lua.LNumber(v.ctx.TimeScale()))
 			return 1
 		},
+		"play_sound": func(L *lua.LState) int {
+			if v.ctx.Audio == nil {
+				return 0
+			}
+			ref := L.CheckString(1)
+			if r := v.lib.Ref(ref); r != "" {
+				ref = r
+			}
+			if _, err := v.ctx.Audio.Play(ref, float64(L.OptNumber(2, 1)), false); err != nil {
+				L.RaiseError("%v", err)
+			}
+			return 0
+		},
 		"tween": func(L *lua.LState) int { return v.tween(L, 1) },
 		"say":   func(L *lua.LState) int { return v.say(L, 1) },
 		"quit": func(L *lua.LState) int {

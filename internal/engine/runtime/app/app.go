@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/asset"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/audio"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/input"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/platform"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/platform/terminal"
@@ -26,6 +27,9 @@ type Options struct {
 	FPS        int
 	Modules    []project.Module
 	Now        func() time.Time
+	// Speaker plays the game's sound stream; nil runs silent. Injected so
+	// only the terminal player links the sound device.
+	Speaker func(r io.Reader) (io.Closer, error)
 }
 
 func (o Options) withDefaults() Options {
@@ -59,7 +63,7 @@ type Engine struct {
 // NewPipeline is the standard chain plus the scene passes bound to get, so the
 // caller can swap scenes without rebuilding the pipeline.
 func NewPipeline(get func() *scene.Scene, now func() time.Time) *pipeline.Pipeline {
-	passes := append(pipeline.Standard(), &scene.Geometry{Scene: get}, &scene.Cells{Scene: get})
+	passes := append(pipeline.Standard(), &scene.Geometry{Scene: get}, &scene.Painted{Scene: get}, &scene.Cells{Scene: get})
 	return pipeline.New(now, passes...)
 }
 
@@ -103,6 +107,20 @@ func Open(ctx context.Context, fsys fs.FS, o Options) (*Engine, error) {
 	e := build(o.withDefaults(), p.Registry, p.Library, s)
 	e.proj = p
 	return e, nil
+}
+
+// loadSound decodes a sound asset of the open project.
+func (e *Engine) loadSound(ref string) (audio.Sound, error) {
+	if e.proj == nil {
+		return audio.Sound{}, fmt.Errorf("sound %s: %w", ref, asset.ErrNotFound)
+	}
+	p := e.lib.Resolve(ref)
+	f, err := e.proj.FS.Open(p)
+	if err != nil {
+		return audio.Sound{}, fmt.Errorf("sound %s: %w", p, err)
+	}
+	defer f.Close()
+	return audio.Decode(f, p)
 }
 
 func (e *Engine) Scene() *scene.Scene          { return e.scn }
@@ -172,6 +190,16 @@ func (e *Engine) RunOn(ctx context.Context, d platform.Display, in platform.Inpu
 		return err
 	}
 	defer d.Close(context.WithoutCancel(ctx))
+	if e.opts.Speaker != nil {
+		mix := audio.NewMixer(e.loadSound)
+		if sp, err := e.opts.Speaker(mix); err == nil {
+			e.ctx.Audio = mix
+			defer sp.Close()
+			defer mix.StopAll()
+		} else {
+			e.ctx.Logf("error", "audio", "%v", err) // a game without sound beats no game
+		}
+	}
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	ticker := time.NewTicker(time.Second / time.Duration(e.opts.FPS))

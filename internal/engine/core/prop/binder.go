@@ -187,6 +187,14 @@ func (b *Binder) Material(name string, p *string) *Binder {
 	return b.text(Prop{Name: name, Type: MatRef}, p)
 }
 
+func (b *Binder) Controller(name string, p *string) *Binder {
+	return b.text(Prop{Name: name, Type: CtrlRef}, p)
+}
+
+func (b *Binder) Audio(name string, p *string) *Binder {
+	return b.text(Prop{Name: name, Type: AudioRef}, p)
+}
+
 func (b *Binder) Prefab(name string, p *string) *Binder {
 	return b.text(Prop{Name: name, Type: PrefabRef}, p)
 }

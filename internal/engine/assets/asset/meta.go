@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -24,8 +25,23 @@ type Meta struct {
 	Import json.RawMessage `json:"import,omitempty"` // per kind import settings, such as texture size
 }
 
+// ReadMeta reads an asset's .meta, or its entry in the asset index of a
+// built game, which ships no .meta files.
 func ReadMeta(fsys fs.FS, asset string) (Meta, error) {
+	return readMeta(fsys, asset, nil)
+}
+
+// readMeta takes an index already read, so listing a built game parses it once.
+func readMeta(fsys fs.FS, asset string, idx Index) (Meta, error) {
 	b, err := fs.ReadFile(fsys, asset+MetaExt)
+	if errors.Is(err, fs.ErrNotExist) {
+		if idx == nil {
+			idx, _ = ReadIndex(fsys)
+		}
+		if m, ok := idx[asset]; ok {
+			return m, nil
+		}
+	}
 	if err != nil {
 		return Meta{}, err
 	}
@@ -37,6 +53,38 @@ func ReadMeta(fsys fs.FS, asset string) (Meta, error) {
 		return Meta{}, fmt.Errorf("meta %s: %w", asset, guid.ErrInvalid)
 	}
 	return m, nil
+}
+
+// IndexFile replaces the .meta files of a built game: every asset's id and
+// import settings in one file.
+const IndexFile = "assets.index"
+
+type Index map[string]Meta
+
+// Write adds the index to a pak being written.
+func (idx Index) Write(z interface {
+	Create(name string) (io.Writer, error)
+}) error {
+	w, err := z.Create(IndexFile)
+	if err != nil {
+		return fmt.Errorf("write index: %w", err)
+	}
+	if err := json.NewEncoder(w).Encode(idx); err != nil {
+		return fmt.Errorf("write index: %w", err)
+	}
+	return nil
+}
+
+func ReadIndex(fsys fs.FS) (Index, error) {
+	b, err := fs.ReadFile(fsys, IndexFile)
+	if err != nil {
+		return nil, err
+	}
+	var idx Index
+	if err := json.Unmarshal(b, &idx); err != nil {
+		return nil, fmt.Errorf("read index: %w", err)
+	}
+	return idx, nil
 }
 
 // MetaBytes is the file content of a .meta for id.

@@ -316,10 +316,12 @@
             {
               "kind": "light",
               "props": {
+                "angle": 50,
                 "color": "#78c8ff",
                 "flicker": 0.05,
                 "intensity": 1.2,
-                "radius": 12
+                "radius": 12,
+                "type": "point"
               }
             }
           ]

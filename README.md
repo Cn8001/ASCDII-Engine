@@ -103,5 +103,5 @@ rendering, building and the Go API.
 `internal/engine/{core,render,world,assets,script,platform,runtime}`, the
 sample content in `internal/dragonfall`, the editor backend in
 `internal/editor`, the UI in `frontend/`, programs in `cmd/` (the terminal
-menu is `cmd/launcher`). `docs/usage/architecture.html` explains the modules
+menu is `cmd/ascdii/menu`). `docs/usage/architecture.html` explains the modules
 and the display backend contract. See `CLAUDE.md` for rules.

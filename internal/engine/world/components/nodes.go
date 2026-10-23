@@ -10,6 +10,7 @@ import (
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/geom"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/prop"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/draw"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/light"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/scene"
 )
 
@@ -42,6 +43,13 @@ func Register(r *scene.Registry, lib *asset.Library) {
 	r.Register("emitter", func() scene.Component { return NewEmitter() }, obj("effects", "Particles"))
 	r.Register("label", func() scene.Component { return NewLabel("label") }, obj("ui", "Text"))
 	r.Register("sprite", func() scene.Component { return NewSprite(lib, "") }, obj("ui", "Sprite"))
+	r.Register("audio_source", func() scene.Component { return NewAudioSource() }, scene.Meta{Category: "audio", Label: "Audio Source"})
+	r.Register("box_collider", func() scene.Component { return NewBoxCollider() }, scene.Meta{Category: "physics", Label: "Box Collider"})
+	r.Register("circle_collider", func() scene.Component { return NewCircleCollider() }, scene.Meta{Category: "physics", Label: "Circle Collider"})
+	r.Register("mesh_collider", func() scene.Component { return &MeshCollider{} }, scene.Meta{Category: "physics", Label: "Mesh Collider"})
+	r.Register("rigidbody", func() scene.Component { return NewRigidbody() }, scene.Meta{Category: "physics", Label: "Rigidbody"})
+	r.Register("paint", func() scene.Component { return &Paint{} }, scene.Meta{Category: "3d", Label: "Paint"})
+	r.Register("animator", func() scene.Component { return NewAnimator(lib) }, scene.Meta{Category: "logic", Label: "Animator"})
 	r.Register("player", func() scene.Component { return NewPlayer() }, scene.Meta{Category: "logic", Label: "Player"})
 	r.Register("toggle", func() scene.Component { return NewToggle("e", "", "visible") }, scene.Meta{Category: "logic", Label: "Toggle"})
 	r.Register("daynight", func() scene.Component { return NewDayNight() }, scene.Meta{Category: "logic", Label: "Day Night"})
@@ -353,26 +361,46 @@ func (w *Water) Draw(c *draw.Context, t scene.Transform) {
 }
 
 type Light struct {
+	Type      string // point, spot or directional
 	Radius    float64
 	Color     color.Color
 	Intensity float64
 	Flicker   float64
+	Angle     float64 // a spot's full cone in degrees
 }
 
 func NewLight(r float64, c color.Color) *Light {
-	return &Light{Radius: r, Color: c, Intensity: 1.2, Flicker: .15}
+	return &Light{Type: "point", Radius: r, Color: c, Intensity: 1.2, Flicker: .15, Angle: 50}
 }
 
 func (*Light) Kind() string { return "light" }
 func (l *Light) bind() *prop.Binder {
-	return prop.Bind().Float("radius", &l.Radius, .5, 200).Color("color", &l.Color).
-		Float("intensity", &l.Intensity, 0, 5).Float("flicker", &l.Flicker, 0, 1)
+	return prop.Bind().Enum("type", &l.Type, "point", "spot", "directional").Float("radius", &l.Radius, .5, 200).Color("color", &l.Color).
+		Float("intensity", &l.Intensity, 0, 5).Float("flicker", &l.Flicker, 0, 1).Float("angle", &l.Angle, 1, 170)
 }
 func (l *Light) Props() []prop.Prop        { return l.bind().Props() }
 func (l *Light) Set(n string, v any) error { return l.bind().Set(n, v) }
+
+// Bounds is empty for a directional light, which lights everything and so
+// must never be culled.
 func (l *Light) Bounds(t scene.Transform) geom.AABB {
+	if l.Type == "directional" {
+		return geom.AABB{}
+	}
 	return geom.Footprint(t.Pos.Sub(geom.V3(0, 0, l.Radius)), geom.V3(l.Radius*2, l.Radius*2, l.Radius*2))
 }
+
+// Draw aims spot and directional lights down, turned by the object's rotation.
 func (l *Light) Draw(c *draw.Context, t scene.Transform) {
-	c.Light(lightAt(t.Pos, l.Radius, l.Color, l.Intensity, l.Flicker))
+	aim := geom.V3(0, 0, -1).RotateEuler(t.Rot)
+	switch l.Type {
+	case "directional":
+		c.Sun = &light.Sun{Dir: aim.Scale(-1), Color: l.Color, Intensity: l.Intensity}
+	case "spot":
+		p := lightAt(t.Pos, l.Radius, l.Color, l.Intensity, l.Flicker)
+		p.Dir, p.Cone = aim, math.Cos(l.Angle/2*math.Pi/180)
+		c.Light(p)
+	default:
+		c.Light(lightAt(t.Pos, l.Radius, l.Color, l.Intensity, l.Flicker))
+	}
 }

@@ -51,6 +51,137 @@ export namespace anim {
 
 }
 
+export namespace animator {
+	
+	export class Cond {
+	    param: string;
+	    op?: string;
+	    value?: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new Cond(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.param = source["param"];
+	        this.op = source["op"];
+	        this.value = source["value"];
+	    }
+	}
+	export class Transition {
+	    from: string;
+	    to: string;
+	    when?: Cond[];
+	    exit?: boolean;
+	
+	    static createFrom(source: any = {}) {
+	        return new Transition(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.from = source["from"];
+	        this.to = source["to"];
+	        this.when = this.convertValues(source["when"], Cond);
+	        this.exit = source["exit"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class State {
+	    name: string;
+	    clip: string;
+	    speed?: number;
+	    x?: number;
+	    y?: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new State(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.name = source["name"];
+	        this.clip = source["clip"];
+	        this.speed = source["speed"];
+	        this.x = source["x"];
+	        this.y = source["y"];
+	    }
+	}
+	export class Param {
+	    name: string;
+	    type: string;
+	    value?: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new Param(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.name = source["name"];
+	        this.type = source["type"];
+	        this.value = source["value"];
+	    }
+	}
+	export class Controller {
+	    parameters: Param[];
+	    states: State[];
+	    start: string;
+	    transitions: Transition[];
+	
+	    static createFrom(source: any = {}) {
+	        return new Controller(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.parameters = this.convertValues(source["parameters"], Param);
+	        this.states = this.convertValues(source["states"], State);
+	        this.start = source["start"];
+	        this.transitions = this.convertValues(source["transitions"], Transition);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	
+	
+
+}
+
 export namespace asset {
 	
 	export class Entry {
@@ -189,6 +320,7 @@ export namespace session {
 	    speed: number;
 	    length: number;
 	    tracks: anim.Track[];
+	    active: boolean;
 	
 	    static createFrom(source: any = {}) {
 	        return new Clip(source);
@@ -203,6 +335,7 @@ export namespace session {
 	        this.speed = source["speed"];
 	        this.length = source["length"];
 	        this.tracks = this.convertValues(source["tracks"], anim.Track);
+	        this.active = source["active"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
@@ -306,6 +439,7 @@ export namespace session {
 	    templates: string[];
 	    canUndo: boolean;
 	    canRedo: boolean;
+	    prefab?: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new Info(source);
@@ -328,6 +462,7 @@ export namespace session {
 	        this.templates = source["templates"];
 	        this.canUndo = source["canUndo"];
 	        this.canRedo = source["canRedo"];
+	        this.prefab = source["prefab"];
 	    }
 	}
 	export class Kind {

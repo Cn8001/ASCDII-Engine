@@ -6,6 +6,10 @@ export function AlignGame() {
   return window['go']['service']['ViewportService']['AlignGame']();
 }
 
+export function AudioEnded(arg1) {
+  return window['go']['service']['ViewportService']['AudioEnded'](arg1);
+}
+
 export function Drag(arg1, arg2, arg3, arg4, arg5, arg6) {
   return window['go']['service']['ViewportService']['Drag'](arg1, arg2, arg3, arg4, arg5, arg6);
 }
@@ -28,6 +32,10 @@ export function KeyUp(arg1) {
 
 export function Orbit(arg1, arg2) {
   return window['go']['service']['ViewportService']['Orbit'](arg1, arg2);
+}
+
+export function Paint(arg1, arg2, arg3, arg4, arg5, arg6) {
+  return window['go']['service']['ViewportService']['Paint'](arg1, arg2, arg3, arg4, arg5, arg6);
 }
 
 export function Pan(arg1, arg2) {

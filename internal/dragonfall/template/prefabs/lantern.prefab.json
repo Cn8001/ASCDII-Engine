@@ -91,10 +91,12 @@
           {
             "kind": "light",
             "props": {
+              "angle": 50,
               "color": "#ffb060",
               "flicker": 0.25,
               "intensity": 1.5,
-              "radius": 9
+              "radius": 9,
+              "type": "point"
             }
           }
         ]

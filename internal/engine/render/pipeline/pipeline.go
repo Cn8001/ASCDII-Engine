@@ -58,6 +58,13 @@ func (f *Frame) Begin(cam view.Camera, t float64, env light.Env) {
 	f.Ctx = &draw.Context{Buf: f.Buf, View: f.View, Time: t}
 }
 
+// useSun puts a directional light in place of the scene's sun.
+func (f *Frame) useSun() {
+	if f.Ctx != nil && f.Ctx.Sun != nil {
+		f.Env.Sun, f.Env.Auto = *f.Ctx.Sun, false
+	}
+}
+
 type Pass interface {
 	Name() string
 	Stage() Stage

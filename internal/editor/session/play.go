@@ -47,6 +47,10 @@ func (s *Session) Stop() {
 }
 
 func (s *Session) stop() {
+	if a, ok := s.sctx.Audio.(*editorAudio); ok {
+		a.emit(AudioEvent{Op: "stopall"})
+		clear(a.live)
+	}
 	s.play, s.mode, s.keys = nil, Edit, nil
 	s.touch()
 }

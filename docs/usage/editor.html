@@ -24,9 +24,11 @@
 <a href="textures.html">Textures and materials</a>
 <a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
+<a href="audio.html">Audio</a>
+<a href="physics.html">Physics</a>
 <a href="scripting.html">Lua scripting</a>
 <a href="rendering.html">Rendering</a>
-<a href="building.html">Build and release</a>
+<a href="building.html">Build</a>
 <h4>Reference</h4>
 <a href="lua-api.html">Lua API</a>
 <a href="cli.html">CLI reference</a>
@@ -71,6 +73,9 @@
 <p>The header holds the name, visibility, tag and Solid. Below it come <b>Transform</b> and one card per component, each with a checkbox and a ⋮ menu for Reset, Move Up, Move Down and Remove. <b>Add Component</b> searches every component kind and your Lua scripts, and can create a new script on the spot. Slots for objects, components, prefabs, textures and materials take drops, as described in <a href="gameobjects.html#references">References</a>. Clicking a texture, material or model in the Project window shows its settings here instead.</p>
 <p>Number labels are scrub handles: drag them sideways, hold <kbd>Shift</kbd> for fine steps. The diamond at the end of a row records an animation key for that property.</p>
 
+<h2 id="brush">Braille brush</h2>
+<p>For small fixes on a model or primitive without a 3D tool: select an object and turn on the brush in the view toolbar. Drag over the object to paint its dots in the chosen color, or switch to <b>erase</b> to hide them. The size slider sets the brush in world units. Strokes are stored in a <b>Paint</b> component in the object's own space, so they move, turn and scale with it, and the model file never changes; remove the component to undo all of it, or use undo for single strokes.</p>
+
 <h2>Pipeline</h2>
 <p>The second tab on the right lists the render passes by stage with a toggle, live timings and their settings. Drag passes to reorder them inside their stage. <a href="rendering.html">Rendering</a> covers what each one does.</p>
 
@@ -80,6 +85,8 @@
 <li><b>Project</b>: the project folder with its folders. Double click opens a scene, places a prefab, model or sprite, or opens a script in your code editor. Drop files from your file manager to import them. See <a href="assets.html">Assets and import</a>.</li>
 <li><b>Console</b>: messages from scripts and the engine. Filter by level, see repeats collapsed with a count, double click a script error to jump to the line.</li>
 <li><b>Animation</b>: clips and keys of the selection. It can float as its own window. See <a href="animation.html">Animation</a>.</li>
+<li><b>Animator</b>: the state graph of an animator controller, in a window of its own. See <a href="animation.html#animator">Animator</a>.</li>
+<li><b>Packages</b>: the package manager, from the package button in the toolbar. See <a href="packages.html">Packages</a>.</li>
 </ul>
 
 <h2>Shortcuts</h2>

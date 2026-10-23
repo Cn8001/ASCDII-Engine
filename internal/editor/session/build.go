@@ -31,30 +31,10 @@ func (s *Session) prepare(ctx context.Context) (string, project.Manifest, error)
 	return s.dir, s.proj.Manifest, nil
 }
 
-func (s *Session) Build(ctx context.Context, goos string) (BuildResult, error) {
-	dir, m, err := s.prepare(ctx)
-	if err != nil {
-		return BuildResult{}, err
-	}
-	tmp, err := os.MkdirTemp("", "ascdii-player-*")
-	if err != nil {
-		return BuildResult{}, err
-	}
-	defer os.RemoveAll(tmp)
-	player, err := s.d.Players.Extract(ctx, goos, "amd64", tmp)
-	if err != nil {
-		return BuildResult{}, err
-	}
-	t := bundle.Target{OS: goos, Arch: "amd64"}
-	out := filepath.Join(dir, project.BuildDir, project.FileName(m.Name)+t.Ext())
-	if err := bundle.Build(ctx, out, player, os.DirFS(dir), project.BuildDir); err != nil {
-		return BuildResult{}, err
-	}
-	return BuildResult{Files: []string{out}, Dir: filepath.Dir(out)}, nil
-}
-
-// Release bumps the manifest version and builds every requested target.
-func (s *Session) Release(ctx context.Context, version string, targets []string) (BuildResult, error) {
+// Build writes build/<os>/<Name>/ with the player, its packed game data and
+// SHA256SUMS, or one executable when single is set. A version, when given,
+// is stored in the manifest first, so the game reports it.
+func (s *Session) Build(ctx context.Context, goos string, single bool, version string) (BuildResult, error) {
 	dir, m, err := s.prepare(ctx)
 	if err != nil {
 		return BuildResult{}, err
@@ -74,17 +54,22 @@ func (s *Session) Release(ctx context.Context, version string, targets []string)
 		return BuildResult{}, err
 	}
 	defer os.RemoveAll(tmp)
-	var ts []bundle.Target
-	for _, goos := range targets {
-		p, err := s.d.Players.Extract(ctx, goos, "amd64", tmp)
-		if err != nil {
-			return BuildResult{}, err
-		}
-		ts = append(ts, bundle.Target{OS: goos, Arch: "amd64", Player: p})
-	}
-	rel, err := bundle.MakeRelease(ctx, filepath.Join(dir, project.BuildDir, "release"), m.Name, m.Version, ts, os.DirFS(dir), project.BuildDir)
+	player, err := s.d.Players.Extract(ctx, goos, "amd64", tmp)
 	if err != nil {
 		return BuildResult{}, err
 	}
-	return BuildResult{Files: rel.Files, Dir: rel.Dir}, nil
+	t := bundle.Target{OS: goos, Arch: "amd64"}
+	name := project.FileName(m.Name)
+	if !single {
+		exe, err := bundle.BuildFolder(ctx, filepath.Join(dir, project.BuildDir, goos, name), name+t.Ext(), player, os.DirFS(dir), project.BuildDir)
+		if err != nil {
+			return BuildResult{}, err
+		}
+		return BuildResult{Files: []string{exe}, Dir: filepath.Dir(exe)}, nil
+	}
+	out := filepath.Join(dir, project.BuildDir, name+t.Ext())
+	if err := bundle.Build(ctx, out, player, os.DirFS(dir), project.BuildDir); err != nil {
+		return BuildResult{}, err
+	}
+	return BuildResult{Files: []string{out}, Dir: filepath.Dir(out)}, nil
 }

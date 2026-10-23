@@ -2,6 +2,7 @@ package vm
 
 import (
 	lua "github.com/yuin/gopher-lua"
+	"slices"
 
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/geom"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/prop"
@@ -234,6 +235,10 @@ func (v *VM) installObject() {
 		case "object":
 			L.Push(v.handle(o))
 		default:
+			if cl, ok := c.(scene.Callable); ok && slices.Contains(cl.Methods(), k) {
+				L.Push(v.method(o, cl, k))
+				return 1
+			}
 			p, ok := prop.Get(o, key+"."+k)
 			if !ok {
 				L.Push(lua.LNil)
@@ -381,6 +386,22 @@ func (v *VM) find(o *scene.GameObject, name string) scene.Component {
 		}
 	}
 	return nil
+}
+
+// method binds a component method for a colon call: c:play("run").
+func (v *VM) method(o *scene.GameObject, c scene.Callable, name string) *lua.LFunction {
+	return v.L.NewFunction(func(L *lua.LState) int {
+		args := make([]any, 0, L.GetTop())
+		for i := 2; i <= L.GetTop(); i++ {
+			args = append(args, v.fromLua(o, L.Get(i)))
+		}
+		out, err := c.Call(v.ctx, o, name, args)
+		if err != nil {
+			L.RaiseError("%s: %v", name, err)
+		}
+		L.Push(v.toLua(out))
+		return 1
+	})
 }
 
 // componentOf finds the component behind a handle or a script's self.

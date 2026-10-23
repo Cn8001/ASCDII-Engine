@@ -72,6 +72,7 @@ type Context struct {
 	Time    float64
 	Lights  []light.Point
 	Shadows []Caster
+	Sun     *light.Sun // a directional light's sun, replacing the scene's for this frame
 }
 
 func (c *Context) Light(p light.Point) { c.Lights = append(c.Lights, p) }

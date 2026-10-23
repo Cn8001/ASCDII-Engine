@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/animator"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/asset"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/material"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/mesh"
@@ -266,4 +267,79 @@ func (s *Session) MaterialAt(ref string, col, row int) (uint64, error) {
 		return 0, fmt.Errorf("nothing under the pointer: %w", ErrNotReference)
 	}
 	return id, s.ApplyMaterial(id, ref)
+}
+
+// CreateController writes a one state animator controller.
+func (s *Session) CreateController(ctx context.Context, name string) (string, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if err := s.need(); err != nil {
+		return "", err
+	}
+	rel := strings.TrimSuffix(filepath.ToSlash(name), animator.Ext)
+	if !strings.Contains(rel, "/") {
+		rel = "animators/" + rel
+	}
+	if locked(rel) {
+		return "", lockedErr(rel)
+	}
+	rel = s.freeName(rel + animator.Ext)
+	c := animator.Default()
+	var b bytes.Buffer
+	if err := animator.Encode(&b, c); err != nil {
+		return "", err
+	}
+	if err := s.writeAsset(ctx, rel, b.Bytes()); err != nil {
+		return "", err
+	}
+	s.lib.PutController(rel, c)
+	return rel, nil
+}
+
+func (s *Session) Controller(ref string) (*animator.Controller, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.lib.Controller(ref)
+}
+
+// SetController saves a whole controller, as the animator window edits it.
+func (s *Session) SetController(ctx context.Context, ref string, c *animator.Controller) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if err := s.need(); err != nil {
+		return err
+	}
+	p := s.lib.Resolve(ref)
+	if locked(p) {
+		return lockedErr(p)
+	}
+	if _, err := s.lib.Controller(p); err != nil {
+		return err
+	}
+	var b bytes.Buffer
+	if err := animator.Encode(&b, c); err != nil {
+		return err
+	}
+	if err := writeFile(ctx, filepath.Join(s.dir, filepath.FromSlash(p)), b.Bytes()); err != nil {
+		return err
+	}
+	s.lib.PutController(p, c)
+	s.touch()
+	return nil
+}
+
+// AnimatorState is what an object's animator is doing, for the animator
+// window to light up the active state while the game runs.
+func (s *Session) AnimatorState(id uint64) string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	o, err := s.current().ByID(id)
+	if err != nil {
+		return ""
+	}
+	if p, ok := prop.Get(o, "animator.state"); ok {
+		v, _ := p.Value.(string)
+		return v
+	}
+	return ""
 }

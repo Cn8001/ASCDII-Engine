@@ -1,6 +1,7 @@
 package light
 
 import (
+	"math"
 	"testing"
 
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/color"
@@ -69,5 +70,22 @@ func TestUnit_NightIsDimmerThanNoon(t *testing.T) {
 	// Assert
 	if !(noon.Intensity > nightI) || noonZ < .5 {
 		t.Fatalf("noon %+v night %+v", noon, night)
+	}
+}
+
+func TestUnit_SpotLightOnlyLightsInsideItsCone(t *testing.T) {
+	// Arrange
+	env := Env{Exposure: 1}
+	spot := Point{Pos: geom.V3(0, 0, 5), Radius: 20, Color: color.RGB(255, 255, 255), Intensity: 1, Dir: geom.V3(0, 0, -1), Cone: math.Cos(20 * math.Pi / 180)}
+	sh := NewShader(env, []Point{spot}, 0)
+	up := geom.V3(0, 0, 1)
+
+	// Act
+	below, _, _ := sh.Irradiance(up, geom.V3(0, 0, 0), 0)
+	aside, _, _ := sh.Irradiance(up, geom.V3(8, 0, 0), 0)
+
+	// Assert
+	if below < .3 || aside > 1e-6 {
+		t.Fatalf("below %.3f aside %.3f", below, aside)
 	}
 }

@@ -24,9 +24,11 @@
 <a href="textures.html">Textures and materials</a>
 <a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
+<a href="audio.html">Audio</a>
+<a href="physics.html">Physics</a>
 <a href="scripting.html">Lua scripting</a>
 <a href="rendering.html">Rendering</a>
-<a href="building.html">Build and release</a>
+<a href="building.html">Build</a>
 <h4>Reference</h4>
 <a href="lua-api.html">Lua API</a>
 <a href="cli.html">CLI reference</a>
@@ -45,7 +47,7 @@
 <tr><th>Entry</th><th>Creates</th></tr>
 <tr><td>Create Empty</td><td>An object with only a transform, for grouping and for scripts.</td></tr>
 <tr><td>3D Object</td><td>Cube, Sphere, Cylinder, Cone, Plane, Quad, Ground, Water.</td></tr>
-<tr><td>Light</td><td>A point light.</td></tr>
+<tr><td>Light</td><td>Point, spot and directional lights.</td></tr>
 <tr><td>Effects</td><td>Particles.</td></tr>
 <tr><td>UI</td><td>Text and glyph art sprites.</td></tr>
 <tr><td>Model</td><td>Every model in the project, see <a href="models.html">Models</a>.</td></tr>
@@ -98,12 +100,16 @@
 <tr><td><code>plane</code>, <code>quad</code></td><td>Plane, Quad</td><td>A flat rectangle on the ground, and an upright one facing the camera; both take materials.</td></tr>
 <tr><td><code>mesh</code></td><td>Model</td><td>An imported .obj model.</td></tr>
 <tr><td><code>ground</code>, <code>water</code></td><td>Ground, Water</td><td>Terrain patches; water has animated glints.</td></tr>
-<tr><td><code>light</code></td><td>Point Light</td><td>Radius, color, intensity and flicker.</td></tr>
+<tr><td><code>light</code></td><td>Point, Spot, Directional Light</td><td>A <code>type</code> of point, spot (a cone aimed by the object's rotation, <code>angle</code>) or directional (replaces the sun, aimed by the rotation); radius, color, intensity, flicker.</td></tr>
 <tr><td><code>emitter</code></td><td>Particles</td><td>Embers, fire, sparks; deterministic, so they scrub with time.</td></tr>
 <tr><td><code>label</code>, <code>sprite</code></td><td>Text, Sprite</td><td>Text in the world or on screen, and glyph art from <code>art/</code>.</td></tr>
 <tr><td><code>player</code></td><td>Add Component</td><td>Walk, jump, slide along walls, camera follow.</td></tr>
 <tr><td><code>toggle</code></td><td>Add Component</td><td>Flip a bool property on a key, on this object or a referenced one.</td></tr>
 <tr><td><code>daynight</code>, <code>quit</code></td><td>Add Component</td><td>Run the clock to the other phase on a key; leave the game on a key.</td></tr>
+<tr><td><code>animator</code></td><td>Add Component</td><td>Plays the object's clips as states of a controller, see <a href="animation.html#animator">Animation</a>.</td></tr>
+<tr><td><code>audio_source</code></td><td>Add Component</td><td>Plays a sound, see <a href="audio.html">Audio</a>.</td></tr>
+<tr><td><code>box_collider</code>, <code>circle_collider</code>, <code>mesh_collider</code>, <code>rigidbody</code></td><td>Add Component</td><td>Collision and simple physics, see <a href="physics.html">Physics</a>.</td></tr>
+<tr><td><code>paint</code></td><td>Braille brush</td><td>Strokes painted over the object in the editor, see <a href="editor.html#brush">the editor</a>.</td></tr>
 <tr><td><code>script</code></td><td>Add Component</td><td>A Lua file, see <a href="scripting.html">Lua scripting</a>.</td></tr>
 </table>
 <div class="tip"><b>Writing your own</b>Components are Go types registered by kind; see <a href="go-api.html">Go API</a>. Lua scripts with a <code>draw</code> hook can draw too, without Go.</div>

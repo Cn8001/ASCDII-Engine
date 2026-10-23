@@ -19,7 +19,9 @@ import (
 
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/dragonfall"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/editor/players"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/animator"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/guid"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/raster"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/pack"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/project"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/components"
@@ -230,12 +232,22 @@ func TestUnit_BuildBundlesProject(t *testing.T) {
 	s, _, dir := newSession(t, "")
 
 	// Act
-	res, err := s.Build(context.Background(), "linux")
-	_, errWin := s.Build(context.Background(), "windows")
+	res, err := s.Build(context.Background(), "linux", false, "0.2.0")
+	one, errOne := s.Build(context.Background(), "linux", true, "")
+	_, errWin := s.Build(context.Background(), "windows", false, "")
 
 	// Assert
-	if err != nil || len(res.Files) != 1 || filepath.Dir(res.Files[0]) != filepath.Join(dir, "build") {
+	if err != nil || len(res.Files) != 1 || res.Dir != filepath.Join(dir, "build", "linux", "Game") {
 		t.Fatalf("err %v res %+v", err, res)
+	}
+	if _, err := os.Stat(filepath.Join(res.Dir, "data", "game.pak")); err != nil {
+		t.Fatal("the folder build has no packed data")
+	}
+	if s.proj.Manifest.Version != "0.2.0" {
+		t.Fatalf("version %s", s.proj.Manifest.Version)
+	}
+	if errOne != nil || filepath.Dir(one.Files[0]) != filepath.Join(dir, "build") {
+		t.Fatalf("single err %v res %+v", errOne, one)
 	}
 	if !errors.Is(errWin, players.ErrNoPlayer) {
 		t.Fatalf("got %v", errWin)
@@ -862,5 +874,126 @@ func TestUnit_PackageClashAndExport(t *testing.T) {
 	files, _ := pack.Files(src.FS)
 	if src.Manifest.Name != "lanterns" || !slices.Contains(files, "lantern.prefab.json.meta") {
 		t.Fatalf("manifest %+v files %v", src.Manifest, files)
+	}
+}
+
+func TestUnit_ClipsAndControllerForAnAnimator(t *testing.T) {
+	// Arrange
+	s, _, _ := newSession(t, "")
+	ctx := context.Background()
+	id, _ := s.Add(0, "box")
+
+	// Act
+	errIdle := s.NewClip(id, "idle")
+	_ = s.AddKey(id, "pos.z", 0)
+	errRun := s.NewClip(id, "run")
+	_ = s.AddKey(id, "pos.z", 1)
+	clips, _ := s.Clips(id)
+	errRename := s.RenameClip(clips[1].Index, "walk")
+	rel, errCtrl := s.CreateController(ctx, "box")
+	c, _ := s.Controller(rel)
+	c.States = append(c.States, animator.State{Name: "walk", Clip: "walk"})
+	errSave := s.SetController(ctx, rel, c)
+	back, _ := s.Controller(rel)
+	after, _ := s.Clips(id)
+
+	// Assert
+	if errIdle != nil || errRun != nil || errRename != nil || errCtrl != nil || errSave != nil {
+		t.Fatalf("errs %v %v %v %v %v", errIdle, errRun, errRename, errCtrl, errSave)
+	}
+	if len(after) != 2 || after[1].Name != "walk" || len(after[0].Tracks) != 1 || len(after[1].Tracks) != 1 || !after[1].Active {
+		t.Fatalf("clips %+v", after)
+	}
+	if rel != "animators/box.animator.json" || len(back.States) != 2 {
+		t.Fatalf("controller %s %+v", rel, back)
+	}
+}
+
+func TestUnit_PlayModeSoundsBecomeEvents(t *testing.T) {
+	// Arrange
+	s, rec, dir := newSession(t, "")
+	_ = os.WriteFile(filepath.Join(dir, "beep.wav"), []byte("RIFF"), 0o644)
+	id, _ := s.Add(0, "empty")
+	_, _ = s.AddComponent(id, "audio_source")
+	_ = s.SetProp(id, "audio_source.clip", "beep.wav")
+
+	// Act
+	errPlay := s.Play()
+	_, _ = s.Tick(1.0 / 60)
+	s.Stop()
+	file, errFile := s.AssetFile("beep.wav")
+	_, errOut := s.AssetFile("../secret")
+
+	// Assert
+	if errPlay != nil || rec.count("audio") < 2 || errFile != nil || filepath.Base(file) != "beep.wav" {
+		t.Fatalf("play %v events %d file %v %s", errPlay, rec.count("audio"), errFile, file)
+	}
+	if errOut == nil && !strings.HasPrefix(file, dir) {
+		t.Fatal("paths must stay inside the project")
+	}
+}
+
+func TestUnit_BrushPaintsTheSelectedObject(t *testing.T) {
+	// Arrange
+	s, _, _ := newSession(t, "")
+	id, _ := s.Add(0, "box")
+	_ = s.SetProp(id, "box.size", []float64{6, 6, 6})
+	s.mu.Lock()
+	s.cam.Target, s.cam.Span = s.spawnPoint(), 12
+	s.mu.Unlock()
+	s.Resize(40, 20)
+	_, _ = s.Tick(0)
+	hit := func() (float64, float64) {
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		b := s.frame.Buf
+		for y := 0; y < b.H; y++ {
+			for x := 0; x < b.W; x++ {
+				if b.At(x, y).Tag == uint32(id) {
+					return (float64(x) + .5) / raster.SubW, (float64(y) + .5) / raster.SubH
+				}
+			}
+		}
+		return -1, -1
+	}
+	col, row := hit()
+
+	// Act
+	err := s.PaintAt(id, col, row, "#ff0000", 1, false)
+	missed := s.PaintAt(id, 0, 0, "#ff0000", 1, false)
+
+	// Assert
+	p, _ := find(s, "Cube").Component("paint").(*components.Paint)
+	if err != nil || p == nil || len(p.Strokes) != 1 || !errors.Is(missed, ErrMissed) {
+		t.Fatalf("err %v missed %v paint %v at %.1f,%.1f", err, missed, p, col, row)
+	}
+}
+
+func TestUnit_PrefabModeEditsAndUpdatesInstances(t *testing.T) {
+	// Arrange
+	s, _, _ := newSession(t, "dragonfall")
+	ctx := context.Background()
+	id, _ := s.Drop("prefab:prefabs/lantern.prefab.json", 40, 15)
+	_, _ = s.Add(0, "box")
+	unsavedBefore := s.unsaved
+
+	// Act
+	errOpen := s.OpenPrefab("prefabs/lantern.prefab.json")
+	glow := find(s, "glow")
+	errSet := s.SetProp(glow.ID, "light.radius", 30)
+	errSave := s.Save(ctx)
+	info, _ := s.Info(ctx)
+	errClose := s.ClosePrefab()
+
+	// Assert
+	if errOpen != nil || errSet != nil || errSave != nil || errClose != nil || info.Prefab != "prefabs/lantern.prefab.json" {
+		t.Fatalf("errs %v %v %v %v info %+v", errOpen, errSet, errSave, errClose, info)
+	}
+	if !s.unsaved || !unsavedBefore || find(s, "Cube") == nil {
+		t.Fatal("the scene should come back with its unsaved edits")
+	}
+	got := childNamed(s, id, "glow").Component("light").(*components.Light).Radius
+	if got != 30 {
+		t.Fatalf("instance radius %v", got)
 	}
 }

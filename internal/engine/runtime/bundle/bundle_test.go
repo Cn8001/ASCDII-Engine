@@ -6,9 +6,12 @@ import (
 	"errors"
 	"io/fs"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"testing/fstest"
+
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/asset"
 )
 
 func TestUnit_WriteThenReadRoundTrips(t *testing.T) {
@@ -72,31 +75,55 @@ func TestUnit_BuildFromBundledPlayerDoesNotNest(t *testing.T) {
 	// Assert
 	a, _ := os.ReadFile(first)
 	b, _ := os.ReadFile(second)
-	if err1 != nil || err2 != nil || !bytes.Equal(a, b) {
+	if err1 != nil || err2 != nil || len(a) != len(b) { // salts differ, sizes match unless the bundle nested
 		t.Fatalf("err %v %v nested %d vs %d", err1, err2, len(a), len(b))
 	}
 }
 
-func TestUnit_ReleaseBuildsEveryTarget(t *testing.T) {
+const meta = `{"format":1,"guid":"019a0000-0000-7000-8000-000000000001"}`
+
+func TestUnit_FolderBuildPacksOnlyGameData(t *testing.T) {
 	// Arrange
 	dir := t.TempDir()
-	for _, n := range []string{"lin", "win.exe"} {
-		if err := os.WriteFile(dir+"/"+n, []byte("PLAYER-"+n), 0o755); err != nil {
-			t.Fatal(err)
-		}
+	player := filepath.Join(dir, "player")
+	if err := os.WriteFile(player, []byte("PLAYER"), 0o755); err != nil {
+		t.Fatal(err)
 	}
-	targets := []Target{{OS: "linux", Arch: "amd64", Player: dir + "/lin"}, {OS: "windows", Arch: "amd64", Player: dir + "/win.exe"}}
-	src := fstest.MapFS{"g.ascdiiproj": {Data: []byte(`{}`)}}
+	src := fstest.MapFS{
+		"g.ascdiiproj":             {Data: []byte(`{}`)},
+		"scenes/a.scene.json":      {Data: []byte(`{}`)},
+		"scenes/a.scene.json.meta": {Data: []byte(meta)},
+		"README.md":                {Data: []byte("notes")},
+		".gitignore":               {Data: []byte("build/")},
+		"build/old":                {Data: []byte("x")},
+	}
 
 	// Act
-	rel, err := MakeRelease(context.Background(), dir+"/out", "My Game", "v1.2.0", targets, src)
+	exe, err := BuildFolder(context.Background(), filepath.Join(dir, "Game"), "game", player, src, "build")
+	fsys, errData := OpenData(exe)
+	_, none := OpenData(player)
+	raw, _ := os.ReadFile(filepath.Join(dir, "Game", DataDir, PakFile))
+	sums, _ := os.ReadFile(filepath.Join(dir, "Game", SumsFile))
 
 	// Assert
-	if err != nil || len(rel.Files) != 5 {
-		t.Fatalf("err %v files %v", err, rel.Files)
+	if err != nil || errData != nil || !errors.Is(none, ErrNoData) {
+		t.Fatalf("errs %v %v %v", err, errData, none)
 	}
-	sums, _ := os.ReadFile(rel.Dir + "/SHA256SUMS")
-	if !strings.Contains(string(sums), "My-Game-1.2.0-windows-amd64.exe.zip") {
+	if _, err := fs.Stat(fsys, "scenes/a.scene.json"); err != nil {
+		t.Fatal("the scene is missing from the pak")
+	}
+	for _, gone := range []string{"README.md", ".gitignore", "build/old", "scenes/a.scene.json.meta"} {
+		if _, err := fs.Stat(fsys, gone); err == nil {
+			t.Fatalf("%s should not be in a build", gone)
+		}
+	}
+	if m, err := asset.ReadMeta(fsys, "scenes/a.scene.json"); err != nil || m.GUID == "" {
+		t.Fatalf("the asset index lost the guid: %v", err)
+	}
+	if bytes.Contains(raw, []byte("scene.json")) {
+		t.Fatal("the pak should not show file names in the clear")
+	}
+	if !strings.Contains(string(sums), "  game\n") || !strings.Contains(string(sums), "data/game.pak") {
 		t.Fatalf("sums %s", sums)
 	}
 }

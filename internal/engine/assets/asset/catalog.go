@@ -11,6 +11,7 @@ import (
 	"strings"
 	"sync"
 
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/animator"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/material"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/mesh"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/texture"
@@ -27,6 +28,8 @@ const (
 	Model    Kind = "model"
 	Texture  Kind = "texture"
 	Material Kind = "material"
+	Animator Kind = "animator"
+	Audio    Kind = "audio"
 )
 
 const (
@@ -58,6 +61,10 @@ func Classify(p string) (Kind, bool) {
 		return Model, true
 	case strings.HasSuffix(l, material.Ext):
 		return Material, true
+	case strings.HasSuffix(l, animator.Ext):
+		return Animator, true
+	case strings.HasSuffix(l, ".wav"), strings.HasSuffix(l, ".mp3"):
+		return Audio, true
 	case strings.HasSuffix(l, ".png"), strings.HasSuffix(l, ".jpg"), strings.HasSuffix(l, ".jpeg"), strings.HasSuffix(l, ".gif"):
 		return Texture, true
 	case strings.HasSuffix(l, ".xp"), strings.HasSuffix(l, ".json"):
@@ -69,6 +76,10 @@ func Classify(p string) (Kind, bool) {
 // List walks a project tree; skip names directories never scanned, such as build output.
 func List(ctx context.Context, fsys fs.FS, skip ...string) ([]Entry, error) {
 	var out []Entry
+	idx, _ := ReadIndex(fsys) // a built game; projects have .meta files instead
+	if idx == nil {
+		idx = Index{}
+	}
 	err := fs.WalkDir(fsys, ".", func(p string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -91,7 +102,7 @@ func List(ctx context.Context, fsys fs.FS, skip ...string) ([]Entry, error) {
 			return err
 		}
 		e := Entry{Path: p, Kind: k, Size: info.Size()}
-		if m, err := ReadMeta(fsys, p); err == nil {
+		if m, err := readMeta(fsys, p, idx); err == nil {
 			e.GUID = m.GUID
 		}
 		out = append(out, e)
@@ -115,6 +126,7 @@ type Library struct {
 	models  map[string]*mesh.Mesh
 	tex     map[string]*texture.Texture
 	mats    map[string]*material.Material
+	ctrls   map[string]*animator.Controller
 	byGUID  map[string]string
 	byPath  map[string]string
 }
@@ -126,7 +138,7 @@ type source struct {
 
 func NewLibrary(reg *scene.Registry) *Library {
 	return &Library{reg: reg, art: map[string]Surface{}, prefabs: map[string][]byte{}, scripts: map[string]source{},
-		models: map[string]*mesh.Mesh{}, tex: map[string]*texture.Texture{}, mats: map[string]*material.Material{}, byGUID: map[string]string{}, byPath: map[string]string{}}
+		models: map[string]*mesh.Mesh{}, tex: map[string]*texture.Texture{}, mats: map[string]*material.Material{}, ctrls: map[string]*animator.Controller{}, byGUID: map[string]string{}, byPath: map[string]string{}}
 }
 
 // Load reads every art file and prefab from fsys.
@@ -169,6 +181,10 @@ func (l *Library) Load(ctx context.Context, fsys fs.FS, skip ...string) error {
 			if m, err := material.Decode(bytes.NewReader(b)); err == nil {
 				l.PutMaterial(e.Path, m)
 			}
+		case Animator:
+			if c, err := animator.Decode(bytes.NewReader(b)); err == nil {
+				l.PutController(e.Path, c)
+			}
 		case Art:
 			s, err := DecodeArt(e.Path, b)
 			if err != nil {
@@ -210,6 +226,24 @@ func (l *Library) Resolve(ref string) string {
 		return p
 	}
 	return path.Clean(ref)
+}
+
+func (l *Library) PutController(name string, c *animator.Controller) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	l.ctrls[path.Clean(name)] = c
+}
+
+// Controller returns the shared asset; the editor replaces it, never edits it.
+func (l *Library) Controller(ref string) (*animator.Controller, error) {
+	p := l.Resolve(ref)
+	l.mu.RLock()
+	defer l.mu.RUnlock()
+	c, ok := l.ctrls[p]
+	if !ok {
+		return nil, fmt.Errorf("%w: %s", ErrNotFound, ref)
+	}
+	return c, nil
 }
 
 // Known reports whether a GUID already names an asset of the project.
@@ -259,6 +293,10 @@ func (l *Library) Rename(from, to string) {
 		l.mats[to] = v
 		delete(l.mats, from)
 	}
+	if v, ok := l.ctrls[from]; ok {
+		l.ctrls[to] = v
+		delete(l.ctrls, from)
+	}
 	if id, ok := l.byPath[from]; ok {
 		delete(l.byPath, from)
 		l.byPath[to], l.byGUID[id] = id, to
@@ -276,6 +314,7 @@ func (l *Library) Remove(p string) {
 	delete(l.models, p)
 	delete(l.tex, p)
 	delete(l.mats, p)
+	delete(l.ctrls, p)
 	if id, ok := l.byPath[p]; ok {
 		delete(l.byGUID, id)
 		delete(l.byPath, p)

@@ -2,12 +2,14 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { Project, Viewport } from '../lib/api'
 import { duplicate, remove } from '../lib/actions'
+import { listenAudio } from '../lib/audio'
 import { listenFileDrops } from '../lib/filedrop'
 import { typing } from '../lib/keys'
 import { call, refresh, refreshAssets, store, toast } from '../lib/store'
 import AnimationPanel from './AnimationPanel.vue'
 import BuildDialog from './BuildDialog.vue'
 import ConsolePanel from './ConsolePanel.vue'
+import AnimatorWindow from './AnimatorWindow.vue'
 import FloatingWindow from './FloatingWindow.vue'
 import Icon from './Icon.vue'
 import AssetInspector from './AssetInspector.vue'
@@ -26,6 +28,8 @@ const tabs = [
   { id: 'console', label: 'Console', icon: 'file' },
   { id: 'animation', label: 'Animation', icon: 'film' },
 ] as const
+
+let offAudio = () => {}
 
 async function shortcut(e: KeyboardEvent) {
   if (typing(e)) return
@@ -99,9 +103,13 @@ function dock() {
 onMounted(async () => {
   window.addEventListener('keydown', shortcut)
   listenFileDrops()
+  offAudio = listenAudio()
   await Promise.all([refresh(), refreshAssets()])
 })
-onBeforeUnmount(() => window.removeEventListener('keydown', shortcut))
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', shortcut)
+  offAudio()
+})
 
 function tab(active: boolean) {
   return active ? 'text-ink-100 after:absolute after:inset-x-2 after:-bottom-px after:h-px after:bg-amber-glow' : 'text-ink-500 hover:text-ink-200'
@@ -153,6 +161,9 @@ function tab(active: boolean) {
         </div>
       </aside>
     </div>
+    <FloatingWindow v-if="store.animator" id="animator" title="Animator" icon="graph" @dock="store.animator = ''" @close="store.animator = ''">
+      <AnimatorWindow />
+    </FloatingWindow>
     <FloatingWindow v-if="store.animFloating" id="animation" title="Animation" icon="film" @dock="dock" @close="store.animFloating = false">
       <AnimationPanel floating />
     </FloatingWindow>

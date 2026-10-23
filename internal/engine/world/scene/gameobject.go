@@ -14,6 +14,7 @@ import (
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/prop"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/draw"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/pipeline"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/physics"
 )
 
 var (
@@ -119,6 +120,48 @@ type Updater interface {
 	Update(c *Ctx, o *GameObject, dt float64)
 }
 
+// Callable components offer methods to scripts, such as an animator's
+// play or a rigidbody's add_force; properties alone cannot express those.
+type Callable interface {
+	Methods() []string
+	Call(c *Ctx, o *GameObject, name string, args []any) (any, error)
+}
+
+// Collider is a footprint on the ground plane plus a height range, what
+// rigidbodies and walkers collide with.
+type Collider interface {
+	Shape(o *GameObject, t Transform) physics.Shape
+	Span(o *GameObject, t Transform) (z0, z1 float64)
+	IsTrigger() bool
+}
+
+// CollisionHandler hears about contacts that begin, such as a script's
+// on_collision and on_trigger hooks.
+type CollisionHandler interface {
+	Collide(c *Ctx, o, other *GameObject, trigger bool)
+}
+
+// DotPainter recolors the dots its own object drew, after geometry and
+// before lighting; the paint component uses it.
+type DotPainter interface {
+	PaintDots(f *pipeline.Frame, o *GameObject, t Transform)
+}
+
+// AudioOut plays sound assets by reference; the terminal player mixes them
+// to a speaker, the editor hands them to its web view.
+type AudioOut interface {
+	Play(ref string, volume float64, loop bool) (uint64, error)
+	Stop(voice uint64)
+	SetVolume(voice uint64, v float64)
+	Playing(voice uint64) bool
+}
+
+// ClipDriver is a component that plays its object's clips itself, so the
+// scene does not also play them.
+type ClipDriver interface {
+	DrivesClips() bool
+}
+
 type KeyHandler interface {
 	Key(c *Ctx, o *GameObject, k input.Key) bool
 }
@@ -129,6 +172,7 @@ type Ctx struct {
 	Log      func(level, source, msg string) // nil drops messages
 	Input    *input.State                    // nil outside play
 	Pipeline *pipeline.Pipeline              // what scripts tune; nil in tests
+	Audio    AudioOut                        // nil plays nothing
 	Shared   map[any]any                     // per run state of modules such as the Lua VM, keyed like context values
 	scale    float64
 	scaled   bool

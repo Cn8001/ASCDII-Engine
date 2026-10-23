@@ -1,6 +1,7 @@
 package service
 
 import (
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/animator"
 	"path/filepath"
 
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/editor/session"
@@ -120,6 +121,10 @@ func (s *SceneService) Reparent(id, parent uint64, index int) error {
 func (s *SceneService) Duplicate(id uint64) (uint64, error) { return wrap1(s.d.Session.Duplicate(id)) }
 func (s *SceneService) Unpack(id uint64) error              { return wrap(s.d.Session.Unpack(id)) }
 
+// OpenPrefab edits a prefab on its own; ClosePrefab goes back to the scene.
+func (s *SceneService) OpenPrefab(ref string) error { return wrap(s.d.Session.OpenPrefab(ref)) }
+func (s *SceneService) ClosePrefab() error          { return wrap(s.d.Session.ClosePrefab()) }
+
 // Apply writes instance overrides into the prefab; name "" applies all.
 func (s *SceneService) Apply(id uint64, name string) error {
 	return wrap(s.d.Session.Apply(s.d.Ctx.Get(), id, name))
@@ -145,8 +150,16 @@ func (v *ViewportService) Pause()                     { v.d.Session.Pause() }
 func (v *ViewportService) Stop()                      { v.d.Session.Stop() }
 func (v *ViewportService) Key(name string) error      { return wrap(v.d.Session.Key(name)) }
 func (v *ViewportService) KeyUp(name string) error    { return wrap(v.d.Session.KeyUp(name)) }
-func (v *ViewportService) SetLive(on bool)            { v.d.Session.SetLive(on) }
-func (v *ViewportService) SetTime(t float64) error    { return wrap(v.d.Session.SetTime(t)) }
+
+// Paint adds a brush stroke on the selected object at a viewport cell.
+func (v *ViewportService) Paint(id uint64, col, row float64, color string, radius float64, erase bool) error {
+	return wrap(v.d.Session.PaintAt(id, col, row, color, radius, erase))
+}
+
+// AudioEnded reports a play mode sound the web view finished playing.
+func (v *ViewportService) AudioEnded(voice uint64) { v.d.Session.AudioEnded(voice) }
+func (v *ViewportService) SetLive(on bool)         { v.d.Session.SetLive(on) }
+func (v *ViewportService) SetTime(t float64) error { return wrap(v.d.Session.SetTime(t)) }
 func (v *ViewportService) Drag(id uint64, axis string, fc, fr, tc, tr float64) error {
 	return wrap(v.d.Session.Drag(id, axis, fc, fr, tc, tr))
 }
@@ -218,6 +231,16 @@ func (a *AssetService) RenameFolder(from, name string) (string, error) {
 }
 func (a *AssetService) Delete(rel string) error { return wrap(a.d.Session.Delete(a.d.Ctx.Get(), rel)) }
 
+func (a *AssetService) CreateController(name string) (string, error) {
+	return wrap1(a.d.Session.CreateController(a.d.Ctx.Get(), name))
+}
+func (a *AssetService) Controller(ref string) (*animator.Controller, error) {
+	return wrap1(a.d.Session.Controller(ref))
+}
+func (a *AssetService) SetController(ref string, c *animator.Controller) error {
+	return wrap(a.d.Session.SetController(a.d.Ctx.Get(), ref, c))
+}
+
 // ConvertToArt turns a texture into glyph art cols cells wide.
 func (a *AssetService) ConvertToArt(ref string, cols int) (string, error) {
 	return wrap1(a.d.Session.ConvertToArt(a.d.Ctx.Get(), ref, cols))
@@ -253,6 +276,15 @@ type AnimService struct{ d Deps }
 
 func (a *AnimService) Eases() []string                         { return anim.Eases() }
 func (a *AnimService) Clips(id uint64) ([]session.Clip, error) { return wrap1(a.d.Session.Clips(id)) }
+func (a *AnimService) NewClip(id uint64, name string) error {
+	return wrap(a.d.Session.NewClip(id, name))
+}
+func (a *AnimService) PickClip(index int) { a.d.Session.PickClip(index) }
+func (a *AnimService) RenameClip(index int, name string) error {
+	return wrap(a.d.Session.RenameClip(index, name))
+}
+func (a *AnimService) AnimatorState(id uint64) string { return a.d.Session.AnimatorState(id) }
+
 func (a *AnimService) AddKey(id uint64, name string, t float64) error {
 	return wrap(a.d.Session.AddKey(id, name, t))
 }
@@ -273,10 +305,10 @@ func (a *AnimService) SetEase(index int, name string, t float64, ease string) er
 type BuildService struct{ d Deps }
 
 func (b *BuildService) Targets() []string { return b.d.Session.Targets() }
-func (b *BuildService) Build(target string) (session.BuildResult, error) {
-	return wrap1(b.d.Session.Build(b.d.Ctx.Get(), target))
-}
-func (b *BuildService) Release(version string, targets []string) (session.BuildResult, error) {
-	return wrap1(b.d.Session.Release(b.d.Ctx.Get(), version, targets))
+
+// Build writes a game folder (player, packed data, checksums) for target,
+// or one executable when single is set.
+func (b *BuildService) Build(target string, single bool, version string) (session.BuildResult, error) {
+	return wrap1(b.d.Session.Build(b.d.Ctx.Get(), target, single, version))
 }
 func (b *BuildService) Reveal(path string) error { return wrap(b.d.Reveal(b.d.Ctx.Get(), path)) }

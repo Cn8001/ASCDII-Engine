@@ -24,9 +24,11 @@
 <a href="textures.html">Textures and materials</a>
 <a href="models.html">Models</a>
 <a href="animation.html" class="on">Animation</a>
+<a href="audio.html">Audio</a>
+<a href="physics.html">Physics</a>
 <a href="scripting.html">Lua scripting</a>
 <a href="rendering.html">Rendering</a>
-<a href="building.html">Build and release</a>
+<a href="building.html">Build</a>
 <h4>Reference</h4>
 <a href="lua-api.html">Lua API</a>
 <a href="cli.html">CLI reference</a>
@@ -61,10 +63,29 @@
 <p>Press the float button at the right of the Animation header to turn it into a window you can move and resize over the view. The editor remembers where you left it. The arrow in its title bar docks it back.</p>
 <figure><img src="img/editor-floating.png" alt="Floating Animation window"></figure>
 
+<h2>Several clips per object</h2>
+<p>Press <b>+ Clip</b> in the Animation tab to give the selection another clip, for example <code>walk</code> next to <code>idle</code>. Click a clip's header to make it the one new keys go to; it is highlighted. Double click the header to rename it.</p>
+
+<h2 id="animator">Animator</h2>
+<p>An <b>Animator</b> component plays its object's clips as the states of a controller and switches between them when conditions hold, like Unity's Animator.</p>
+<ol class="steps">
+<li>In the Project window choose <b>Create</b>, <b>Animator Controller</b>. The Animator window opens.</li>
+<li>Add parameters on the left: <code>float</code>, <code>bool</code> or <code>trigger</code> (true for one transition, then reset).</li>
+<li>Add states with <b>+ State</b>; pick each state's clip on the right. The start state has an amber border; any state can be made the start.</li>
+<li>Shift drag from one state to another to add a transition, then give it conditions such as <code>speed &gt; 0.1</code>, or tick <b>After the clip ends</b>. A transition from <b>any state</b> leaves every state, for hits and deaths.</li>
+<li>Add an <b>Animator</b> to the object and drag the controller onto its <b>controller</b> slot. The graph button on its card opens the controller.</li>
+</ol>
+<p>While the game runs, the selected object's active state glows in the Animator window. With an animator running, the object's clips play only as its states; the timeline still previews them while you edit.</p>
+<pre><code><span class="k">local</span> anim = self:component(<span class="s">"animator"</span>)
+anim:set(<span class="s">"speed"</span>, 3)
+anim:trigger(<span class="s">"jump"</span>)
+log(anim.state)
+anim:play(<span class="s">"idle"</span>)   <span class="c">-- jump to a state</span></code></pre>
+
 <h2>Animation from scripts</h2>
 <p>Scripts can start tweens at runtime, for doors, pickups and UI. They use the same easing and are never saved into the scene.</p>
 <pre><code>tween(self, "pos.z", 4, 0.6, "out")</code></pre>
-<nav class="pager"><a class="prev" href="models.html"><small>Previous</small>Models</a><a class="next" href="scripting.html"><small>Next</small>Lua scripting</a></nav>
+<nav class="pager"><a class="prev" href="models.html"><small>Previous</small>Models</a><a class="next" href="audio.html"><small>Next</small>Audio</a></nav>
 </main>
 </div>
 </body>

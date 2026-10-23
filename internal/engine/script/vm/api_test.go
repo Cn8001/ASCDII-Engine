@@ -2,11 +2,13 @@ package vm
 
 import (
 	"bytes"
+	"fmt"
 	"math"
 	"strings"
 	"testing"
 	"time"
 
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/animator"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/asset"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/color"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/geom"
@@ -284,5 +286,63 @@ end`})
 	// Assert
 	if o.Local.Pos != geom.V3(3, 4, 4) || o.Component(Kind).(*Script).self.RawGetString("len").String() != "3" {
 		t.Fatalf("pos %+v logs %v", o.Local.Pos, w.log.lines)
+	}
+}
+
+type fakeAudio struct{ played []string }
+
+func (f *fakeAudio) Play(ref string, vol float64, _ bool) (uint64, error) {
+	f.played = append(f.played, fmt.Sprintf("%s@%.1f", ref, vol))
+	return uint64(len(f.played)), nil
+}
+func (f *fakeAudio) Stop(uint64)               {}
+func (f *fakeAudio) SetVolume(uint64, float64) {}
+func (f *fakeAudio) Playing(uint64) bool       { return true }
+
+func TestUnit_ScriptsDriveAnimatorAudioAndBodies(t *testing.T) {
+	// Arrange
+	w := newWorld(t, map[string]string{"scripts/boss.lua": `
+function start(self)
+  local a = self:component("animator")
+  a:set("speed", 2)
+  a:trigger("hit")
+  self.speed = a:get("speed")
+  local src = self:component("audio_source")
+  src.volume = 0.5
+  src:play()
+  play_sound("sfx/boom.wav", 0.3)
+  local rb = self:component("rigidbody")
+  rb:add_force(vec3(4, 0, 0))
+  rb.gravity = false
+end
+function on_collision(self, other) hit = other.name end
+function update(self) self.hit = hit end`})
+	ctrl := animator.Default()
+	ctrl.Parameters = []animator.Param{{Name: "speed", Type: animator.Float}, {Name: "hit", Type: animator.Trigger}}
+	w.lib.PutController("anims/boss.animator.json", ctrl)
+	audio := &fakeAudio{}
+	w.c.Audio = audio
+	boss := w.s.Add("boss", components.NewCircleCollider(), components.NewRigidbody(), w.script(t, "scripts/boss.lua"))
+	_ = boss.Set("rigidbody.drag", 0)
+	an, _ := w.reg.New("animator")
+	_ = an.Set("controller", "anims/boss.animator.json")
+	src := components.NewAudioSource()
+	src.Clip, src.PlayOnStart = "sfx/theme.wav", false
+	boss.With(an, src)
+	w.s.Add("pillar", components.NewCircleCollider()).At(4, 0, 0)
+
+	// Act
+	w.run(40)
+
+	// Assert
+	sc := boss.Component(Kind).(*Script)
+	if got := sc.self.RawGetString("speed").String(); got != "2" {
+		t.Fatalf("animator param %s logs %v", got, w.log.lines)
+	}
+	if len(audio.played) != 2 || audio.played[0] != "sfx/theme.wav@0.5" {
+		t.Fatalf("audio %v logs %v", audio.played, w.log.lines)
+	}
+	if boss.Local.Pos.X < 1 || sc.self.RawGetString("hit").String() != "pillar" {
+		t.Fatalf("x %.2f hit %s logs %v", boss.Local.Pos.X, sc.self.RawGetString("hit"), w.log.lines)
 	}
 }

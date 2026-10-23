@@ -10,8 +10,16 @@ export function ApplyMaterial(arg1, arg2) {
   return window['go']['service']['AssetService']['ApplyMaterial'](arg1, arg2);
 }
 
+export function Controller(arg1) {
+  return window['go']['service']['AssetService']['Controller'](arg1);
+}
+
 export function ConvertToArt(arg1, arg2) {
   return window['go']['service']['AssetService']['ConvertToArt'](arg1, arg2);
+}
+
+export function CreateController(arg1) {
+  return window['go']['service']['AssetService']['CreateController'](arg1);
 }
 
 export function CreateFolder(arg1) {
@@ -72,6 +80,10 @@ export function Rename(arg1, arg2) {
 
 export function RenameFolder(arg1, arg2) {
   return window['go']['service']['AssetService']['RenameFolder'](arg1, arg2);
+}
+
+export function SetController(arg1, arg2) {
+  return window['go']['service']['AssetService']['SetController'](arg1, arg2);
 }
 
 export function SetProp(arg1, arg2, arg3) {

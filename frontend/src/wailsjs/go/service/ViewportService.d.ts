@@ -4,6 +4,8 @@ import {session} from '../models';
 
 export function AlignGame():Promise<void>;
 
+export function AudioEnded(arg1:number):Promise<void>;
+
 export function Drag(arg1:number,arg2:string,arg3:number,arg4:number,arg5:number,arg6:number):Promise<void>;
 
 export function Drop(arg1:string,arg2:number,arg3:number):Promise<number>;
@@ -15,6 +17,8 @@ export function Key(arg1:string):Promise<void>;
 export function KeyUp(arg1:string):Promise<void>;
 
 export function Orbit(arg1:number,arg2:number):Promise<void>;
+
+export function Paint(arg1:number,arg2:number,arg3:number,arg4:string,arg5:number,arg6:boolean):Promise<void>;
 
 export function Pan(arg1:number,arg2:number):Promise<void>;
 

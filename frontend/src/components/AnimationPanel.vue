@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { Anim, Viewport } from '../lib/api'
+import { ask } from '../lib/dialog'
 import { call, findNode, refreshClips, refreshProps, store, toast } from '../lib/store'
 import Icon from './Icon.vue'
 
@@ -88,8 +89,9 @@ function keyX(clip: number, prop: string, t: number) {
   return (at / span.value) * 100 + '%'
 }
 
-async function addAt(e: MouseEvent, prop: string) {
+async function addAt(e: MouseEvent, prop: string, clip: number) {
   if (!store.selected) return
+  await Anim.PickClip(clip)
   const t = snap(timeAt(e.clientX))
   await setLive(false)
   await call(() => Viewport.SetTime(t))
@@ -123,6 +125,28 @@ async function removeClip(index: number) {
   await refreshClips()
 }
 
+// newClip gives the selection another clip, such as walk next to idle,
+// for an animator to switch between; new keys go to it.
+async function newClip() {
+  if (!store.selected) return
+  const name = await ask('New clip', 'walk', { ok: 'Create' })
+  if (!name) return
+  await call(() => Anim.NewClip(store.selected, name))
+  await refreshClips()
+}
+
+async function pickClip(index: number) {
+  await Anim.PickClip(index)
+  await refreshClips()
+}
+
+async function renameClip(index: number, old: string) {
+  const name = await ask('Rename clip', old, { ok: 'Rename' })
+  if (!name || name === old) return
+  await call(() => Anim.RenameClip(index, name))
+  await refreshClips()
+}
+
 function record() {
   store.autoKey = !store.autoKey
   if (store.autoKey) toast('Record: changes become keys', 'info')
@@ -140,6 +164,7 @@ function record() {
       <span class="ml-2 font-mono text-[11px] text-amber-glow">{{ local.toFixed(2) }}s</span>
       <span class="ml-2 truncate text-[11px] text-ink-500">{{ target }}</span>
       <span class="flex-1" />
+      <button v-if="store.selected" class="btn h-6" title="New clip for the selection" @click="newClip"><Icon name="plus" :size="11" /> Clip</button>
       <template v-if="selectedKey && store.key">
         <span class="font-mono text-[10.5px] text-ink-400">{{ store.key.prop }} @ {{ store.key.t.toFixed(2) }}</span>
         <select class="h-6 rounded-md bg-ink-800 px-1.5 text-[11px] text-ink-200 outline-none" :value="selectedKey.ease || 'linear'" @change="setEase(($event.target as HTMLSelectElement).value)">
@@ -157,8 +182,8 @@ function record() {
           <span v-for="t in ticks" :key="t" class="absolute top-1 -translate-x-1/2 font-mono text-[9.5px] text-ink-500" :style="{ left: (t / span) * 100 + '%' }">{{ t }}</span>
         </div>
         <template v-for="c in store.clips" :key="c.index">
-          <div class="flex h-7 items-center gap-1 border-b border-ink-800/60 bg-ink-850/60 px-2 text-[11.5px] text-ink-200">
-            <Icon name="film" :size="11" class="text-ink-500" />
+          <div class="flex h-7 cursor-pointer items-center gap-1 border-b border-ink-800/60 px-2 text-[11.5px] text-ink-200" :class="c.active ? 'bg-amber-glow/10' : 'bg-ink-850/60'" title="Click: keys go here. Double click: rename." @click="pickClip(c.index)" @dblclick="renameClip(c.index, c.name)">
+            <Icon name="film" :size="11" :class="c.active ? 'text-amber-glow' : 'text-ink-500'" />
             <span class="flex-1 truncate">{{ c.name }}</span>
             <select class="h-5 rounded bg-ink-800 px-1 text-[10.5px] text-ink-300 outline-none" :value="c.mode" @change="mode(c.index, ($event.target as HTMLSelectElement).value)">
               <option v-for="m in ['once', 'loop', 'pingpong']" :key="m" :value="m">{{ m }}</option>
@@ -168,7 +193,7 @@ function record() {
           <div class="h-7 border-b border-ink-800/60 bg-ink-850/60" />
           <template v-for="tr in c.tracks" :key="c.index + tr.prop">
             <div class="flex h-7 items-center pl-6 pr-2 font-mono text-[10.5px] text-ink-400">{{ tr.prop }}</div>
-            <div class="relative h-7 border-b border-ink-800/40" @dblclick="addAt($event, tr.prop)">
+            <div class="relative h-7 border-b border-ink-800/40" @dblclick="addAt($event, tr.prop, c.index)">
               <div class="absolute top-1/2 h-px -translate-y-1/2 bg-ink-700" :style="{ left: (tr.keys[0]?.t / span) * 100 + '%', width: ((tr.keys[tr.keys.length - 1]?.t - tr.keys[0]?.t) / span) * 100 + '%' }" />
               <button
                 v-for="k in tr.keys"

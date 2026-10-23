@@ -40,5 +40,5 @@ func Build(ctx context.Context, dst, player string, fsys fs.FS, skip ...string) 
 	if err := os.Rename(tmp, dst); err != nil {
 		return fmt.Errorf("build: %w", err)
 	}
-	return nil
+	return writeSum(ctx, dst)
 }

@@ -15,10 +15,11 @@ import (
 	"strconv"
 	"strings"
 
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/cmd/launcher/menu"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/cmd/ascdii/menu"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/dragonfall"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/editor/recent"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/guid"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/platform/speaker"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/app"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/bundle"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/project"
@@ -30,8 +31,7 @@ const usage = `usage:
   ascdii new <dir> [-name N] [-template dragonfall]
   ascdii run <dir>
   ascdii preview <dir> [-size 160x50] [-time 2] [-plain]
-  ascdii build <dir> [-out path] [-player path]
-  ascdii release <dir> [-version v] [-players dir]
+  ascdii build <dir> [-out path] [-player path] [-single]
   ascdii pack list|install|remove|export ...
   ascdii version
   ascdii help`
@@ -58,6 +58,9 @@ func run(ctx context.Context, args []string) error {
 	} else if !errors.Is(err, bundle.ErrNoBundle) {
 		return err
 	}
+	if fsys, err := bundle.OpenData(self); err == nil {
+		return play(ctx, fsys, args)
+	}
 	if len(args) == 0 {
 		return launch(ctx)
 	}
@@ -76,8 +79,6 @@ func run(ctx context.Context, args []string) error {
 		return cmdPreview(ctx, args[1:])
 	case "build":
 		return cmdBuild(ctx, self, args[1:])
-	case "release":
-		return cmdRelease(ctx, self, args[1:])
 	case "pack":
 		return cmdPack(ctx, args[1:])
 	case "version":
@@ -107,7 +108,7 @@ func play(ctx context.Context, fsys fs.FS, args []string) error {
 	if len(args) > 0 && args[0] == "--preview" {
 		return preview(ctx, fsys, args[1:])
 	}
-	e, err := app.Open(ctx, fsys, app.Options{Modules: modules()})
+	e, err := app.Open(ctx, fsys, app.Options{Modules: modules(), Speaker: speaker.Open})
 	if err != nil {
 		return err
 	}
@@ -191,8 +192,9 @@ func parseSize(s string) (int, int, error) {
 func cmdBuild(ctx context.Context, self string, args []string) error {
 	dir, rest := split(args)
 	fl := flag.NewFlagSet("build", flag.ContinueOnError)
-	out := fl.String("out", "", "output executable")
+	out := fl.String("out", "", "output folder, or executable with -single")
 	player := fl.String("player", self, "player binary for the target platform")
+	single := fl.Bool("single", false, "one executable with the project inside, instead of a folder")
 	if err := fl.Parse(rest); err != nil || dir == "" {
 		return errors.New(usage)
 	}
@@ -204,58 +206,29 @@ func cmdBuild(ctx context.Context, self string, args []string) error {
 	if err != nil {
 		return err
 	}
-	if *out == "" {
-		ext := ""
-		if runtime.GOOS == "windows" || strings.HasSuffix(*player, ".exe") {
-			ext = ".exe"
+	ext := ""
+	if runtime.GOOS == "windows" || strings.HasSuffix(*player, ".exe") {
+		ext = ".exe"
+	}
+	name := strings.ReplaceAll(p.Manifest.Name, " ", "-")
+	if !*single {
+		folder := *out
+		if folder == "" {
+			folder = filepath.Join(dir, project.BuildDir, name)
 		}
-		*out = filepath.Join(dir, project.BuildDir, strings.ReplaceAll(p.Manifest.Name, " ", "-")+ext)
+		exe, err := bundle.BuildFolder(ctx, folder, name+ext, *player, fsys, project.BuildDir)
+		if err != nil {
+			return err
+		}
+		fmt.Println(exe)
+		return nil
+	}
+	if *out == "" {
+		*out = filepath.Join(dir, project.BuildDir, name+ext)
 	}
 	if err := bundle.Build(ctx, *out, *player, fsys, project.BuildDir); err != nil {
 		return err
 	}
 	fmt.Println(*out)
-	return nil
-}
-
-// cmdRelease builds every target whose player is found in -players, named
-// ascdii-<os>-<arch>[.exe]; the host player is always this binary.
-func cmdRelease(ctx context.Context, self string, args []string) error {
-	dir, rest := split(args)
-	fl := flag.NewFlagSet("release", flag.ContinueOnError)
-	ver := fl.String("version", "", "game version, defaults to the manifest")
-	players := fl.String("players", "", "folder with ascdii-<os>-<arch> player binaries")
-	if err := fl.Parse(rest); err != nil || dir == "" {
-		return errors.New(usage)
-	}
-	if _, err := project.EnsureMeta(ctx, dir, guid.Default()); err != nil {
-		return err
-	}
-	fsys := os.DirFS(dir)
-	p, err := project.Open(ctx, fsys, modules())
-	if err != nil {
-		return err
-	}
-	if *ver == "" {
-		*ver = p.Manifest.Version
-	}
-	targets := []bundle.Target{{OS: runtime.GOOS, Arch: runtime.GOARCH, Player: self}}
-	if *players != "" {
-		for _, t := range []bundle.Target{{OS: "linux", Arch: "amd64"}, {OS: "windows", Arch: "amd64"}, {OS: "darwin", Arch: "arm64"}} {
-			path := filepath.Join(*players, "ascdii-"+t.OS+"-"+t.Arch+t.Ext())
-			if _, err := os.Stat(path); err != nil || (t.OS == runtime.GOOS && t.Arch == runtime.GOARCH) {
-				continue
-			}
-			t.Player = path
-			targets = append(targets, t)
-		}
-	}
-	rel, err := bundle.MakeRelease(ctx, filepath.Join(dir, project.BuildDir, "release"), p.Manifest.Name, *ver, targets, fsys, project.BuildDir)
-	if err != nil {
-		return err
-	}
-	for _, f := range rel.Files {
-		fmt.Println(f)
-	}
 	return nil
 }

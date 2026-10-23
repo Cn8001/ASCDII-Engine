@@ -28,6 +28,8 @@ type Point struct {
 	Color     color.Color `json:"color"`
 	Intensity float64     `json:"intensity"`
 	Flicker   float64     `json:"flicker"`
+	Dir       geom.Vec3   `json:"dir,omitempty"`  // a spot light's aim; zero shines all around
+	Cone      float64     `json:"cone,omitempty"` // cosine of the spot's half angle
 }
 
 type Env struct {
@@ -121,6 +123,8 @@ type shadedPoint struct {
 	pos     geom.Vec3
 	radius  float64
 	r, g, b float64
+	dir     geom.Vec3
+	cone    float64
 }
 
 func NewShader(env Env, points []Point, time float64) Shader {
@@ -141,7 +145,11 @@ func NewShader(env Env, points []Point, time float64) Shader {
 			k *= 1 + p.Flicker*(.55*math.Sin(time*11+p.Pos.X)+.35*math.Sin(time*23.7+p.Pos.Y*1.7))
 		}
 		r, g, b := scaled(p.Color, k)
-		s.points = append(s.points, shadedPoint{pos: p.Pos, radius: p.Radius, r: r, g: g, b: b})
+		sp := shadedPoint{pos: p.Pos, radius: p.Radius, r: r, g: g, b: b}
+		if p.Dir != (geom.Vec3{}) {
+			sp.dir, sp.cone = p.Dir.Norm(), p.Cone
+		}
+		s.points = append(s.points, sp)
 	}
 	return s
 }
@@ -170,6 +178,10 @@ func (s Shader) Irradiance(n, world geom.Vec3, shadow float64) (r, g, b float64)
 		// Smooth falloff keeps most of the light inside the radius and still reaches zero at its edge.
 		att := 1 - (dist*dist)/(p.radius*p.radius)
 		att *= att
+		if p.dir != (geom.Vec3{}) && dist > 1e-6 {
+			// A soft rim on the cone reads better in Braille than a hard edge.
+			att *= geom.Smoothstep(p.cone, p.cone+(1-p.cone)*.25, -delta.Dot(p.dir)/dist)
+		}
 		wrap := 1.0
 		if dist > 1e-6 {
 			wrap = (n.Dot(delta.Scale(1/dist)) + .6) / 1.6

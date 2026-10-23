@@ -24,9 +24,11 @@
 <a href="textures.html">Textures and materials</a>
 <a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
+<a href="audio.html">Audio</a>
+<a href="physics.html">Physics</a>
 <a href="scripting.html" class="on">Lua scripting</a>
 <a href="rendering.html">Rendering</a>
-<a href="building.html">Build and release</a>
+<a href="building.html">Build</a>
 <h4>Reference</h4>
 <a href="lua-api.html">Lua API</a>
 <a href="cli.html">CLI reference</a>
@@ -108,6 +110,8 @@ fields = { door = object() }
 <tr><td><code>update(self, dt)</code></td><td>Every simulation step; <code>dt</code> is in seconds and follows <code>time_scale</code>.</td></tr>
 <tr><td><code>key(self, k)</code></td><td>On a key press. Return <code>true</code> to stop other components from also handling it.</td></tr>
 <tr><td><code>on_destroy(self)</code></td><td>Before the object is removed with <code>destroy</code>.</td></tr>
+<tr><td><code>on_collision(self, other)</code></td><td>When a collider of this object starts touching another, see <a href="physics.html">Physics</a>.</td></tr>
+<tr><td><code>on_trigger(self, other)</code></td><td>When a trigger collider starts overlapping another object.</td></tr>
 <tr><td><code>draw(self, d)</code></td><td>Every frame, to draw extra shapes; see the <a href="lua-api.html#draw">draw API</a>.</td></tr>
 </table>
 <p>The <a href="lua-api.html">Lua API</a> page lists every function, including the camera, the environment and the render pipeline, which scripts can change at run time.</p>
@@ -115,7 +119,7 @@ fields = { door = object() }
 <h2>Errors and hot reload</h2>
 <p>A runtime error stops only that script and appears in the Console with the file and line, for example <code>scripts/door.lua:12: attempt to index a nil value</code>. Double click it to jump to the line. Fix the file and save: the script reloads, keeps the state on <code>self</code> and runs <code>start</code> again.</p>
 <div class="note"><b>Scripts and play mode</b>Scripts run in play mode and in built games. In the editor's Live preview they do not run, so editing never moves things by logic. Scripts run in a sandbox with the standard <code>math</code>, <code>string</code> and <code>table</code> libraries and no file, network or OS access.</div>
-<nav class="pager"><a class="prev" href="animation.html"><small>Previous</small>Animation</a><a class="next" href="rendering.html"><small>Next</small>Rendering</a></nav>
+<nav class="pager"><a class="prev" href="physics.html"><small>Previous</small>Physics</a><a class="next" href="rendering.html"><small>Next</small>Rendering</a></nav>
 </main>
 </div>
 </body>

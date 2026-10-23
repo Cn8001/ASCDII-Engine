@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/animator"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/asset"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/material"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/mesh"
@@ -52,6 +53,10 @@ func (s *Session) reloadFiles(ctx context.Context, dir string, changed []string)
 		case asset.Texture:
 			if t, err := asset.LoadTexture(os.DirFS(dir), p); err == nil {
 				s.lib.PutTexture(p, t)
+			}
+		case asset.Animator:
+			if c, err := animator.Decode(bytes.NewReader(b)); err == nil {
+				s.lib.PutController(p, c)
 			}
 		case asset.Material:
 			if m, err := material.Decode(bytes.NewReader(b)); err == nil {

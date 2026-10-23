@@ -24,9 +24,11 @@
 <a href="textures.html">Textures and materials</a>
 <a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
+<a href="audio.html">Audio</a>
+<a href="physics.html">Physics</a>
 <a href="scripting.html">Lua scripting</a>
 <a href="rendering.html">Rendering</a>
-<a href="building.html">Build and release</a>
+<a href="building.html">Build</a>
 <h4>Reference</h4>
 <a href="lua-api.html">Lua API</a>
 <a href="cli.html">CLI reference</a>
@@ -36,42 +38,56 @@
 <main>
 <div class="kicker">Start</div>
 <h1>Install</h1>
-<p class="lead">The engine and editor build from one Go module. You need Go, Node and the Wails CLI. Everything else is vendored or generated.</p>
-<h2>Requirements</h2>
+<p class="lead">Most people only need the two programs: the editor, <code>ascdii-editor</code>, and the command <code>ascdii</code>, which also plays games. Building from source is only for working on the engine itself.</p>
+
+<h2>Download and run</h2>
+<p>Get the archive for your platform from your team's release page; it holds both programs:</p>
+<table>
+<tr><th>Platform</th><th>Archive</th><th>Contains</th></tr>
+<tr><td>Windows 10 and 11</td><td><code>ascdii-0.0.1-windows-amd64.zip</code></td><td><code>ascdii-editor.exe</code>, <code>ascdii.exe</code></td></tr>
+<tr><td>Linux, WSL</td><td><code>ascdii-0.0.1-linux-amd64.tar.gz</code></td><td><code>ascdii-editor</code>, <code>ascdii</code></td></tr>
+</table>
+<ol class="steps">
+<li>Unpack it anywhere, for example into <code>C:\Tools\ascdii</code> or <code>~/tools/ascdii</code>.</li>
+<li>Start <code>ascdii-editor</code>. The start screen creates a project or opens one; nothing else is needed for the editor.</li>
+<li>To use <code>ascdii</code> from any folder, add the unpacked folder to your <code>PATH</code>. Run <code>ascdii</code> on its own for the terminal main menu, or <code>ascdii help</code> for the commands.</li>
+</ol>
+<table>
+<tr><th>Needs</th><th>Windows</th><th>Linux</th></tr>
+<tr><td>Editor window</td><td>WebView2, already part of Windows 10 and 11</td><td>WebKitGTK 4.1: <code>sudo apt install libwebkit2gtk-4.1-0</code></td></tr>
+<tr><td>Sound in games</td><td>nothing</td><td>ALSA, installed on almost every desktop (<code>libasound2</code>)</td></tr>
+</table>
+<div class="note"><b>Players need nothing</b>Games you build are folders with one executable and a data folder. The people who play them only need a terminal, see below.</div>
+
+<h2>Check your terminal</h2>
+<figure><img src="img/terminal.png" alt="Dragonfall in a terminal"><figcaption>Dragonfall as a terminal emulator draws it: every cell is one Braille character with a foreground and a background color.</figcaption></figure>
+<p>Games run in any terminal with 24 bit color and a font that has the Braille block (U+2800 to U+28FF): Windows Terminal, WezTerm, Kitty, Alacritty, GNOME Terminal, iTerm2 and the VS Code terminal all work. A window of about 120 by 40 cells or larger looks best; a smaller font gives more detail.</p>
+<pre><code>ascdii version
+ascdii new ~/games/demo -template dragonfall
+ascdii run ~/games/demo</code></pre>
+<div class="tip"><b>Not the old Windows console</b>On Windows use Windows Terminal, not the legacy console host, which has no 24 bit color.</div>
+
+<h2>Build from source</h2>
+<p>For changing the engine or the editor. Everything builds from one Go module.</p>
 <table>
 <tr><th>Tool</th><th>Version</th><th>Used for</th></tr>
 <tr><td>Go</td><td>1.24 or newer</td><td>Engine, CLI, editor backend</td></tr>
 <tr><td>Node.js</td><td>20 or newer</td><td>Editor interface (Vue, Vite, Tailwind)</td></tr>
-<tr><td>Wails CLI</td><td>v2.17</td><td>Desktop editor builds: <code>go install github.com/wailsapp/wails/v2/cmd/wails@v2.17.0</code></td></tr>
-<tr><td>WebKitGTK 4.1</td><td>Linux and WSL only</td><td>The editor window: <code>sudo apt install libwebkit2gtk-4.1-dev</code></td></tr>
+<tr><td>Wails CLI</td><td>v2.17</td><td><code>go install github.com/wailsapp/wails/v2/cmd/wails@v2.17.0</code></td></tr>
+<tr><td>WebKitGTK 4.1 headers</td><td>Linux and WSL only</td><td><code>sudo apt install libwebkit2gtk-4.1-dev</code></td></tr>
 </table>
-<div class="note"><b>Windows</b>Games and the editor run natively on Windows. You can also build both from WSL: the Windows executables are cross compiled, no extra toolchain needed.</div>
-
-<h2>Build everything</h2>
 <pre><code><span class="c"># tests and vet for the whole module</span>
 make test
-
-<span class="c"># the ascdii CLI and game player</span>
+<span class="c"># the ascdii command and game player</span>
 make cli
-
-<span class="c"># player binaries the editor uses to build games</span>
+<span class="c"># player binaries the editor builds games from; run before any editor build</span>
 make players
-
 <span class="c"># the editor, for this machine and for Windows</span>
 make editor-linux
-make editor-windows</code></pre>
-<p>The editor lands in <code>cmd/editor/build/bin/</code>. Run <code>ascdii-editor</code> on Linux or WSL, or <code>ascdii-editor.exe</code> on Windows.</p>
-<div class="tip"><b>Always run make players first</b>The editor embeds the player binaries it appends your game to. Without them the Build window shows the platforms as unavailable.</div>
-
-<h2>Develop the editor</h2>
-<pre><code>make editor-dev</code></pre>
-<p>This starts the editor with hot reload for the interface. The same session is also reachable from a browser at <code>http://localhost:34115</code>, which is handy for the developer tools.</p>
-
-<h2>Check your terminal</h2>
-<p>Games need a terminal with truecolor and a font that has the Braille block (U+2800 to U+28FF). Windows Terminal, WezTerm, Kitty, Alacritty and the VS Code terminal all work. A window of about 120x40 cells or larger looks best.</p>
-<pre><code>ascdii version
-ascdii new ~/games/demo -template dragonfall
-ascdii run ~/games/demo</code></pre>
+make editor-windows
+<span class="c"># the archives from Download and run, in bin/dist</span>
+make dist</code></pre>
+<p>The editor lands in <code>cmd/editor/build/bin/</code>. From WSL the Windows programs are cross compiled; no extra toolchain is needed. <code>make editor-dev</code> starts the editor with hot reload, also reachable from a browser at <code>http://localhost:34115</code> for the developer tools.</p>
 <nav class="pager"><a class="prev" href="index.html"><small>Previous</small>Welcome</a><a class="next" href="first-game.html"><small>Next</small>Your first game</a></nav>
 </main>
 </div>

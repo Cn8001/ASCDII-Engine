@@ -24,9 +24,11 @@
 <a href="textures.html">Textures and materials</a>
 <a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
+<a href="audio.html">Audio</a>
+<a href="physics.html">Physics</a>
 <a href="scripting.html">Lua scripting</a>
 <a href="rendering.html">Rendering</a>
-<a href="building.html">Build and release</a>
+<a href="building.html">Build</a>
 <h4>Reference</h4>
 <a href="lua-api.html">Lua API</a>
 <a href="cli.html" class="on">CLI reference</a>
@@ -47,11 +49,11 @@
 <tr><td><code>ascdii pack install &lt;dir&gt; &lt;file | name&gt;</code></td><td>Install a <code>.ascdiipack</code> or a built in package such as <code>dragonfall</code>.</td></tr>
 <tr><td><code>ascdii pack remove &lt;dir&gt; &lt;name&gt;</code></td><td>Remove a package, and the modules only it needed.</td></tr>
 <tr><td><code>ascdii pack export &lt;folder&gt; -name N [-version V] [-description D] [-out file]</code></td><td>Write a folder, .meta files included, as a <code>.ascdiipack</code>.</td></tr>
-<tr><td><code>launcher</code></td><td>The terminal main menu as its own program; <code>ascdii</code> without arguments shows the same.</td></tr>
+
 <tr><td><code>ascdii run &lt;dir&gt;</code></td><td>Play a project folder in this terminal.</td></tr>
 <tr><td><code>ascdii preview &lt;dir&gt; [-size 160x50] [-time 2] [-hour 22] [-plain]</code></td><td>Print one frame after simulating some time.</td></tr>
-<tr><td><code>ascdii build &lt;dir&gt; [-out path] [-player path]</code></td><td>One executable. The player defaults to this binary.</td></tr>
-<tr><td><code>ascdii release &lt;dir&gt; [-version v] [-players dir]</code></td><td>Executables, zips and SHA256SUMS for every available player.</td></tr>
+<tr><td><code>ascdii build &lt;dir&gt; [-out path] [-player path] [-single]</code></td><td>A game folder: the player, <code>data/game.pak</code> and SHA256SUMS. <code>-single</code> makes one executable instead. The player defaults to this binary.</td></tr>
+
 <tr><td><code>ascdii version</code></td><td>Print the engine version.</td></tr>
 <tr><td><code>ascdii help</code></td><td>Print this list.</td></tr>
 </table>
@@ -63,6 +65,7 @@
 <tr><td><code>make cli</code></td><td>Build <code>bin/ascdii</code>.</td></tr>
 <tr><td><code>make players</code></td><td>Linux and Windows players, also copied into the editor.</td></tr>
 <tr><td><code>make editor-dev</code>, <code>make editor-linux</code>, <code>make editor-windows</code></td><td>Run or build the editor.</td></tr>
+<tr><td><code>make dist</code></td><td>Archives of the editor and <code>ascdii</code> per platform, for people without the source.</td></tr>
 <tr><td><code>make hello</code>, <code>make dragonfall</code></td><td>The two examples in the terminal.</td></tr>
 <tr><td><code>make template</code></td><td>Regenerate the Dragonfall template from its Go source.</td></tr>
 <tr><td><code>make brand</code></td><td>Regenerate the app icon.</td></tr>
