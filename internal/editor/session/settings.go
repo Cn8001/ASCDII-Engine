@@ -26,6 +26,7 @@ type ProjectSettings struct {
 	FPS     int    `json:"fps"`
 	Mods    bool   `json:"mods"`
 	ModAPI  string `json:"modApi"` // script reference, a guid or a path
+	Icon    string `json:"icon"`   // chosen in the build dialog, kept as it is here
 }
 
 func (s *Session) ProjectSettings() (ProjectSettings, error) {
@@ -35,7 +36,7 @@ func (s *Session) ProjectSettings() (ProjectSettings, error) {
 		return ProjectSettings{}, err
 	}
 	m := s.proj.Manifest
-	return ProjectSettings{Name: m.Name, Version: m.Version, Start: m.Start, Cols: m.Cols, Rows: m.Rows, FPS: m.FPS, Mods: m.Mods.Enabled, ModAPI: m.Mods.API}, nil
+	return ProjectSettings{Name: m.Name, Version: m.Version, Start: m.Start, Cols: m.Cols, Rows: m.Rows, FPS: m.FPS, Mods: m.Mods.Enabled, ModAPI: m.Mods.API, Icon: m.Icon}, nil
 }
 
 func (s *Session) SetProjectSettings(ctx context.Context, p ProjectSettings) error {
@@ -51,6 +52,7 @@ func (s *Session) SetProjectSettings(ctx context.Context, p ProjectSettings) err
 	m.Name, m.Version, m.Start = strings.TrimSpace(p.Name), strings.TrimSpace(p.Version), p.Start
 	m.Cols, m.Rows, m.FPS = p.Cols, p.Rows, p.FPS
 	m.Mods = project.ModSettings{Enabled: p.Mods, API: p.ModAPI}
+	m.Icon = p.Icon
 	if err := project.SaveManifest(ctx, filepath.Join(s.dir, s.proj.File), m); err != nil {
 		return err
 	}

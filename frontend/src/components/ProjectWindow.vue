@@ -315,9 +315,17 @@ async function removePackage(f: string) {
   await refresh()
 }
 
+// revealItem shows a file or folder in the system's file manager; the label
+// uses the name Windows users know.
+const revealLabel = navigator.userAgent.includes('Windows') ? 'Show in Explorer' : 'Show in File Manager'
+function revealItem(rel: string): MenuItem {
+  return { label: revealLabel, icon: 'folder', run: () => call(() => Assets.Reveal(rel)) }
+}
+
 function folderMenu(e: MouseEvent, f: string) {
   if (isPkg(f)) {
     const items: MenuItem[] = [{ label: 'Open', icon: 'open', run: () => go(f) }]
+    items.push(revealItem(f))
     if (f.split('/').length === 2) items.push({ label: 'Package Manager', icon: 'package', run: showPackages }, { label: '-' }, { label: 'Remove Package', icon: 'trash', danger: true, run: () => removePackage(f) })
     openMenu(e, items)
     return
@@ -327,6 +335,7 @@ function folderMenu(e: MouseEvent, f: string) {
     { label: 'New Folder', icon: 'folder', run: () => newFolder(f) },
     { label: 'Rename', icon: 'file', run: () => renameFolder(f) },
     { label: 'Export Package', icon: 'package', run: () => exportFolder(f) },
+    revealItem(f),
     { label: '-' },
     { label: 'Delete', icon: 'trash', danger: true, run: () => remove(f, true) },
   ])
@@ -350,6 +359,7 @@ function itemMenu(e: MouseEvent, a: asset.Entry) {
     items.push({ label: a.kind === 'scene' ? 'Open' : a.kind === 'script' ? 'Edit' : 'Place', icon: 'open', run: () => openAsset(a) })
   }
   if (flat.value) items.push({ label: 'Show in Folder', icon: 'folder', run: () => { go(dirOf(a.path)); picked.value = a.path } })
+  items.push(revealItem(a.path))
   if (!isPkg(a.path)) {
     items.push({ label: 'Rename', icon: 'file', run: () => rename(a) })
     items.push({ label: '-' }, { label: 'Delete', icon: 'trash', danger: true, run: () => remove(a.path, false) })
@@ -373,7 +383,7 @@ async function reload() {
         @dragover="(e) => dragOver(e, '/')"
         @dragleave="over = ''"
         @drop.prevent="(e) => dropInto(e, '')"
-        @contextmenu.prevent="(e) => openMenu(e, [{ label: 'New Folder', icon: 'folder', run: () => newFolder('') }, { label: 'Export Package', icon: 'package', run: () => exportFolder('') }])"
+        @contextmenu.prevent="(e) => openMenu(e, [{ label: 'New Folder', icon: 'folder', run: () => newFolder('') }, { label: 'Export Package', icon: 'package', run: () => exportFolder('') }, revealItem('')])"
       >
         <Icon name="folder" :size="13" :class="cwd === '' ? 'text-amber-glow' : ''" />
         <span class="flex-1 truncate">Assets</span>

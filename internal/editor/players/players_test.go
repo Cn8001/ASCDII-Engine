@@ -39,3 +39,19 @@ func TestUnit_ExtractMissingReportsNoPlayer(t *testing.T) {
 		t.Fatalf("got %v", err)
 	}
 }
+
+func TestUnit_SourceTreeLayoutServesBothPlatforms(t *testing.T) {
+	// Arrange
+	s := Source{Dirs: []fs.FS{fstest.MapFS{
+		"linux/ascdii-player":       {Data: []byte("elf")},
+		"windows/ascdii-player.exe": {Data: []byte("pe")},
+	}}}
+
+	// Act
+	got := s.Available()
+
+	// Assert
+	if len(got) != 2 {
+		t.Fatalf("available %v", got)
+	}
+}

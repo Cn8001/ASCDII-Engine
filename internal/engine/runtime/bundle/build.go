@@ -24,7 +24,7 @@ func Build(ctx context.Context, dst, player string, fsys fs.FS, skip ...string) 
 		return fmt.Errorf("build: %w", err)
 	}
 	// A player that already carries a bundle must not nest a second one.
-	size, err := playerSize(ctx, src)
+	size, err := PlayerSize(ctx, src)
 	if err != nil {
 		out.Close()
 		return err

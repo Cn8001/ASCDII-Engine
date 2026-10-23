@@ -10,8 +10,8 @@ import (
 
 func ioLimit(f *os.File, n int64) io.Reader { return io.NewSectionReader(f, 0, n) }
 
-// playerSize is the length of the executable without any appended bundle.
-func playerSize(ctx context.Context, f *os.File) (int64, error) {
+// PlayerSize is the length of the executable without any appended bundle.
+func PlayerSize(ctx context.Context, f *os.File) (int64, error) {
 	if err := ctx.Err(); err != nil {
 		return 0, err
 	}

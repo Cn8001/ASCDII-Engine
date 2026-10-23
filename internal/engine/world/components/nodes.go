@@ -23,9 +23,21 @@ func Register(r *scene.Registry, lib *asset.Library) {
 		b.lib = lib
 		return b
 	}, obj("3d", "Cube"))
-	r.Register("blob", func() scene.Component { return NewBlob(1.2, color.RGB(78, 138, 92)) }, obj("3d", "Sphere"))
-	r.Register("cylinder", func() scene.Component { return NewCylinder(1, 3, color.RGB(140, 146, 150)) }, obj("3d", "Cylinder"))
-	r.Register("cone", func() scene.Component { return NewCone(1.5, 3, color.RGB(64, 120, 84)) }, obj("3d", "Cone"))
+	r.Register("blob", func() scene.Component {
+		b := NewBlob(1.2, color.RGB(78, 138, 92))
+		b.lib = lib
+		return b
+	}, obj("3d", "Sphere"))
+	r.Register("cylinder", func() scene.Component {
+		y := NewCylinder(1, 3, color.RGB(140, 146, 150))
+		y.lib = lib
+		return y
+	}, obj("3d", "Cylinder"))
+	r.Register("cone", func() scene.Component {
+		o := NewCone(1.5, 3, color.RGB(64, 120, 84))
+		o.lib = lib
+		return o
+	}, obj("3d", "Cone"))
 	r.Register("plane", func() scene.Component {
 		p := NewPlane(6, 6, color.RGB(150, 146, 138))
 		p.lib = lib
@@ -37,8 +49,16 @@ func Register(r *scene.Registry, lib *asset.Library) {
 		return q
 	}, obj("3d", "Quad"))
 	r.Register("mesh", func() scene.Component { return NewMesh(lib, "") }, scene.Meta{Category: "3d", Label: "Mesh"})
-	r.Register("ground", func() scene.Component { return NewGround(40, 40, color.RGB(64, 92, 60)) }, obj("3d", "Ground"))
-	r.Register("water", func() scene.Component { return NewWater(12, 6, color.RGB(36, 92, 112)) }, obj("3d", "Water"))
+	r.Register("ground", func() scene.Component {
+		g := NewGround(40, 40, color.RGB(64, 92, 60))
+		g.lib = lib
+		return g
+	}, obj("3d", "Ground"))
+	r.Register("water", func() scene.Component {
+		w := NewWater(12, 6, color.RGB(36, 92, 112))
+		w.lib = lib
+		return w
+	}, obj("3d", "Water"))
 	r.Register("camera", func() scene.Component { return NewCamera() }, obj("camera", "Camera"))
 	r.Register("light", func() scene.Component { return NewLight(8, color.RGB(255, 190, 110)) }, obj("light", "Point Light"))
 	r.Register("emitter", func() scene.Component { return NewEmitter() }, obj("effects", "Particle System"))
@@ -227,6 +247,8 @@ type Cylinder struct {
 	Radius, Height float64
 	Color          color.Color
 	Segments       int
+	Material       string // material asset; replaces the color when set
+	lib            *asset.Library
 }
 
 func NewCylinder(r, h float64, c color.Color) *Cylinder {
@@ -236,7 +258,7 @@ func NewCylinder(r, h float64, c color.Color) *Cylinder {
 func (*Cylinder) Kind() string { return "cylinder" }
 func (y *Cylinder) bind() *prop.Binder {
 	return prop.Bind().Float("radius", &y.Radius, .05, 100).Float("height", &y.Height, .05, 200).
-		Color("color", &y.Color).Int("segments", &y.Segments, 6, 48)
+		Color("color", &y.Color).Int("segments", &y.Segments, 6, 48).Material("material", &y.Material)
 }
 func (y *Cylinder) Props() []prop.Prop        { return y.bind().Props() }
 func (y *Cylinder) Set(n string, v any) error { return y.bind().Set(n, v) }
@@ -247,7 +269,11 @@ func (y *Cylinder) Bounds(t scene.Transform) geom.AABB {
 func (y *Cylinder) Draw(c *draw.Context, t scene.Transform) {
 	k := t.Uniform()
 	m := draw.M(y.Color)
-	c.Cylinder(t.Pos, y.Radius*k, y.Height*k, m.Tint(1.1), m, y.Segments)
+	top := m.Tint(1.1)
+	if mm, ok := materialOf(y.lib, y.Material); ok {
+		m, top = mm, mm
+	}
+	c.Cylinder(t.Pos, y.Radius*k, y.Height*k, top, m, y.Segments)
 	c.Shadow(t.Pos, y.Radius*k*1.2, y.Radius*k, .5)
 }
 
@@ -255,6 +281,8 @@ type Cone struct {
 	Radius, Height float64
 	Color          color.Color
 	Sway           float64
+	Material       string
+	lib            *asset.Library
 }
 
 func NewCone(r, h float64, c color.Color) *Cone { return &Cone{Radius: r, Height: h, Color: c} }
@@ -262,7 +290,7 @@ func NewCone(r, h float64, c color.Color) *Cone { return &Cone{Radius: r, Height
 func (*Cone) Kind() string { return "cone" }
 func (o *Cone) bind() *prop.Binder {
 	return prop.Bind().Float("radius", &o.Radius, .05, 100).Float("height", &o.Height, .05, 200).
-		Color("color", &o.Color).Float("sway", &o.Sway, 0, 2)
+		Color("color", &o.Color).Float("sway", &o.Sway, 0, 2).Material("material", &o.Material)
 }
 func (o *Cone) Props() []prop.Prop        { return o.bind().Props() }
 func (o *Cone) Set(n string, v any) error { return o.bind().Set(n, v) }
@@ -273,21 +301,28 @@ func (o *Cone) Bounds(t scene.Transform) geom.AABB {
 func (o *Cone) Draw(c *draw.Context, t scene.Transform) {
 	k := t.Uniform()
 	lean := geom.V2(o.Sway*math.Sin(c.Time*1.3+t.Pos.X*.3), 0)
-	c.Cone(t.Pos, o.Radius*k, o.Height*k, draw.M(o.Color), 10, lean)
+	m := draw.M(o.Color)
+	if mm, ok := materialOf(o.lib, o.Material); ok {
+		m = mm
+	}
+	c.Cone(t.Pos, o.Radius*k, o.Height*k, m, 10, lean)
 	c.Shadow(t.Pos, o.Radius*k, o.Radius*k*.8, .5)
 }
 
 type Blob struct {
-	Radius float64
-	Color  color.Color
-	Glow   float64
+	Radius   float64
+	Color    color.Color
+	Glow     float64
+	Material string
+	lib      *asset.Library
 }
 
 func NewBlob(r float64, c color.Color) *Blob { return &Blob{Radius: r, Color: c} }
 
 func (*Blob) Kind() string { return "blob" }
 func (b *Blob) bind() *prop.Binder {
-	return prop.Bind().Float("radius", &b.Radius, .05, 50).Color("color", &b.Color).Float("glow", &b.Glow, 0, 1)
+	return prop.Bind().Float("radius", &b.Radius, .05, 50).Color("color", &b.Color).Float("glow", &b.Glow, 0, 1).
+		Material("material", &b.Material)
 }
 func (b *Blob) Props() []prop.Prop        { return b.bind().Props() }
 func (b *Blob) Set(n string, v any) error { return b.bind().Set(n, v) }
@@ -297,7 +332,11 @@ func (b *Blob) Bounds(t scene.Transform) geom.AABB {
 }
 func (b *Blob) Draw(c *draw.Context, t scene.Transform) {
 	r := b.Radius * t.Uniform()
-	c.Blob(t.Pos.Add(geom.V3(0, 0, r)), r, draw.M(b.Color).Glow(b.Glow))
+	m := draw.M(b.Color).Glow(b.Glow)
+	if mm, ok := materialOf(b.lib, b.Material); ok {
+		m = mm
+	}
+	c.Blob(t.Pos.Add(geom.V3(0, 0, r)), r, m)
 	c.Shadow(t.Pos, r, r*.8, .55)
 }
 
@@ -306,6 +345,8 @@ type Ground struct {
 	Color        color.Color
 	Grain        float64
 	Seed         int
+	Material     string // tiles once per world unit; tiling below 1 enlarges it
+	lib          *asset.Library
 }
 
 func NewGround(w, d float64, c color.Color) *Ground {
@@ -315,7 +356,7 @@ func NewGround(w, d float64, c color.Color) *Ground {
 func (*Ground) Kind() string { return "ground" }
 func (g *Ground) bind() *prop.Binder {
 	return prop.Bind().Float("width", &g.Width, 1, 2000).Float("depth", &g.Depth, 1, 2000).
-		Color("color", &g.Color).Float("grain", &g.Grain, 0, 1).Int("seed", &g.Seed, 0, 9999)
+		Color("color", &g.Color).Float("grain", &g.Grain, 0, 1).Int("seed", &g.Seed, 0, 9999).Material("material", &g.Material)
 }
 func (g *Ground) Props() []prop.Prop        { return g.bind().Props() }
 func (g *Ground) Set(n string, v any) error { return g.bind().Set(n, v) }
@@ -337,19 +378,25 @@ func (r rect) Tile(x, y int) draw.Tile {
 
 func (g *Ground) Draw(c *draw.Context, t scene.Transform) {
 	m := draw.M(g.Color)
+	if mm, ok := materialOf(g.lib, g.Material); ok {
+		m = mm
+	}
 	c.Terrain(rect{g.Bounds(t), draw.Tile{Height: t.Pos.Z, Top: m, Side: m.Tint(.7)}}, draw.TerrainOptions{Grain: g.Grain, Seed: uint32(g.Seed)})
 }
 
 type Water struct {
 	Width, Depth float64
 	Color        color.Color
+	Material     string // keeps the glints and reflections of water
+	lib          *asset.Library
 }
 
 func NewWater(w, d float64, c color.Color) *Water { return &Water{Width: w, Depth: d, Color: c} }
 
 func (*Water) Kind() string { return "water" }
 func (w *Water) bind() *prop.Binder {
-	return prop.Bind().Float("width", &w.Width, 1, 2000).Float("depth", &w.Depth, 1, 2000).Color("color", &w.Color)
+	return prop.Bind().Float("width", &w.Width, 1, 2000).Float("depth", &w.Depth, 1, 2000).Color("color", &w.Color).
+		Material("material", &w.Material)
 }
 func (w *Water) Props() []prop.Prop        { return w.bind().Props() }
 func (w *Water) Set(n string, v any) error { return w.bind().Set(n, v) }
@@ -358,6 +405,10 @@ func (w *Water) Bounds(t scene.Transform) geom.AABB {
 }
 func (w *Water) Draw(c *draw.Context, t scene.Transform) {
 	m := draw.Material{Albedo: w.Color, Water: true}
+	if mm, ok := materialOf(w.lib, w.Material); ok {
+		m = mm
+		m.Water = true
+	}
 	c.Terrain(rect{w.Bounds(t), draw.Tile{Height: t.Pos.Z, Top: m, Side: m.Tint(.6)}}, draw.TerrainOptions{})
 }
 

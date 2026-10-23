@@ -1,6 +1,5 @@
-// Command ascdii opens the editor when started without arguments, as from a
-// double click, and is the developer CLI otherwise: projects, builds and
-// packages. Games run on ascdii-player.
+// Command ascdii is the developer CLI: ascdii run opens the editor, the other
+// commands handle projects, builds and packages. Games run on ascdii-player.
 package main
 
 import (
@@ -20,14 +19,14 @@ import (
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/bundle"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/project"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/version"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/winbrand"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/player"
 )
 
 const usage = `usage:
-  ascdii                      the editor: templates and recent projects
-  ascdii edit <manifest>      the editor with a project open
+  ascdii run [project]        the editor, at its start screen or with a project open
   ascdii new <dir> [-name N] [-template dragonfall]
-  ascdii run <dir> [--blocks]
+  ascdii play <dir> [--blocks]
   ascdii preview <dir> [-size 160x50] [-time 2] [-hour 22] [-plain] [-blocks]
   ascdii build <dir> [-out path] [-player path] [-single]
   ascdii pack list|install|remove|export ...
@@ -51,26 +50,28 @@ func run(ctx context.Context, args []string) error {
 		return fmt.Errorf("locate executable: %w", err)
 	}
 	if len(args) == 0 {
-		hideConsole()
-		if err := edit(ctx, self, ""); err != nil {
-			report(fmt.Sprintf("ASCDII could not start the editor.\n\n%v", err))
-			return err
+		fmt.Println(usage)
+		if ownConsole() {
+			// A double click opened this window; it would close before the help is read.
+			fmt.Print("\nPress Enter to close.")
+			_, _ = fmt.Scanln()
 		}
 		return nil
 	}
 	switch args[0] {
-	case "edit":
-		manifest := ""
-		if len(args) > 1 {
-			manifest = args[1]
+	case "run":
+		hideConsole()
+		if err := edit(ctx, self, args[1:]); err != nil {
+			report(fmt.Sprintf("ASCDII could not start the editor.\n\n%v", err))
+			return err
 		}
-		return edit(ctx, self, manifest)
+		return nil
 	case "help", "-h", "--help":
 		fmt.Println(usage)
 		return nil
 	case "new":
 		return cmdNew(ctx, args[1:])
-	case "run":
+	case "play":
 		if len(args) < 2 {
 			return errors.New(usage)
 		}
@@ -91,8 +92,17 @@ func run(ctx context.Context, args []string) error {
 	return errors.New(usage)
 }
 
-// edit starts the editor, at its start screen without a manifest.
-func edit(ctx context.Context, self, manifest string) error {
+// edit starts the editor: at its start screen, or with the project given as
+// its manifest or its folder.
+func edit(ctx context.Context, self string, args []string) error {
+	manifest := ""
+	if len(args) > 0 {
+		m, err := manifestOf(args[0])
+		if err != nil {
+			return err
+		}
+		manifest = m
+	}
 	editor, err := launch.Find(self, launch.Editor)
 	if err != nil {
 		return err
@@ -171,6 +181,18 @@ func cmdBuild(ctx context.Context, self string, args []string) error {
 		}
 		*bin = p
 	}
+	brand, err := winbrand.For(p.Manifest, fsys, p.Library)
+	if err != nil {
+		return err
+	}
+	tmp, err := os.MkdirTemp("", "ascdii-player-*")
+	if err != nil {
+		return fmt.Errorf("build: %w", err)
+	}
+	defer os.RemoveAll(tmp)
+	if *bin, err = winbrand.Brand(ctx, *bin, tmp, brand); err != nil {
+		return err
+	}
 	if strings.HasSuffix(*bin, ".exe") {
 		ext = ".exe"
 	}
@@ -200,4 +222,23 @@ func cmdBuild(ctx context.Context, self string, args []string) error {
 	}
 	fmt.Println(*out)
 	return nil
+}
+
+func manifestOf(path string) (string, error) {
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		return "", fmt.Errorf("project %s: %w", path, err)
+	}
+	st, err := os.Stat(abs)
+	if err != nil {
+		return "", fmt.Errorf("project %s: %w", path, err)
+	}
+	if !st.IsDir() {
+		return abs, nil
+	}
+	name, err := project.Find(os.DirFS(abs))
+	if err != nil {
+		return "", fmt.Errorf("project %s: %w", path, err)
+	}
+	return filepath.Join(abs, name), nil
 }

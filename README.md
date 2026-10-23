@@ -12,7 +12,7 @@ make test                       # go vet + go test -race
 make hello                      # smallest program, see cmd/hello
 make dragonfall                 # the sample game in the terminal
 make all                        # bin/linux and bin/windows: ascdii, editor, player
-bin/linux/ascdii                # opens the editor at its start screen
+bin/linux/ascdii run            # opens the editor at its start screen
 make editor-dev                 # editor with hot reload
 ```
 
@@ -48,11 +48,11 @@ MyGame/
 
 Only the manifest has a fixed place; folders are the project's own.
 
-CLI, also the game player:
+CLI (`ascdii run` opens the editor):
 
 ```bash
 ascdii new MyGame -template dragonfall
-ascdii run MyGame
+ascdii play MyGame                           # in the terminal
 ascdii preview MyGame -size 160x50 -time 2
 ascdii build MyGame                          # folder: player, data/game.pak, SHA256SUMS
 ascdii build MyGame -single                  # one executable instead

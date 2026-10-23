@@ -75,7 +75,7 @@
 <tr><td><code>emissive</code></td><td>Light emitted by the surface itself, 0 to 1.</td></tr>
 <tr><td><code>unlit</code></td><td>Ignores lighting and shows the texture as it is.</td></tr>
 </table>
-<p>The Cube, Plane, Quad and Mesh components have a material slot. A cube maps the texture once onto each face, a plane and a quad once onto their surface, and a model uses the texture coordinates of its file. Editing a material changes every object that uses it.</p>
+<p>Every 3D component has a material slot: Cube, Sphere, Cylinder, Cone, Plane, Quad, Mesh, Ground and Water. A cube maps the texture once onto each face, a plane and a quad once onto their surface, a cylinder once around its side and across its top, a cone once around from base to tip, and a sphere once around from bottom to top. Ground and water repeat the texture once per world unit, so large areas stay detailed; a tiling below 1 enlarges it. Water keeps its glints and reflections with a material. A model uses the texture coordinates of its file. Editing a material changes every object that uses it.</p>
 
 <h2 id="sprites">Sprites</h2>
 <p>A sprite is glyph art: a grid of terminal cells, each with a character, a foreground and a background color. The <b>Sprite</b> component draws it as whole cells at its object's position, hidden behind nearer geometry, which suits logos, portraits and signs that should stay sharp and are not lit. Sprites are created in three ways:</p>

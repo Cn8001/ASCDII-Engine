@@ -224,6 +224,15 @@ func (a *AssetService) AddSprite(name string) (uint64, error) {
 }
 func (a *AssetService) Reload() error { return wrap(a.d.Session.Reload(a.d.Ctx.Get())) }
 
+// Reveal shows a project file or folder in the system's file manager.
+func (a *AssetService) Reveal(rel string) error {
+	p, err := a.d.Session.Path(rel)
+	if err != nil {
+		return wrap(err)
+	}
+	return wrap(a.d.Reveal(a.d.Ctx.Get(), p))
+}
+
 func (a *AssetService) CreateMaterial(name string) (string, error) {
 	return wrap1(a.d.Session.CreateMaterial(a.d.Ctx.Get(), name))
 }
@@ -335,7 +344,8 @@ func (b *BuildService) Targets() []string { return b.d.Session.Targets() }
 
 // Build writes a game folder (player, packed data, checksums) for target,
 // or one executable when single is set.
-func (b *BuildService) Build(target string, single bool, version string) (session.BuildResult, error) {
-	return wrap1(b.d.Session.Build(b.d.Ctx.Get(), target, single, version))
+func (b *BuildService) CanBrand() bool { return b.d.Session.CanBrand() }
+func (b *BuildService) Build(target string, o session.BuildOptions) (session.BuildResult, error) {
+	return wrap1(b.d.Session.Build(b.d.Ctx.Get(), target, o))
 }
 func (b *BuildService) Reveal(path string) error { return wrap(b.d.Reveal(b.d.Ctx.Get(), path)) }

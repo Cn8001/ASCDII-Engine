@@ -3,6 +3,7 @@ package draw
 import (
 	"math"
 
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/color"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/geom"
 )
 
@@ -60,6 +61,7 @@ func ring(center geom.Vec3, r float64, seg int) []geom.Vec3 {
 }
 
 // Cylinder is flat shaded per facet, which reads well at Braille resolution.
+// A texture wraps once around the side, bottom to top, and spans the cap.
 func (c *Context) Cylinder(base geom.Vec3, r, h float64, top, side Material, seg int) {
 	seg = max(6, seg)
 	lo := ring(base, r, seg)
@@ -67,9 +69,28 @@ func (c *Context) Cylinder(base geom.Vec3, r, h float64, top, side Material, seg
 	for i := range lo {
 		j := (i + 1) % seg
 		mid := lo[i].Add(lo[j]).Scale(.5).Sub(base)
-		c.Face([]geom.Vec3{lo[i], lo[j], hi[j], hi[i]}, geom.V3(mid.X, mid.Y, 0).Norm(), side)
+		n := geom.V3(mid.X, mid.Y, 0).Norm()
+		if side.Texture == nil {
+			c.Face([]geom.Vec3{lo[i], lo[j], hi[j], hi[i]}, n, side)
+			continue
+		}
+		u0, u1 := float64(i)/float64(seg), float64(i+1)/float64(seg)
+		c.FaceUV([]geom.Vec3{lo[i], lo[j], hi[j], hi[i]}, []geom.Vec2{{X: u0}, {X: u1}, {X: u1, Y: 1}, {X: u0, Y: 1}}, n, side)
 	}
-	c.Face(hi, up(), top)
+	if top.Texture == nil {
+		c.Face(hi, up(), top)
+		return
+	}
+	c.FaceUV(hi, discUV(hi, base, r), up(), top)
+}
+
+// discUV spans a texture across a circle of radius r around center.
+func discUV(pts []geom.Vec3, center geom.Vec3, r float64) []geom.Vec2 {
+	out := make([]geom.Vec2, len(pts))
+	for i, p := range pts {
+		out[i] = geom.V2(.5+(p.X-center.X)/(2*r), .5+(p.Y-center.Y)/(2*r))
+	}
+	return out
 }
 
 // Cone leans its tip by lean, which is how trees sway without a rig.
@@ -84,7 +105,12 @@ func (c *Context) Cone(base geom.Vec3, r, h float64, m Material, seg int, lean g
 		if n.Dot(geom.V3(mid.X, mid.Y, 0)) < 0 {
 			n = n.Scale(-1)
 		}
-		c.Face([]geom.Vec3{rim[i], rim[j], tip}, n, m)
+		if m.Texture == nil {
+			c.Face([]geom.Vec3{rim[i], rim[j], tip}, n, m)
+			continue
+		}
+		u0, u1 := float64(i)/float64(seg), float64(i+1)/float64(seg)
+		c.FaceUV([]geom.Vec3{rim[i], rim[j], tip}, []geom.Vec2{{X: u0}, {X: u1}, {X: (u0 + u1) / 2, Y: 1}}, n, m)
 	}
 }
 
@@ -116,7 +142,8 @@ func (c *Context) Pyramid(b geom.AABB, m Material) {
 	}
 }
 
-// Blob is a sphere shaded per dot, used for canopies, bushes and rocks.
+// Blob is a sphere shaded per dot, used for canopies, bushes and rocks. A
+// texture wraps once around it, bottom to top.
 func (c *Context) Blob(center geom.Vec3, r float64, m Material) {
 	cx, cy, cd := c.View.Project(center)
 	rd := r * c.View.Zoom
@@ -124,6 +151,13 @@ func (c *Context) Blob(center geom.Vec3, r float64, m Material) {
 		return
 	}
 	f := c.frag(m, up())
+	lod := 0.0
+	if m.Texture != nil {
+		w, _ := m.Texture.Size()
+		if rho := float64(w) / (2 * math.Pi * rd); rho > 1 {
+			lod = math.Log2(rho) + .5 // the bias triangles use, so spheres shimmer no more than faces
+		}
+	}
 	x0, x1 := int(math.Floor(cx-rd)), int(math.Ceil(cx+rd))
 	y0, y1 := int(math.Floor(cy-rd)), int(math.Ceil(cy+rd))
 	for y := max(0, y0); y <= min(c.Buf.H-1, y1); y++ {
@@ -138,6 +172,14 @@ func (c *Context) Blob(center geom.Vec3, r float64, m Material) {
 			f.Normal = packed(n)
 			f.Depth = cd + nz*r
 			f.World = center.Add(n.Scale(r))
+			if m.Texture != nil {
+				uv := m.uv(geom.V2(math.Atan2(n.Y, n.X)/(2*math.Pi)+.5, math.Asin(geom.Clamp(n.Z, -1, 1))/math.Pi+.5))
+				col, solid := m.Texture.Sample(lod, uv.X, uv.Y)
+				if !solid {
+					continue
+				}
+				f.Albedo = color.Mul(col, m.Albedo)
+			}
 			c.Buf.Plot(x, y, f)
 		}
 	}

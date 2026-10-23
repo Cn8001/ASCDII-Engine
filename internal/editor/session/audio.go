@@ -63,6 +63,21 @@ func (s *Session) AudioEnded(v uint64) {
 
 // AssetFile is the file behind a project path, for the /asset/ route; paths
 // outside the project are refused.
+// Path is where a project file or folder lies on disk; "" is the project
+// folder itself.
+func (s *Session) Path(rel string) (string, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if err := s.need(); err != nil {
+		return "", err
+	}
+	rel, err := clean(rel)
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(s.dir, filepath.FromSlash(rel)), nil
+}
+
 func (s *Session) AssetFile(rel string) (string, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()

@@ -51,14 +51,15 @@ func Default() Source {
 	return Source{Dirs: dirs}
 }
 
-// names are the files that can be the player for a target.
+// names are the files that can be the player for a target. <os>/ is the
+// layout of bin/ in the source tree, which ASCDII_PLAYERS points wails dev at.
 func names(goos, arch string) []string {
-	out := []string{Name(goos, arch)}
+	own := launch.Player
+	if goos == "windows" {
+		own += ".exe"
+	}
+	out := []string{Name(goos, arch), goos + "/" + own}
 	if goos == runtime.GOOS && arch == runtime.GOARCH {
-		own := launch.Player
-		if goos == "windows" {
-			own += ".exe"
-		}
 		out = append(out, own)
 	}
 	return out
