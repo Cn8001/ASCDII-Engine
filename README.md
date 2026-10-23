@@ -61,15 +61,17 @@ finds a bundle it plays it, so a release is a single file per platform.
 
 ## Editor
 
-`make editor-linux` and `make editor-windows` write `cmd/editor/build/bin/`.
-Unity like: a GameObject menu, Hierarchy (drag to reparent, right click to
-create, duplicate, save as prefab), live 2.5D viewport (drag pan, right drag
-orbit, wheel zoom, click to pick, drag the handle to move, drop files, prefabs,
-models and materials), Inspector with component cards and reference slots that
-take drags, Project window with real folders and file import, pipeline,
-timeline, console, build and release.
+`make editor-linux` and `make editor-windows` write `cmd/editor/build/bin/`
+and copy the editor next to `bin/ascdii`. The editor is started from the
+`ascdii` launcher, which lists recent projects and opens the chosen one; started
+directly, it opens the launcher instead. `make editor-dev` skips the launcher.
+The editor has a GameObject menu, a Hierarchy (drag to reparent, right click to
+create, duplicate, save as prefab), a live 2.5D viewport with move, rotate and
+scale tools, an Inspector with component cards and reference slots, a Project
+window with free folders and file import, the pipeline, timeline, animator,
+particle editor, console and builds.
 
-Packages work like Unity's: assets with their .meta files and a pack.json,
+Packages are assets with their .meta files and a pack.json,
 shared as one `.ascdiipack`, installed into `packages/` read only and removed
 as a whole from the Package Manager. New projects start empty; the Dragonfall
 sample is a package, and its Go components are a code module that only

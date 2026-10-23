@@ -24,6 +24,7 @@
 <a href="textures.html">Textures and materials</a>
 <a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
+<a href="particles.html">Particles</a>
 <a href="audio.html">Audio</a>
 <a href="physics.html">Physics</a>
 <a href="scripting.html">Lua scripting</a>
@@ -38,56 +39,59 @@
 <main>
 <div class="kicker">Start</div>
 <h1>Install</h1>
-<p class="lead">Most people only need the two programs: the editor, <code>ascdii-editor</code>, and the command <code>ascdii</code>, which also plays games. Building from source is only for working on the engine itself.</p>
+<p class="lead">ASCDII Engine consists of two programs: <code>ascdii</code>, the launcher and command line tool, and <code>ascdii-editor</code>, the desktop editor. The editor is always started from <code>ascdii</code>.</p>
 
-<h2>Download and run</h2>
-<p>Get the archive for your platform from your team's release page; it holds both programs:</p>
+<h2>Requirements</h2>
 <table>
-<tr><th>Platform</th><th>Archive</th><th>Contains</th></tr>
-<tr><td>Windows 10 and 11</td><td><code>ascdii-0.0.1-windows-amd64.zip</code></td><td><code>ascdii-editor.exe</code>, <code>ascdii.exe</code></td></tr>
-<tr><td>Linux, WSL</td><td><code>ascdii-0.0.1-linux-amd64.tar.gz</code></td><td><code>ascdii-editor</code>, <code>ascdii</code></td></tr>
+<tr><th>Component</th><th>Windows</th><th>Linux</th></tr>
+<tr><td>Operating system</td><td>Windows 10 or 11, 64 bit</td><td>A 64 bit distribution; WSL 2 is supported</td></tr>
+<tr><td>Editor window</td><td>WebView2, included in Windows 10 and 11</td><td>WebKitGTK 4.1: <code>sudo apt install libwebkit2gtk-4.1-0</code></td></tr>
+<tr><td>Sound</td><td>No additional software</td><td>ALSA (<code>libasound2</code>)</td></tr>
+<tr><td>Terminal</td><td>Windows Terminal</td><td>Any terminal with 24 bit color</td></tr>
+</table>
+
+<h2>Installation</h2>
+<table>
+<tr><th>Platform</th><th>Archive</th><th>Contents</th></tr>
+<tr><td>Windows</td><td><code>ascdii-0.0.1-windows-amd64.zip</code></td><td><code>ascdii.exe</code>, <code>ascdii-editor.exe</code></td></tr>
+<tr><td>Linux</td><td><code>ascdii-0.0.1-linux-amd64.tar.gz</code></td><td><code>ascdii</code>, <code>ascdii-editor</code></td></tr>
 </table>
 <ol class="steps">
-<li>Unpack it anywhere, for example into <code>C:\Tools\ascdii</code> or <code>~/tools/ascdii</code>.</li>
-<li>Start <code>ascdii-editor</code>. The start screen creates a project or opens one; nothing else is needed for the editor.</li>
-<li>To use <code>ascdii</code> from any folder, add the unpacked folder to your <code>PATH</code>. Run <code>ascdii</code> on its own for the terminal main menu, or <code>ascdii help</code> for the commands.</li>
+<li>Extract the archive for your platform into a folder of your choice, for example <code>C:\Tools\ascdii</code> or <code>~/tools/ascdii</code>. Both programs must remain in the same folder.</li>
+<li>Optionally, add that folder to <code>PATH</code> to run <code>ascdii</code> from any location.</li>
 </ol>
-<table>
-<tr><th>Needs</th><th>Windows</th><th>Linux</th></tr>
-<tr><td>Editor window</td><td>WebView2, already part of Windows 10 and 11</td><td>WebKitGTK 4.1: <code>sudo apt install libwebkit2gtk-4.1-0</code></td></tr>
-<tr><td>Sound in games</td><td>nothing</td><td>ALSA, installed on almost every desktop (<code>libasound2</code>)</td></tr>
-</table>
-<div class="note"><b>Players need nothing</b>Games you build are folders with one executable and a data folder. The people who play them only need a terminal, see below.</div>
 
-<h2>Check your terminal</h2>
-<figure><img src="img/terminal.png" alt="Dragonfall in a terminal"><figcaption>Dragonfall as a terminal emulator draws it: every cell is one Braille character with a foreground and a background color.</figcaption></figure>
-<p>Games run in any terminal with 24 bit color and a font that has the Braille block (U+2800 to U+28FF): Windows Terminal, WezTerm, Kitty, Alacritty, GNOME Terminal, iTerm2 and the VS Code terminal all work. A window of about 120 by 40 cells or larger looks best; a smaller font gives more detail.</p>
+<h2>Starting the engine</h2>
+<ol class="steps">
+<li>Run <code>ascdii</code>. The launcher opens in the terminal and lists recent projects.</li>
+<li>Select a recent project, <b>Open project</b> or <b>New project</b>. The selected project opens in the editor; the launcher remains available for further projects.</li>
+</ol>
+<p>Starting <code>ascdii-editor</code> directly opens the launcher instead.</p>
+
+<h2>Terminal requirements</h2>
+<figure><img src="img/terminal.png" alt="Dragonfall in a terminal"><figcaption>Dragonfall rendered by a terminal emulator. Each cell holds one Braille character with a foreground and a background color.</figcaption></figure>
+<p>Games and the launcher require a terminal with 24 bit color and a font that includes the Braille block (U+2800 to U+28FF). Supported terminals include Windows Terminal, WezTerm, Kitty, Alacritty, GNOME Terminal, iTerm2 and the Visual Studio Code terminal. A window of at least 120 by 40 cells is recommended.</p>
 <pre><code>ascdii version
-ascdii new ~/games/demo -template dragonfall
 ascdii run ~/games/demo</code></pre>
-<div class="tip"><b>Not the old Windows console</b>On Windows use Windows Terminal, not the legacy console host, which has no 24 bit color.</div>
+<div class="tip"><b>Windows console</b>The legacy Windows console host does not support 24 bit color. Use Windows Terminal.</div>
+<div class="note"><b>Distributing games</b>Built games run on their own and require only a terminal. See <a href="building.html">Build</a>.</div>
 
-<h2>Build from source</h2>
-<p>For changing the engine or the editor. Everything builds from one Go module.</p>
+<h2>Building from source</h2>
+<p>Required only for development of the engine and the editor. All programs build from one Go module.</p>
 <table>
-<tr><th>Tool</th><th>Version</th><th>Used for</th></tr>
+<tr><th>Tool</th><th>Version</th><th>Purpose</th></tr>
 <tr><td>Go</td><td>1.24 or newer</td><td>Engine, CLI, editor backend</td></tr>
 <tr><td>Node.js</td><td>20 or newer</td><td>Editor interface (Vue, Vite, Tailwind)</td></tr>
 <tr><td>Wails CLI</td><td>v2.17</td><td><code>go install github.com/wailsapp/wails/v2/cmd/wails@v2.17.0</code></td></tr>
 <tr><td>WebKitGTK 4.1 headers</td><td>Linux and WSL only</td><td><code>sudo apt install libwebkit2gtk-4.1-dev</code></td></tr>
 </table>
-<pre><code><span class="c"># tests and vet for the whole module</span>
-make test
-<span class="c"># the ascdii command and game player</span>
-make cli
-<span class="c"># player binaries the editor builds games from; run before any editor build</span>
-make players
-<span class="c"># the editor, for this machine and for Windows</span>
-make editor-linux
-make editor-windows
-<span class="c"># the archives from Download and run, in bin/dist</span>
-make dist</code></pre>
-<p>The editor lands in <code>cmd/editor/build/bin/</code>. From WSL the Windows programs are cross compiled; no extra toolchain is needed. <code>make editor-dev</code> starts the editor with hot reload, also reachable from a browser at <code>http://localhost:34115</code> for the developer tools.</p>
+<pre><code>make test             <span class="c"># vet and tests for the whole module</span>
+make cli              <span class="c"># ascdii</span>
+make players          <span class="c"># player binaries for builds; required before an editor build</span>
+make editor-linux     <span class="c"># ascdii-editor for Linux</span>
+make editor-windows   <span class="c"># ascdii-editor for Windows</span>
+make dist             <span class="c"># the archives listed under Installation, in bin/dist</span></code></pre>
+<p>The editor is written to <code>cmd/editor/build/bin/</code>; place it next to <code>ascdii</code> to start it from the launcher. Windows programs are cross compiled from Linux and WSL without additional toolchains. <code>make editor-dev</code> starts the editor with hot reload and without the launcher, and serves it at <code>http://localhost:34115</code> for browser developer tools.</p>
 <nav class="pager"><a class="prev" href="index.html"><small>Previous</small>Welcome</a><a class="next" href="first-game.html"><small>Next</small>Your first game</a></nav>
 </main>
 </div>

@@ -32,7 +32,7 @@ func Create(ctx context.Context, dir, name string, template fs.FS) (string, erro
 		_, err := EnsureMeta(ctx, dir, guid.Default())
 		return manifest, err
 	}
-	for _, d := range []string{"scenes", "prefabs", "art"} {
+	for _, d := range []string{"scenes"} {
 		if err := os.MkdirAll(filepath.Join(dir, d), 0o755); err != nil {
 			return "", fmt.Errorf("create project: %w", err)
 		}

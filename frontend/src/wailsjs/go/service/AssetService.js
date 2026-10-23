@@ -14,8 +14,8 @@ export function Controller(arg1) {
   return window['go']['service']['AssetService']['Controller'](arg1);
 }
 
-export function ConvertToArt(arg1, arg2) {
-  return window['go']['service']['AssetService']['ConvertToArt'](arg1, arg2);
+export function ConvertToSprite(arg1, arg2) {
+  return window['go']['service']['AssetService']['ConvertToSprite'](arg1, arg2);
 }
 
 export function CreateController(arg1) {

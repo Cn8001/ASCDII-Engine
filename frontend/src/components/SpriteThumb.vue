@@ -11,7 +11,7 @@ onMounted(async () => {
     const pv = await Assets.Preview(props.path)
     if (canvas.value) render(canvas.value, decode(pv.cols, pv.rows, pv.cells), { cw: 4, ch: 8, style: 'pixels' })
   } catch {
-    // unreadable art shows the plain icon instead
+    // an unreadable sprite shows the plain icon instead
   }
 })
 </script>

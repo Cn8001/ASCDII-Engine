@@ -125,6 +125,12 @@ const selectedName = computed(() => findNode(store.selected)?.name ?? '')
 const playing = computed(() => store.frame.mode !== 'edit')
 
 type DragMode = 'none' | 'pan' | 'orbit' | 'move' | 'paint'
+const tools = [
+  { name: 'move', icon: 'move', title: 'Move  W' },
+  { name: 'rotate', icon: 'rotate', title: 'Rotate  E' },
+  { name: 'scale', icon: 'scale', title: 'Scale  R' },
+] as const
+const ring = 40
 let mode: DragMode = 'none'
 let axis = 'free'
 let prev = { x: 0, y: 0 }
@@ -172,10 +178,12 @@ function down(e: PointerEvent) {
   ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
 }
 
-// hitAxis returns which gizmo handle is under p: an arrow tip or the free centre.
+// hitAxis returns which gizmo handle is under p: an arrow tip, the free
+// centre, or for rotation the ring around the ground's up axis.
 function hitAxis(p: { x: number; y: number }): string {
   const a = anchor.value
   if (!a) return ''
+  if (store.tool === 'rotate' && Math.abs(Math.hypot(p.x - a.x, p.y - a.y) - ring) < 6) return 'z'
   for (const ax of axes.value) {
     const dx = ax.tip.x - a.x
     const dy = ax.tip.y - a.y
@@ -205,7 +213,8 @@ function move(e: PointerEvent) {
     const from = prev
     const id = store.selected
     const ax = axis
-    queue(() => Viewport.Drag(id, ax, from.x / cw.value, from.y / ch.value, p.x / cw.value, p.y / ch.value))
+    const fn = store.tool === 'rotate' ? Viewport.Turn : store.tool === 'scale' ? Viewport.Stretch : Viewport.Drag
+    queue(() => fn(id, ax, from.x / cw.value, from.y / ch.value, p.x / cw.value, p.y / ch.value))
   }
   prev = p
 }
@@ -258,7 +267,7 @@ async function drop(e: DragEvent) {
     }
     return
   }
-  if (kind !== 'prefab' && kind !== 'art' && kind !== 'model') return
+  if (kind !== 'prefab' && kind !== 'sprite' && kind !== 'model') return
   await place(`${kind}:${path}`, local(e))
 }
 
@@ -275,7 +284,7 @@ async function fileDrop(e: Event) {
   const d = (e as CustomEvent<FileDrop>).detail
   for (const p of d.paths) {
     const kind = assetKind(p)
-    if (kind === 'model' || kind === 'prefab' || kind === 'art') await place(`${kind}:${p}`, local({ clientX: d.x, clientY: d.y } as MouseEvent))
+    if (kind === 'model' || kind === 'prefab' || kind === 'sprite') await place(`${kind}:${p}`, local({ clientX: d.x, clientY: d.y } as MouseEvent))
   }
 }
 
@@ -318,9 +327,14 @@ function setLive() {
     />
     <svg v-if="store.view === 'scene' && edges.length" class="pointer-events-none absolute left-0 top-8 h-full w-full overflow-visible">
       <line v-for="(l, i) in edges" :key="i" :x1="l[0]" :y1="l[1]" :x2="l[2]" :y2="l[3]" stroke="var(--color-amber-glow)" stroke-opacity=".45" stroke-width="1" stroke-dasharray="3 3" />
+      <circle v-if="store.tool === 'rotate' && anchor" :cx="anchor.x" :cy="anchor.y" :r="ring" fill="none" :stroke="axisColor[2]" :stroke-width="hover === 'z' ? 3 : 2" />
       <g v-for="ax in axes" :key="ax.name">
-        <line :x1="anchor!.x" :y1="anchor!.y" :x2="ax.tip.x" :y2="ax.tip.y" :stroke="ax.color" :stroke-width="hover === ax.name ? 3 : 2" />
-        <polygon :points="ax.head" :fill="ax.color" />
+        <template v-if="store.tool !== 'rotate' || ax.name !== 'z'">
+          <line :x1="anchor!.x" :y1="anchor!.y" :x2="ax.tip.x" :y2="ax.tip.y" :stroke="ax.color" :stroke-width="hover === ax.name ? 3 : 2" />
+          <polygon v-if="store.tool === 'move'" :points="ax.head" :fill="ax.color" />
+          <circle v-else-if="store.tool === 'rotate'" :cx="ax.tip.x" :cy="ax.tip.y" r="4.5" :fill="ax.color" />
+          <rect v-else :x="ax.tip.x - 4" :y="ax.tip.y - 4" width="8" height="8" :fill="ax.color" />
+        </template>
       </g>
       <g v-if="anchor" :transform="`translate(${anchor.x} ${anchor.y})`">
         <rect x="-5" y="-5" width="10" height="10" rx="2" fill="var(--color-ink-950)" fill-opacity=".7" :stroke="hover === 'free' ? '#fff' : 'var(--color-ink-200)'" stroke-width="1.5" />
@@ -337,6 +351,8 @@ function setLive() {
     </div>
 
     <div class="absolute left-2 top-10 flex items-center gap-1 rounded-lg border border-ink-750 bg-ink-900/85 p-1 backdrop-blur">
+      <button v-for="t in tools" :key="t.name" class="icon-btn" :class="store.tool === t.name ? 'text-amber-glow' : ''" :title="t.title" @click="store.tool = t.name"><Icon :name="t.icon" :size="14" /></button>
+      <span class="mx-1 h-4 w-px bg-ink-700" />
       <button class="icon-btn" :class="store.dots === 'dots' ? 'text-amber-glow' : ''" title="Braille dots" @click="store.dots = 'dots'"><Icon name="grid" :size="14" /></button>
       <button class="icon-btn" :class="store.dots === 'pixels' ? 'text-amber-glow' : ''" title="Pixels" @click="store.dots = 'pixels'"><Icon name="image" :size="14" /></button>
       <span class="mx-1 h-4 w-px bg-ink-700" />

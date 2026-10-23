@@ -59,22 +59,46 @@
             "kind": "emitter",
             "props": {
               "active": true,
+              "bounce": 0.3,
+              "box": [
+                2,
+                2,
+                2
+              ],
+              "burst": 0,
+              "collide": false,
               "dir": [
                 0,
                 0,
                 1
               ],
+              "drag": 0,
+              "duration": 5,
               "emissive": 1,
               "end": "#c8461e",
               "glow": 0,
               "gravity": -1.5,
               "life": 0.6,
+              "loop": true,
+              "max": 600,
+              "prewarm": true,
+              "radius": 0.3,
               "rate": 18,
+              "render": "dot",
               "seed": 11,
+              "shape": "point",
               "size": 0.5,
+              "sizeEnd": 0.2,
+              "space": "world",
               "speed": 1.1,
               "spread": 0.3,
-              "start": "#ffdc8c"
+              "start": "#ffdc8c",
+              "turbulence": 0,
+              "wind": [
+                0,
+                0,
+                0
+              ]
             }
           }
         ]

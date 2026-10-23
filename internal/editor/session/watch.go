@@ -46,9 +46,9 @@ func (s *Session) reloadFiles(ctx context.Context, dir string, changed []string)
 		case asset.Prefab:
 			s.lib.PutPrefab(p, b)
 			prefabs = true
-		case asset.Art:
-			if a, err := asset.DecodeArt(p, b); err == nil {
-				s.lib.PutArt(p, a)
+		case asset.Sprite:
+			if a, err := asset.DecodeSprite(p, b); err == nil {
+				s.lib.PutSprite(p, a)
 			}
 		case asset.Texture:
 			if t, err := asset.LoadTexture(os.DirFS(dir), p); err == nil {

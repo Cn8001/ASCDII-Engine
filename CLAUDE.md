@@ -16,7 +16,8 @@ One Go module.
   pack, bundle, ...).
 - `internal/dragonfall/...` example game content built on the engine.
 - `internal/editor/...` editor backend (session, services, Wails adapters).
-- `cmd/ascdii/menu` the terminal main menu `ascdii` shows without arguments.
+- `cmd/ascdii/menu` the launcher `ascdii` shows without arguments; the editor
+  only starts from it (`internal/editor/launch`), except in `wails dev`.
 - `cmd/ascdii` CLI and game player, `cmd/hello` minimal example, `cmd/snapshot`
   PNG renders for review, `cmd/editor` Wails app (built only with Wails tags).
 - `internal/dragonfall/template` is generated: `make template` after editing

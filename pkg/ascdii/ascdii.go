@@ -54,7 +54,7 @@ type (
 	Bone          = anim.Bone
 	Pose          = anim.Pose
 	Motion        = anim.Motion
-	Particles     = fx.Emitter
+	Particles     = fx.System
 	Key           = input.Key
 	Pass          = pipeline.Pass
 	Frame         = pipeline.Frame
@@ -117,5 +117,9 @@ func Player() Component                        { return components.NewPlayer() }
 func Toggle(key, target, p string) Component   { return components.NewToggle(key, target, p) }
 func DayNight() Component                      { return components.NewDayNight() }
 func Quit(key string) Component                { return &components.Quit{Press: key} }
-func Fire() Particles                          { return fx.Fire() }
-func Embers() Particles                        { return fx.Embers() }
+func Fire() Particles                          { p, _ := fx.Preset("fire"); return p }
+func Embers() Particles                        { p, _ := fx.Preset("embers"); return p }
+
+// ParticlePreset is a named starting point: embers, fire, smoke, sparks,
+// rain, snow, magic, fountain or explosion.
+func ParticlePreset(name string) (Particles, bool) { return fx.Preset(name) }

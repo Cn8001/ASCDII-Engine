@@ -27,6 +27,7 @@ type Emitter struct {
 
 type Particle struct {
 	Pos   geom.Vec3
+	Vel   geom.Vec3
 	Age   float64 // 0..1 of its life
 	Color color.Color
 	Size  float64

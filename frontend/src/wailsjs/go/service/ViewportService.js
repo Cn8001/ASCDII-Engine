@@ -42,6 +42,14 @@ export function Pan(arg1, arg2) {
   return window['go']['service']['ViewportService']['Pan'](arg1, arg2);
 }
 
+export function ParticlePresets() {
+  return window['go']['service']['ViewportService']['ParticlePresets']();
+}
+
+export function Particles(arg1, arg2, arg3, arg4) {
+  return window['go']['service']['ViewportService']['Particles'](arg1, arg2, arg3, arg4);
+}
+
 export function Pause() {
   return window['go']['service']['ViewportService']['Pause']();
 }
@@ -80,6 +88,14 @@ export function Step() {
 
 export function Stop() {
   return window['go']['service']['ViewportService']['Stop']();
+}
+
+export function Stretch(arg1, arg2, arg3, arg4, arg5, arg6) {
+  return window['go']['service']['ViewportService']['Stretch'](arg1, arg2, arg3, arg4, arg5, arg6);
+}
+
+export function Turn(arg1, arg2, arg3, arg4, arg5, arg6) {
+  return window['go']['service']['ViewportService']['Turn'](arg1, arg2, arg3, arg4, arg5, arg6);
 }
 
 export function Zoom(arg1) {

@@ -19,30 +19,9 @@ import (
 
 var ErrUnsupported = errors.New("unsupported file type")
 
-func defaultFolder(k asset.Kind) string {
-	switch k {
-	case asset.Model:
-		return "models"
-	case asset.Script:
-		return "scripts"
-	case asset.Prefab:
-		return "prefabs"
-	case asset.Scene:
-		return "scenes"
-	case asset.Texture:
-		return "textures"
-	case asset.Material:
-		return "materials"
-	case asset.Audio:
-		return "audio"
-	case asset.Animator:
-		return "animators"
-	}
-	return "art"
-}
-
-// Import copies files from outside the project into folder, or a folder by
-// kind when folder is "", and returns their project paths. A model brings
+// Import copies files from outside the project into folder, "" for the
+// project folder, and returns their project paths. Projects organise their
+// files however they like, so nothing is sorted by kind. A model brings
 // its .mtl files and textures, keeping their paths relative to it.
 func (s *Session) Import(ctx context.Context, files []string, folder string) ([]string, error) {
 	s.mu.Lock()
@@ -84,9 +63,6 @@ func (s *Session) import1(ctx context.Context, src, folder string) (string, erro
 	if !ok {
 		return "", fmt.Errorf("import %s: %w", filepath.Base(src), ErrUnsupported)
 	}
-	if folder == "" {
-		folder = defaultFolder(k)
-	}
 	rel := s.freeName(path.Join(filepath.ToSlash(folder), filepath.Base(src)))
 	if err := s.copyAsset(ctx, src, rel); err != nil {
 		return "", err
@@ -98,7 +74,7 @@ func (s *Session) import1(ctx context.Context, src, folder string) (string, erro
 }
 
 // importDir copies a folder as it is, metas included, which is how a
-// prefab arrives together with its scripts, models and art.
+// prefab arrives together with its scripts, models and sprites.
 func (s *Session) importDir(ctx context.Context, src, folder string) (string, error) {
 	root := s.freeName(path.Join(filepath.ToSlash(folder), filepath.Base(src)))
 	err := filepath.WalkDir(src, func(p string, d fs.DirEntry, err error) error {
@@ -167,9 +143,9 @@ func (s *Session) copyAsset(ctx context.Context, src, rel string) error {
 		s.lib.PutScript(rel, string(b))
 	case asset.Prefab:
 		s.lib.PutPrefab(rel, b)
-	case asset.Art:
-		if a, err := asset.DecodeArt(rel, b); err == nil {
-			s.lib.PutArt(rel, a)
+	case asset.Sprite:
+		if a, err := asset.DecodeSprite(rel, b); err == nil {
+			s.lib.PutSprite(rel, a)
 		}
 	case asset.Texture:
 		if t, err := asset.LoadTexture(os.DirFS(s.dir), rel); err == nil {

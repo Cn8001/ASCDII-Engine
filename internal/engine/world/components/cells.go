@@ -40,7 +40,7 @@ func (s *Sprite) DrawCells(f *pipeline.Frame, t scene.Transform) {
 	if s.lib == nil || s.Asset == "" {
 		return
 	}
-	art, err := s.lib.Art(s.Asset)
+	art, err := s.lib.Sprite(s.Asset)
 	if err != nil {
 		return
 	}

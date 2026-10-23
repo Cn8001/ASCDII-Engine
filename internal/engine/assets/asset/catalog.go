@@ -21,7 +21,7 @@ import (
 type Kind string
 
 const (
-	Art      Kind = "art"
+	Sprite   Kind = "sprite"
 	Prefab   Kind = "prefab"
 	Scene    Kind = "scene"
 	Script   Kind = "script"
@@ -37,6 +37,7 @@ const (
 	SceneExt  = ".scene.json"
 	ScriptExt = ".lua"
 	ModelExt  = ".obj"
+	SpriteExt = ".sprite.json"
 )
 
 type Entry struct {
@@ -50,7 +51,7 @@ func Classify(p string) (Kind, bool) {
 	l := strings.ToLower(p)
 	switch {
 	case path.Base(l) == "pack.json":
-		return "", false // a package's manifest, not art
+		return "", false // a package's manifest
 	case strings.HasSuffix(l, PrefabExt):
 		return Prefab, true
 	case strings.HasSuffix(l, SceneExt):
@@ -67,8 +68,8 @@ func Classify(p string) (Kind, bool) {
 		return Audio, true
 	case strings.HasSuffix(l, ".png"), strings.HasSuffix(l, ".jpg"), strings.HasSuffix(l, ".jpeg"), strings.HasSuffix(l, ".gif"):
 		return Texture, true
-	case strings.HasSuffix(l, ".xp"), strings.HasSuffix(l, ".json"):
-		return Art, true
+	case strings.HasSuffix(l, SpriteExt), strings.HasSuffix(l, ".xp"):
+		return Sprite, true
 	}
 	return "", false
 }
@@ -115,12 +116,12 @@ func List(ctx context.Context, fsys fs.FS, skip ...string) ([]Entry, error) {
 	return out, nil
 }
 
-// Library keeps art and prefab sources in memory so that scene decoding, which
+// Library keeps sprite and prefab sources in memory so that scene decoding, which
 // has no context, never touches the disk.
 type Library struct {
 	mu      sync.RWMutex
 	reg     *scene.Registry
-	art     map[string]Surface
+	sprites map[string]Surface
 	prefabs map[string][]byte
 	scripts map[string]source
 	models  map[string]*mesh.Mesh
@@ -137,11 +138,11 @@ type source struct {
 }
 
 func NewLibrary(reg *scene.Registry) *Library {
-	return &Library{reg: reg, art: map[string]Surface{}, prefabs: map[string][]byte{}, scripts: map[string]source{},
+	return &Library{reg: reg, sprites: map[string]Surface{}, prefabs: map[string][]byte{}, scripts: map[string]source{},
 		models: map[string]*mesh.Mesh{}, tex: map[string]*texture.Texture{}, mats: map[string]*material.Material{}, ctrls: map[string]*animator.Controller{}, byGUID: map[string]string{}, byPath: map[string]string{}}
 }
 
-// Load reads every art file and prefab from fsys.
+// Load reads every sprite and prefab from fsys.
 func (l *Library) Load(ctx context.Context, fsys fs.FS, skip ...string) error {
 	entries, err := List(ctx, fsys, skip...)
 	if err != nil {
@@ -163,7 +164,7 @@ func (l *Library) Load(ctx context.Context, fsys fs.FS, skip ...string) error {
 		if e.Kind == Model {
 			m, err := mesh.Load(ctx, fsys, e.Path, ModelOptions(fsys, e.Path))
 			if err != nil {
-				continue // a broken model shows as missing, like stray art
+				continue // a broken model shows as missing, like a broken sprite
 			}
 			l.PutModel(e.Path, m)
 			continue
@@ -185,18 +186,18 @@ func (l *Library) Load(ctx context.Context, fsys fs.FS, skip ...string) error {
 			if c, err := animator.Decode(bytes.NewReader(b)); err == nil {
 				l.PutController(e.Path, c)
 			}
-		case Art:
-			s, err := DecodeArt(e.Path, b)
+		case Sprite:
+			s, err := DecodeSprite(e.Path, b)
 			if err != nil {
-				continue // a stray json that is not art is not fatal
+				continue // a broken sprite is not fatal
 			}
-			l.PutArt(e.Path, s)
+			l.PutSprite(e.Path, s)
 		}
 	}
 	return nil
 }
 
-func DecodeArt(name string, b []byte) (Surface, error) {
+func DecodeSprite(name string, b []byte) (Surface, error) {
 	if strings.HasSuffix(strings.ToLower(name), ".xp") {
 		layers, err := LoadXP(bytes.NewReader(b), CP437())
 		if err != nil {
@@ -269,9 +270,9 @@ func (l *Library) Rename(from, to string) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	from, to = path.Clean(from), path.Clean(to)
-	if v, ok := l.art[from]; ok {
-		l.art[to] = v
-		delete(l.art, from)
+	if v, ok := l.sprites[from]; ok {
+		l.sprites[to] = v
+		delete(l.sprites, from)
 	}
 	if v, ok := l.prefabs[from]; ok {
 		l.prefabs[to] = v
@@ -308,7 +309,7 @@ func (l *Library) Remove(p string) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	p = path.Clean(p)
-	delete(l.art, p)
+	delete(l.sprites, p)
 	delete(l.prefabs, p)
 	delete(l.scripts, p)
 	delete(l.models, p)
@@ -321,10 +322,10 @@ func (l *Library) Remove(p string) {
 	}
 }
 
-func (l *Library) PutArt(name string, s Surface) {
+func (l *Library) PutSprite(name string, s Surface) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	l.art[path.Clean(name)] = s
+	l.sprites[path.Clean(name)] = s
 }
 
 func (l *Library) PutPrefab(name string, b []byte) {
@@ -362,11 +363,11 @@ func (l *Library) ModelNames() []string {
 	return out
 }
 
-func (l *Library) Art(name string) (Surface, error) {
+func (l *Library) Sprite(name string) (Surface, error) {
 	p := l.Resolve(name)
 	l.mu.RLock()
 	defer l.mu.RUnlock()
-	s, ok := l.art[p]
+	s, ok := l.sprites[p]
 	if !ok {
 		return Surface{}, fmt.Errorf("%w: %s", ErrNotFound, name)
 	}

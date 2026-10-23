@@ -20,10 +20,9 @@ import (
 
 type Deps struct {
 	Version   string
-	Demo      fs.FS
 	Templates map[string]fs.FS // nil value means the empty starter project
 	Recent    recent.Store
-	Play      func(ctx context.Context, fsys fs.FS) error
+	Edit      func(ctx context.Context, manifest string) error // starts the editor on a project
 	Help      string
 }
 
@@ -143,17 +142,20 @@ func (l *launcher) key(ctx context.Context, k input.Key) (func(context.Context) 
 }
 
 func (l *launcher) homeMenu(ctx context.Context) *Menu {
-	items := []Item{
-		{Label: "Play Dragonfall", Hint: "demo", Value: "demo"},
-		{Label: "Open project", Value: "open"},
-		{Label: "New project", Value: "new"},
-		{Label: "Help", Value: "help"},
-		{Label: "Quit", Value: "quit"},
+	// Recent projects first: picking one opens it in the editor.
+	var items []Item
+	if list, err := l.d.Recent.Load(ctx); err == nil {
+		for _, p := range list {
+			items = append(items, Item{Label: projectName(p), Hint: filepath.Dir(p), Value: "path:" + p})
+		}
 	}
-	if list, err := l.d.Recent.Load(ctx); err == nil && len(list) > 0 {
-		items = append([]Item{{Label: "Continue " + projectName(list[0]), Hint: filepath.Dir(list[0]), Value: "path:" + list[0]}}, items...)
-	}
-	return &Menu{Title: "MAIN MENU", Items: items}
+	items = append(items,
+		Item{Label: "Open project", Value: "open"},
+		Item{Label: "New project", Value: "new"},
+		Item{Label: "Help", Value: "help"},
+		Item{Label: "Quit", Value: "quit"},
+	)
+	return &Menu{Title: "PROJECTS", Items: items}
 }
 
 func projectName(manifest string) string {
@@ -166,8 +168,6 @@ func (l *launcher) choose(ctx context.Context, kind int, it Item) (func(context.
 		switch {
 		case it.Value == "quit":
 			return nil, true
-		case it.Value == "demo":
-			return func(ctx context.Context) error { return l.d.Play(ctx, l.d.Demo) }, false
 		case it.Value == "open":
 			l.push(openList, l.openMenu(ctx))
 		case it.Value == "new":
@@ -175,7 +175,7 @@ func (l *launcher) choose(ctx context.Context, kind int, it Item) (func(context.
 		case it.Value == "help":
 			l.push(help, l.helpMenu())
 		case strings.HasPrefix(it.Value, "path:"):
-			return l.playPath(strings.TrimPrefix(it.Value, "path:")), false
+			l.pick(ctx, strings.TrimPrefix(it.Value, "path:"))
 		}
 	case openList:
 		if it.Value == "type" {
@@ -183,9 +183,9 @@ func (l *launcher) choose(ctx context.Context, kind int, it Item) (func(context.
 			l.push(openPath, &Menu{Title: "OPEN  folder or .ascdiiproj path", Prompt: true, Text: wd + string(os.PathSeparator)})
 			return nil, false
 		}
-		return l.playPath(it.Value), false
+		l.pick(ctx, it.Value)
 	case openPath:
-		return l.playPath(expand(it.Value)), false
+		l.pick(ctx, expand(it.Value))
 	case newName:
 		l.draft.name = it.Value
 		home, _ := os.UserHomeDir()
@@ -203,7 +203,7 @@ func (l *launcher) choose(ctx context.Context, kind int, it Item) (func(context.
 		_, _ = l.d.Recent.Add(ctx, manifest)
 		l.stack, l.kinds = l.stack[:1], l.kinds[:1]
 		l.stack[0] = l.homeMenu(ctx)
-		return l.playPath(manifest), false
+		l.pick(ctx, manifest)
 	case help:
 		l.pop()
 	}
@@ -229,23 +229,39 @@ func (l *launcher) helpMenu() *Menu {
 	return &Menu{Title: "COMMANDS", Items: items}
 }
 
-// playPath accepts a project folder or its manifest.
-func (l *launcher) playPath(p string) func(context.Context) error {
-	return func(ctx context.Context) error {
-		dir := p
-		if strings.HasSuffix(p, project.Ext) {
-			dir = filepath.Dir(p)
-		}
-		fsys := os.DirFS(dir)
-		file, err := project.Find(fsys)
-		if err != nil {
-			return fmt.Errorf("%s: %w", dir, err)
-		}
-		if _, err := l.d.Recent.Add(ctx, filepath.Join(dir, file)); err != nil && !errors.Is(err, fs.ErrNotExist) {
-			return err
-		}
-		return l.d.Play(ctx, fsys)
+// pick opens a project in the editor.
+func (l *launcher) pick(ctx context.Context, p string) {
+	manifest, err := manifestOf(p)
+	if err != nil {
+		l.status = err.Error()
+		return
 	}
+	l.edit(ctx, manifest)
+}
+
+// edit starts the editor beside the menu, which stays open.
+func (l *launcher) edit(ctx context.Context, manifest string) {
+	if _, err := l.d.Recent.Add(ctx, manifest); err != nil && !errors.Is(err, fs.ErrNotExist) {
+		l.status = err.Error()
+		return
+	}
+	if err := l.d.Edit(ctx, manifest); err != nil {
+		l.status = err.Error()
+		return
+	}
+	l.status = "editor opened"
+}
+
+// manifestOf turns a project folder or manifest path into the manifest path.
+func manifestOf(p string) (string, error) {
+	if strings.HasSuffix(p, project.Ext) {
+		return p, nil
+	}
+	file, err := project.Find(os.DirFS(p))
+	if err != nil {
+		return "", fmt.Errorf("%s: %w", p, err)
+	}
+	return filepath.Join(p, file), nil
 }
 
 func expand(p string) string {

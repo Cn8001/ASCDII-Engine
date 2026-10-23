@@ -10,6 +10,7 @@ import AnimationPanel from './AnimationPanel.vue'
 import BuildDialog from './BuildDialog.vue'
 import ConsolePanel from './ConsolePanel.vue'
 import AnimatorWindow from './AnimatorWindow.vue'
+import ParticleWindow from './ParticleWindow.vue'
 import FloatingWindow from './FloatingWindow.vue'
 import Icon from './Icon.vue'
 import AssetInspector from './AssetInspector.vue'
@@ -60,6 +61,8 @@ async function shortcut(e: KeyboardEvent) {
     openAnimation()
   } else if ((k === 'delete' || k === 'backspace') && store.selected && store.frame.mode === 'edit') {
     await remove(store.selected)
+  } else if (!mod && store.frame.mode === 'edit' && (k === 'w' || k === 'e' || k === 'r')) {
+    store.tool = k === 'w' ? 'move' : k === 'e' ? 'rotate' : 'scale'
   } else if (k === 'f' && store.selected) {
     Viewport.Focus(store.selected)
   } else if (k === ' ' && !mod) {
@@ -163,6 +166,9 @@ function tab(active: boolean) {
     </div>
     <FloatingWindow v-if="store.animator" id="animator" title="Animator" icon="graph" @dock="store.animator = ''" @close="store.animator = ''">
       <AnimatorWindow />
+    </FloatingWindow>
+    <FloatingWindow v-if="store.particles" id="particles" title="Particle Editor" icon="sparkle" @dock="store.particles = false" @close="store.particles = false">
+      <ParticleWindow />
     </FloatingWindow>
     <FloatingWindow v-if="store.animFloating" id="animation" title="Animation" icon="film" @dock="dock" @close="store.animFloating = false">
       <AnimationPanel floating />

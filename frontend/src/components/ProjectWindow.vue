@@ -7,7 +7,7 @@ import { call, refresh, refreshAssets, select, store, toast } from '../lib/store
 import { previewSound } from '../lib/audio'
 import type { FileDrop } from '../lib/filedrop'
 import type { asset } from '../wailsjs/go/models'
-import ArtThumb from './ArtThumb.vue'
+import SpriteThumb from './SpriteThumb.vue'
 import TexThumb from './TexThumb.vue'
 import Icon from './Icon.vue'
 
@@ -20,13 +20,13 @@ const kinds = [
   { id: 'material', label: 'Materials' },
   { id: 'audio', label: 'Audio' },
   { id: 'animator', label: 'Animators' },
-  { id: 'art', label: 'Art' },
+  { id: 'sprite', label: 'Sprites' },
   { id: 'script', label: 'Scripts' },
 ] as const
 const kind = ref<string>('all')
 const search = ref('')
 const picked = ref('')
-const cwd = ref('') // open folder, "" for the project folder
+const cwd = computed({ get: () => store.folder, set: (v: string) => (store.folder = v) }) // "" is the project folder
 const folders = ref<string[]>([])
 const open = ref<Record<string, boolean>>({})
 const over = ref('')
@@ -37,7 +37,7 @@ const pkgOf = (p: string) => p.split('/')[1] ?? ''
 const locked = computed(() => isPkg(cwd.value))
 const dirOf = (p: string) => (p.includes('/') ? p.slice(0, p.lastIndexOf('/')) : '')
 const base = (p: string) => p.split('/').pop() ?? p
-// searching or filtering looks through every folder, like Unity's search.
+// searching or filtering looks through every folder.
 const flat = computed(() => search.value !== '' || kind.value !== 'all')
 const subfolders = computed(() => (flat.value ? [] : folders.value.filter((f) => dirOf(f) === cwd.value && f !== 'packages')))
 const items = computed(() =>
@@ -72,13 +72,15 @@ onMounted(async () => {
 })
 onBeforeUnmount(() => off?.())
 watch(() => store.assetsVersion, reloadAll)
+// another project has other folders
+watch(() => store.info?.dir, () => (store.folder = ''))
 
 function name(p: string) {
-  return base(p).replace(/\.(prefab|scene|material|animator)\.json$/, '').replace(/\.(json|xp|lua|obj|png|jpe?g|gif|wav|mp3)$/i, '')
+  return base(p).replace(/\.(prefab|scene|material|animator|sprite)\.json$/, '').replace(/\.(json|xp|lua|obj|png|jpe?g|gif|wav|mp3)$/i, '')
 }
 
 function icon(k: string) {
-  return { scene: 'scene', prefab: 'package', model: 'box', texture: 'image', material: 'sun', art: 'image', script: 'file', audio: 'music', animator: 'graph' }[k] ?? 'file'
+  return { scene: 'scene', prefab: 'package', model: 'box', texture: 'image', material: 'sun', sprite: 'image', script: 'file', audio: 'music', animator: 'graph' }[k] ?? 'file'
 }
 
 function go(path: string) {
@@ -192,7 +194,7 @@ async function newScript() {
 async function newScene() {
   const n = await ask('New scene', 'level', { suffix: '.scene.json' })
   if (!n) return
-  const rel = (n.includes('/') ? n : cwd.value ? `${cwd.value}/${n}` : 'scenes/' + n).replace(/\.scene\.json$/, '') + '.scene.json'
+  const rel = (n.includes('/') ? n : cwd.value ? `${cwd.value}/${n}` : n).replace(/\.scene\.json$/, '') + '.scene.json'
   await call(() => Project.NewScene(rel))
   store.selected = 0
   await Promise.all([refresh(), reloadAll()])
@@ -229,8 +231,8 @@ async function newFolder(parent = cwd.value) {
   }
 }
 
-async function toArt(a: asset.Entry) {
-  const rel = await call(() => Assets.ConvertToArt(a.path, 48))
+async function toSprite(a: asset.Entry) {
+  const rel = await call(() => Assets.ConvertToSprite(a.path, 48))
   if (rel) {
     toast(rel, 'ok')
     await reloadAll()
@@ -327,7 +329,7 @@ function itemMenu(e: MouseEvent, a: asset.Entry) {
   picked.value = a.path
   const items: MenuItem[] = []
   if (a.kind === 'texture') {
-    items.push({ label: 'Create Material', icon: 'sun', run: () => newMaterial(a.path) }, { label: 'Convert to Art', icon: 'image', run: () => toArt(a) })
+    items.push({ label: 'Create Material', icon: 'sun', run: () => newMaterial(a.path) }, { label: 'Convert to Sprite', icon: 'image', run: () => toSprite(a) })
   } else if (a.kind === 'prefab') {
     items.push({ label: 'Open Prefab', icon: 'open', run: () => openAsset(a) }, { label: 'Place', icon: 'plus', run: () => place(a) })
   } else if (a.kind === 'audio') {
@@ -464,7 +466,7 @@ async function reload() {
             @contextmenu.prevent="itemMenu($event, a)"
           >
             <div class="grid h-12 w-16 place-items-center rounded-md bg-ink-950/60">
-              <ArtThumb v-if="a.kind === 'art'" :path="a.path" />
+              <SpriteThumb v-if="a.kind === 'sprite'" :path="a.path" />
               <TexThumb v-else-if="a.kind === 'texture'" :path="a.path" />
               <Icon v-else :name="icon(a.kind)" :size="22" :class="a.kind === 'prefab' ? 'text-amber-soft' : a.kind === 'script' || a.kind === 'audio' ? 'text-ok' : a.kind === 'model' || a.kind === 'animator' ? 'text-ink-200' : 'text-ink-400'" />
             </div>

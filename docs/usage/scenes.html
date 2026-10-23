@@ -24,6 +24,7 @@
 <a href="textures.html">Textures and materials</a>
 <a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
+<a href="particles.html">Particles</a>
 <a href="audio.html">Audio</a>
 <a href="physics.html">Physics</a>
 <a href="scripting.html">Lua scripting</a>
@@ -40,26 +41,28 @@
 <h1>Scenes and prefabs</h1>
 <p class="lead">How a world is put together: projects, scenes, prefabs and overrides, and the single unit everything is measured in. Objects and their components have their own page, <a href="gameobjects.html">GameObjects and components</a>.</p>
 <h2>The project folder</h2>
+<p>Only the manifest and the start scene have a fixed place; everything else lives in whatever folders you like. A project might look like this:</p>
 <pre><code>MyGame/
-  MyGame.ascdiiproj       <span class="c">manifest</span>
-  scenes/*.scene.json     <span class="c">object trees, camera, environment, clips</span>
-  prefabs/*.prefab.json   <span class="c">reusable object trees</span>
-  models/*.obj            <span class="c">models, with their .mtl files</span>
-  textures/*.png          <span class="c">pictures for materials</span>
-  materials/*.material.json
-  art/*.json, *.xp        <span class="c">glyph art: palette JSON or REXPaint</span>
-  scripts/*.lua           <span class="c">scripts in Lua</span>
+  MyGame.ascdiiproj       <span class="c">manifest: name, version, start scene</span>
+  scenes/main.scene.json  <span class="c">object trees, camera, environment, clips</span>
+  knight/                 <span class="c">one folder per thing, if you like:</span>
+    knight.prefab.json    <span class="c">  a reusable object tree</span>
+    knight.lua            <span class="c">  its script</span>
+    knight.sprite.json    <span class="c">  glyph art: palette JSON, or .xp from REXPaint</span>
+    swing.wav             <span class="c">  a sound</span>
+  props/barrel.obj        <span class="c">models, with their .mtl files and textures</span>
+  props/wood.material.json
   packages/&lt;name&gt;/       <span class="c">installed packages, read only</span>
   **/*.meta               <span class="c">one per asset: its permanent id</span>
   build/                  <span class="c">output, ignored by git</span></code></pre>
 
 <h2>Asset ids and .meta files</h2>
-<p>Every asset has a <code>.meta</code> file next to it holding a UUIDv7, like Unity's GUIDs:</p>
+<p>Every asset has a <code>.meta</code> file next to it holding a UUIDv7:</p>
 <pre><code>{
   "format": 1,
   "guid": "019a0f3e-7c41-7b2a-9d55-3f1c8e2a9b40"
 }</code></pre>
-<p>Scenes refer to prefabs, scripts, models, materials and art by this id, never by path. Rename or move an asset in the Project window (right click, <b>Rename</b>) and the <code>.meta</code> goes with it, so nothing that uses it breaks. Commit the <code>.meta</code> files together with their assets; when you move files with git or a file manager, move the <code>.meta</code> too.</p>
+<p>Scenes refer to prefabs, scripts, models, materials and sprites by this id, never by path. Rename or move an asset in the Project window (right click, <b>Rename</b>) and the <code>.meta</code> goes with it, so nothing that uses it breaks. Commit the <code>.meta</code> files together with their assets; when you move files with git or a file manager, move the <code>.meta</code> too.</p>
 <div class="note"><b>Older projects</b>Opening a project without <code>.meta</code> files creates them and rewrites path references in the scene to ids. The Console reports how many changed; save to keep the result.</div>
 <p>The manifest is short and readable:</p>
 <pre><code>{
@@ -88,7 +91,7 @@
 <p>An instance stores its own name, transform and visibility, the prefab id, and a list of <b>overrides</b>; everything else comes from the prefab. That keeps scene files small and diffs readable.</p>
 
 <h2>Prefab mode</h2>
-<p>Double click a prefab in the Project window to edit it on its own, as in Unity. The toolbar shows the prefab's name with <b>Save</b> and <b>Back</b>. Save writes the prefab file; Back returns to the scene, with its undo history and unsaved changes as you left them, and every instance shows the saved prefab. A prefab has one root object; prefabs of installed packages open read only.</p>
+<p>Double click a prefab in the Project window to edit it on its own. The toolbar shows the prefab's name with <b>Save</b> and <b>Back</b>. Save writes the prefab file; Back returns to the scene, with its undo history and unsaved changes as you left them, and every instance shows the saved prefab. A prefab has one root object; prefabs of installed packages open read only.</p>
 
 <h2>Overrides</h2>
 <p>Select an instance, or anything inside it, and change a value. Instead of being locked, the change is recorded as an override on the instance: the label turns <b>bold amber</b>, the Hierarchy shows an amber dot and a band at the top of the Inspector counts the overrides.</p>

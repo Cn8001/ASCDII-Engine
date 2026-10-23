@@ -270,6 +270,23 @@ func TestUnit_DragMovesOnGround(t *testing.T) {
 	}
 }
 
+func TestUnit_TurnAndStretchChangeTransform(t *testing.T) {
+	// Arrange
+	s, _, _ := newSession(t, "")
+	id, _ := s.Add(0, "box")
+
+	// Act
+	errTurn := s.Turn(id, "x", 10, 10, 20, 10)
+	errGrow := s.Stretch(id, "free", 10, 10, 20, 10)
+	errAxis := s.Stretch(id, "w", 10, 10, 20, 10)
+
+	// Assert
+	l := find(s, "Cube").Local
+	if errTurn != nil || errGrow != nil || l.Rot.X != 30 || l.Scale.X <= 1 || l.Scale.X != l.Scale.Z || !errors.Is(errAxis, ErrBadAxis) {
+		t.Fatalf("turn %v grow %v axis %v local %+v", errTurn, errGrow, errAxis, l)
+	}
+}
+
 func TestUnit_RawFrameHasHeaderAndCells(t *testing.T) {
 	// Arrange
 	s, _, _ := newSession(t, "")
@@ -610,8 +627,8 @@ func TestUnit_ImportModelBringsMaterialsAndDrops(t *testing.T) {
 	}
 
 	// Act
-	got, err := s.Import(context.Background(), []string{filepath.Join(src, "hut.obj")}, "")
-	again, errAgain := s.Import(context.Background(), []string{filepath.Join(src, "hut.obj")}, "")
+	got, err := s.Import(context.Background(), []string{filepath.Join(src, "hut.obj")}, "models")
+	again, errAgain := s.Import(context.Background(), []string{filepath.Join(src, "hut.obj")}, "models")
 	id, errDrop := s.Drop("model:models/hut.obj", 40, 15)
 	_, errBad := s.Import(context.Background(), []string{filepath.Join(src, "hut.mtl")}, "")
 
@@ -681,7 +698,7 @@ func TestUnit_DuplicateRemapsInternalReferences(t *testing.T) {
 	}
 }
 
-func TestUnit_MaterialTextureAndArtFromImportedPicture(t *testing.T) {
+func TestUnit_MaterialTextureAndSpriteFromImportedPicture(t *testing.T) {
 	// Arrange
 	s, _, dir := newSession(t, "")
 	ctx := context.Background()
@@ -699,7 +716,7 @@ func TestUnit_MaterialTextureAndArtFromImportedPicture(t *testing.T) {
 	mat, errMat := s.CreateMaterial(ctx, "brick")
 	errSet := s.SetAssetProp(ctx, mat, "texture", tex[0])
 	errTex := s.SetAssetProp(ctx, tex[0], "filter", "nearest")
-	art, errArt := s.ConvertToArt(ctx, tex[0], 6)
+	art, errArt := s.ConvertToSprite(ctx, tex[0], 6)
 	thumb, errThumb := s.Thumb(tex[0], 32)
 	id, _ := s.Add(0, "box")
 	errBox := s.SetProp(id, "material", mat)
@@ -711,11 +728,11 @@ func TestUnit_MaterialTextureAndArtFromImportedPicture(t *testing.T) {
 		}
 	}
 	raw, _ := os.ReadFile(filepath.Join(dir, filepath.FromSlash(mat)))
-	meta, _ := os.ReadFile(filepath.Join(dir, "textures", "brick.png.meta"))
-	if tex[0] != "textures/brick.png" || !strings.Contains(string(raw), `"texture"`) || !strings.Contains(string(meta), "nearest") {
+	meta, _ := os.ReadFile(filepath.Join(dir, "brick.png.meta"))
+	if tex[0] != "brick.png" || !strings.Contains(string(raw), `"texture"`) || !strings.Contains(string(meta), "nearest") {
 		t.Fatalf("tex %v material %s meta %s", tex, raw, meta)
 	}
-	if art != "art/brick.json" || !strings.HasPrefix(thumb, "data:image/png;base64,") {
+	if art != "brick.sprite.json" || !strings.HasPrefix(thumb, "data:image/png;base64,") {
 		t.Fatalf("art %s thumb %.30s", art, thumb)
 	}
 	if _, ok := s.lib.DrawMaterial(mat); !ok {
@@ -904,7 +921,7 @@ func TestUnit_ClipsAndControllerForAnAnimator(t *testing.T) {
 	if len(after) != 2 || after[1].Name != "walk" || len(after[0].Tracks) != 1 || len(after[1].Tracks) != 1 || !after[1].Active {
 		t.Fatalf("clips %+v", after)
 	}
-	if rel != "animators/box.animator.json" || len(back.States) != 2 {
+	if rel != "box.animator.json" || len(back.States) != 2 {
 		t.Fatalf("controller %s %+v", rel, back)
 	}
 }
@@ -995,5 +1012,22 @@ func TestUnit_PrefabModeEditsAndUpdatesInstances(t *testing.T) {
 	got := childNamed(s, id, "glow").Component("light").(*components.Light).Radius
 	if got != 30 {
 		t.Fatalf("instance radius %v", got)
+	}
+}
+
+func TestUnit_ParticlesPresetAndBurstInEditor(t *testing.T) {
+	// Arrange
+	s, _, _ := newSession(t, "")
+	id, _ := s.Add(0, "emitter")
+
+	// Act
+	_, errPreset := s.Particles(id, "emitter", "preset", "explosion")
+	n, errEmit := s.Particles(id, "emitter", "emit", "")
+	_, errBad := s.Particles(id, "emitter", "preset", "nope")
+	_, errKind := s.Particles(id, "nothing", "play", "")
+
+	// Assert
+	if errPreset != nil || errEmit != nil || n < 120 || !errors.Is(errBad, ErrUnknownPreset) || !errors.Is(errKind, ErrNotParticles) {
+		t.Fatalf("preset %v emit %v n %d bad %v kind %v", errPreset, errEmit, n, errBad, errKind)
 	}
 }

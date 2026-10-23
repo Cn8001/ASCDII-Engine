@@ -24,6 +24,7 @@
 <a href="textures.html">Textures and materials</a>
 <a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
+<a href="particles.html">Particles</a>
 <a href="audio.html">Audio</a>
 <a href="physics.html">Physics</a>
 <a href="scripting.html" class="on">Lua scripting</a>
@@ -74,7 +75,7 @@ fields = {
 <p><code>self</code> is the object the script is on. Its built in fields and methods, such as <code>self.position</code> and <code>self:tween</code>, come from the engine; anything else you put on it, like <code>self.open</code>, is the script's own state.</p>
 
 <h2>Fields: variables you set in the editor</h2>
-<p>A global table named <code>fields</code> declares the variables the Inspector shows, like public fields of a Unity script. Their values are saved with the scene and appear on <code>self</code> before <code>start</code> runs.</p>
+<p>A global table named <code>fields</code> declares the variables the Inspector shows. Their values are saved with the scene and appear on <code>self</code> before <code>start</code> runs.</p>
 <pre><code>fields = {
   speed  = 5,                    <span class="c">-- number</span>
   jumpy  = <span class="k">true</span>,                 <span class="c">-- checkbox</span>

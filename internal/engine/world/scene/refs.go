@@ -185,7 +185,7 @@ func (s *Scene) newFID(taken map[uint64]bool) uint64 {
 type FIDSource func() uint64
 
 // RandomFIDs are what scenes use: two branches that both add objects then
-// merge without clashing ids, which is why Unity's fileIDs are random too.
+// merge without clashing ids.
 // They stay below 2^53 so JavaScript reads them exactly.
 func RandomFIDs() FIDSource {
 	return func() uint64 {

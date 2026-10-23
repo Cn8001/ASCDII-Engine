@@ -54,9 +54,9 @@ async function pick(o: Option) {
 async function createScript() {
   open.value = false
   const suggested = query.value.trim() || node.value?.name.replace(/\s+/g, '-').toLowerCase() || 'script'
-  const name = await ask('New script', suggested, { hint: 'Saved in scripts/ and opened in your code editor.', suffix: '.lua' })
+  const name = await ask('New script', suggested, { hint: `Saved in ${store.folder || 'the project folder'} and opened in your code editor.`, suffix: '.lua' })
   if (!name) return
-  const rel = await call(() => Assets.NewScript(name))
+  const rel = await call(() => Assets.NewScript(name.includes('/') || !store.folder ? name : `${store.folder}/${name}`))
   if (!rel) return
   await pick({ label: name, kind: 'script', script: rel, category: 'scripts' })
   toast(rel, 'ok')

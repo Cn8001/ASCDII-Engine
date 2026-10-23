@@ -152,6 +152,13 @@ func (v *ViewportService) Key(name string) error      { return wrap(v.d.Session.
 func (v *ViewportService) KeyUp(name string) error    { return wrap(v.d.Session.KeyUp(name)) }
 
 // Paint adds a brush stroke on the selected object at a viewport cell.
+// Particles drives a particle system from the particle editor.
+func (v *ViewportService) Particles(id uint64, key, action, arg string) (int, error) {
+	return wrap1(v.d.Session.Particles(id, key, action, arg))
+}
+
+func (v *ViewportService) ParticlePresets() []string { return v.d.Session.ParticlePresets() }
+
 func (v *ViewportService) Paint(id uint64, col, row float64, color string, radius float64, erase bool) error {
 	return wrap(v.d.Session.PaintAt(id, col, row, color, radius, erase))
 }
@@ -160,6 +167,14 @@ func (v *ViewportService) Paint(id uint64, col, row float64, color string, radiu
 func (v *ViewportService) AudioEnded(voice uint64) { v.d.Session.AudioEnded(voice) }
 func (v *ViewportService) SetLive(on bool)         { v.d.Session.SetLive(on) }
 func (v *ViewportService) SetTime(t float64) error { return wrap(v.d.Session.SetTime(t)) }
+func (v *ViewportService) Turn(id uint64, axis string, fc, fr, tc, tr float64) error {
+	return wrap(v.d.Session.Turn(id, axis, fc, fr, tc, tr))
+}
+
+func (v *ViewportService) Stretch(id uint64, axis string, fc, fr, tc, tr float64) error {
+	return wrap(v.d.Session.Stretch(id, axis, fc, fr, tc, tr))
+}
+
 func (v *ViewportService) Drag(id uint64, axis string, fc, fr, tc, tr float64) error {
 	return wrap(v.d.Session.Drag(id, axis, fc, fr, tc, tr))
 }
@@ -241,9 +256,9 @@ func (a *AssetService) SetController(ref string, c *animator.Controller) error {
 	return wrap(a.d.Session.SetController(a.d.Ctx.Get(), ref, c))
 }
 
-// ConvertToArt turns a texture into glyph art cols cells wide.
-func (a *AssetService) ConvertToArt(ref string, cols int) (string, error) {
-	return wrap1(a.d.Session.ConvertToArt(a.d.Ctx.Get(), ref, cols))
+// ConvertToSprite turns a texture into glyph art cols cells wide.
+func (a *AssetService) ConvertToSprite(ref string, cols int) (string, error) {
+	return wrap1(a.d.Session.ConvertToSprite(a.d.Ctx.Get(), ref, cols))
 }
 
 // Import copies files dropped from the OS into the project; folder "" picks

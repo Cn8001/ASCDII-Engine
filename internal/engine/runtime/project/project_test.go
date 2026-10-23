@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"path/filepath"
 	"slices"
 	"testing"
 	"testing/fstest"
@@ -148,5 +149,25 @@ func TestUnit_OnlyNamedModulesAreInstalled(t *testing.T) {
 	// Assert
 	if err != nil || installed || slices.Contains(p.Registry.Kinds(), "sample.thing") {
 		t.Fatalf("err %v installed %v", err, installed)
+	}
+}
+
+func TestUnit_RenameSpritesKeepsMetaAndSkipsOtherJSON(t *testing.T) {
+	// Arrange
+	dir := t.TempDir()
+	sprite := `{"name":"t","palette":{"x":{"glyph":"X","fg":"#00ff22","bg":"#000000"}},"rows":["x"]}`
+	_ = os.MkdirAll(filepath.Join(dir, "art"), 0o755)
+	_ = os.WriteFile(filepath.Join(dir, "art", "tree.json"), []byte(sprite), 0o644)
+	_ = os.WriteFile(filepath.Join(dir, "art", "tree.json.meta"), []byte(`{"guid":"x"}`), 0o644)
+	_ = os.WriteFile(filepath.Join(dir, "settings.json"), []byte(`{"volume":3}`), 0o644)
+
+	// Act
+	got, err := RenameSprites(context.Background(), dir)
+
+	// Assert
+	_, errMeta := os.Stat(filepath.Join(dir, "art", "tree.sprite.json.meta"))
+	_, errOther := os.Stat(filepath.Join(dir, "settings.json"))
+	if err != nil || len(got) != 1 || got[0] != "art/tree.sprite.json" || errMeta != nil || errOther != nil {
+		t.Fatalf("err %v got %v meta %v other %v", err, got, errMeta, errOther)
 	}
 }

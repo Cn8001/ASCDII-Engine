@@ -180,6 +180,9 @@ func (s *Session) Info(ctx context.Context) (Info, error) {
 // Open loads the project whose manifest is at path and its start scene.
 func (s *Session) Open(ctx context.Context, manifest string) error {
 	dir := filepath.Dir(manifest)
+	if _, err := project.RenameSprites(ctx, dir); err != nil {
+		return err
+	}
 	made, err := project.EnsureMeta(ctx, dir, s.d.IDs)
 	if err != nil {
 		return err

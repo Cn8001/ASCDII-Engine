@@ -40,8 +40,8 @@ func TemplateFiles() (map[string][]byte, error) {
 		".gitignore":               []byte(project.BuildDir + "/\n"),
 		"README.md":                []byte("# Dragonfall\n\nThe ASCDII Engine sample: a 2.5D Braille valley with a keep, a sleeping dragon and a knight.\n\n```bash\nascdii run .\n```\n"),
 	}
-	for _, art := range []string{"art/pine.json", "art/hero_idle.json"} {
-		files[art+asset.MetaExt] = asset.MetaBytes(TemplateGUID(art))
+	for _, sp := range []string{"sprites/pine.sprite.json"} {
+		files[sp+asset.MetaExt] = asset.MetaBytes(TemplateGUID(sp))
 	}
 	for name := range files {
 		if _, ok := asset.Classify(name); ok && !strings.HasSuffix(name, asset.MetaExt) && name != "Dragonfall"+project.Ext {

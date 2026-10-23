@@ -16,8 +16,8 @@ type LogEntry struct {
 	Count  int    `json:"count"`
 }
 
-// logbook keeps recent console lines and collapses repeats like Unity's
-// collapse toggle, so a script logging every frame cannot flood the UI.
+// logbook keeps recent console lines and collapses repeats, so a script
+// logging every frame cannot flood the UI.
 type logbook struct {
 	mu      sync.Mutex
 	entries []LogEntry

@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Particles | ASCDII Engine</title>
+<link rel="icon" href="img/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="layout">
+<aside class="side">
+<a class="brand" href="index.html"><img src="img/logo.svg" alt=""><span>ASCDII Engine<small>0.0.1 docs</small></span></a>
+<h4>Start</h4>
+<a href="index.html">Welcome</a>
+<a href="install.html">Install</a>
+<a href="first-game.html">Your first game</a>
+<h4>Guides</h4>
+<a href="editor.html">The editor</a>
+<a href="gameobjects.html">GameObjects and components</a>
+<a href="scenes.html">Scenes and prefabs</a>
+<a href="assets.html">Assets and import</a>
+<a href="packages.html">Packages</a>
+<a href="textures.html">Textures and materials</a>
+<a href="models.html">Models</a>
+<a href="animation.html">Animation</a>
+<a href="particles.html" class="on">Particles</a>
+<a href="audio.html">Audio</a>
+<a href="physics.html">Physics</a>
+<a href="scripting.html">Lua scripting</a>
+<a href="rendering.html">Rendering</a>
+<a href="building.html">Build</a>
+<h4>Reference</h4>
+<a href="lua-api.html">Lua API</a>
+<a href="cli.html">CLI reference</a>
+<a href="go-api.html">Go API</a>
+<a href="architecture.html">Architecture</a>
+</aside>
+<main>
+<div class="kicker">Guides</div>
+<h1>Particles</h1>
+<p class="lead">A <b>Particle System</b> component emits dots that fly, fall, fade and bounce: fire, smoke, sparks, rain, snow, magic. Pick a preset in the Particle Editor and tune it while it runs in the Scene view.</p>
+<figure><img src="img/editor-particles.png" alt="Particle Editor"><figcaption>The Particle Editor next to the Scene view, with the fountain preset running.</figcaption></figure>
+
+<h2>Your first effect</h2>
+<ol class="steps">
+<li>Choose <b>GameObject</b>, <b>Effects</b>, <b>Particle System</b>, or add the component to an existing object.</li>
+<li>Press the sparkle button on its Inspector card. The Particle Editor opens and turns on Live preview, so the effect runs while you edit.</li>
+<li>Click a preset: embers, fire, smoke, sparks, rain, snow, magic, fountain or explosion. A preset replaces every setting; undo brings the old ones back.</li>
+<li>Change values on the right. The bar and the line on the left preview the color and the size over a particle's life.</li>
+</ol>
+<p><b>Play</b> restarts the system, <b>Stop</b> ends births and lets live particles finish, <b>Burst</b> emits the burst count at once, <b>Clear</b> removes every particle.</p>
+
+<h2>Settings</h2>
+<table>
+<tr><th>Group</th><th>Settings</th></tr>
+<tr><td>Emission</td><td><code>active</code> switches births on and off. <code>duration</code> is one cycle in seconds; with <code>loop</code> off the system stops after it. <code>prewarm</code> starts as if it had run for a while, for flames and smoke that should not grow in. <code>rate</code> per second, <code>burst</code> at the start of each cycle, <code>max</code> alive at once.</td></tr>
+<tr><td>Shape</td><td>Where particles are born: a <code>point</code>, inside a <code>sphere</code> of <code>radius</code>, inside a <code>box</code>, or on a flat <code>ring</code>. <code>dir</code> is the main direction; <code>spread</code> widens it from a beam (0) to every direction (1).</td></tr>
+<tr><td>Particles</td><td><code>life</code> in seconds (each varies by 30%), <code>speed</code>, <code>size</code> at birth and <code>sizeEnd</code> at death, <code>start</code> and <code>end</code> color, <code>emissive</code> so they glow in the dark, and <code>glow</code>, a light that follows the effect.</td></tr>
+<tr><td>Forces</td><td><code>gravity</code> pulls down (negative rises), <code>drag</code> slows, <code>wind</code> pushes along a vec3, <code>turbulence</code> makes them swirl. With <code>collide</code> they stop at the ground and <code>bounce</code> back; a bounce of 0 removes them there, for rain.</td></tr>
+<tr><td>Render</td><td><code>space</code>: in <code>world</code> space particles stay where they were born when the object moves, which suits trails and smoke; in <code>local</code> space they move with it. <code>render</code> draws a <code>dot</code> or a <code>streak</code> along the motion, for rain and sparks. <code>seed</code> varies the pattern.</td></tr>
+</table>
+
+<h2>From scripts</h2>
+<pre><code><span class="k">local</span> fx = self:component(<span class="s">"emitter"</span>)
+fx:play()           <span class="c">-- restart the cycle</span>
+fx:emit(40)         <span class="c">-- 40 particles now, playing or not</span>
+fx:stop()           <span class="c">-- no new particles; live ones finish</span>
+fx:clear()
+log(fx:count())
+fx.rate = 80        <span class="c">-- every setting is a field</span>
+fx.start = <span class="s">"#ff4020"</span></code></pre>
+<p>A one shot effect, such as an explosion when something is destroyed: give a prefab a particle system with <code>loop</code> off and a <code>burst</code>, then <code>spawn</code> it where it should happen.</p>
+<div class="tip"><b>Keep it light</b>Every particle is drawn as dots, and a terminal frame has room for only so many. A few hundred particles look rich; thousands only cost time.</div>
+<nav class="pager"><a class="prev" href="animation.html"><small>Previous</small>Animation</a><a class="next" href="audio.html"><small>Next</small>Audio</a></nav>
+</main>
+</div>
+</body>
+</html>

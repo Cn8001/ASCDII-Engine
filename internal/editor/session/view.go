@@ -98,8 +98,7 @@ func (s *Session) Focus(id uint64) error {
 	return nil
 }
 
-// AlignGame copies the editor view into the game camera, like Unity's
-// "align with view".
+// AlignGame copies the editor view into the game camera.
 func (s *Session) AlignGame() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -167,6 +166,74 @@ func (s *Session) Drag(id uint64, axis string, fromCol, fromRow, toCol, toRow fl
 		d = p.World().Inward(d)
 	}
 	e.Local.Pos = e.Local.Pos.Add(d)
+	s.changed()
+	return nil
+}
+
+// Turn rotates an entity by a drag: around "z" by the angle the pointer
+// sweeps about it on the ground, around "x" or "y" by the sideways distance.
+func (s *Session) Turn(id uint64, axis string, fromCol, fromRow, toCol, toRow float64) error {
+	return s.transformDrag(id, "turn", func(e *scene.GameObject, v view.View) error {
+		w := e.World()
+		switch axis {
+		case "z", "free":
+			a, b := ground(v, fromCol, fromRow, w.Pos.Z).Sub(w.Pos), ground(v, toCol, toRow, w.Pos.Z).Sub(w.Pos)
+			e.Local.Rot.Z += (math.Atan2(b.Y, b.X) - math.Atan2(a.Y, a.X)) * 180 / math.Pi
+		case "x":
+			e.Local.Rot.X += (toCol - fromCol) * degPerCell
+		case "y":
+			e.Local.Rot.Y += (toCol - fromCol) * degPerCell
+		default:
+			return fmt.Errorf("turn %s: %w: %s", e.Name, ErrBadAxis, axis)
+		}
+		return nil
+	})
+}
+
+// Stretch scales an entity by a drag, right or up to grow; "free" scales
+// evenly.
+func (s *Session) Stretch(id uint64, axis string, fromCol, fromRow, toCol, toRow float64) error {
+	return s.transformDrag(id, "stretch", func(e *scene.GameObject, _ view.View) error {
+		k := math.Exp((toCol - fromCol - (toRow-fromRow)*2) * scalePerCell)
+		sc := e.Local.Scale
+		switch axis {
+		case "free":
+			sc = sc.Scale(k)
+		case "x":
+			sc.X *= k
+		case "y":
+			sc.Y *= k
+		case "z":
+			sc.Z *= k
+		default:
+			return fmt.Errorf("stretch %s: %w: %s", e.Name, ErrBadAxis, axis)
+		}
+		e.Local.Scale = sc
+		return nil
+	})
+}
+
+const (
+	degPerCell   = 3
+	scalePerCell = .03
+)
+
+func (s *Session) transformDrag(id uint64, kind string, fn func(e *scene.GameObject, v view.View) error) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.play == nil {
+		s.checkpoint(fmt.Sprintf("%s:%d", kind, id))
+	}
+	e, err := s.current().ByID(id)
+	if err != nil {
+		return err
+	}
+	if e.Inherited() {
+		return fmt.Errorf("%s %s: %w", kind, e.Name, scene.ErrPrefabLocked)
+	}
+	if err := fn(e, s.view()); err != nil {
+		return err
+	}
 	s.changed()
 	return nil
 }

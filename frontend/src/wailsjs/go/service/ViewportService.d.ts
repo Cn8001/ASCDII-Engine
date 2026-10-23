@@ -22,6 +22,10 @@ export function Paint(arg1:number,arg2:number,arg3:number,arg4:string,arg5:numbe
 
 export function Pan(arg1:number,arg2:number):Promise<void>;
 
+export function ParticlePresets():Promise<Array<string>>;
+
+export function Particles(arg1:number,arg2:string,arg3:string,arg4:string):Promise<number>;
+
 export function Pause():Promise<void>;
 
 export function Pick(arg1:number,arg2:number):Promise<number>;
@@ -41,5 +45,9 @@ export function Snapshot():Promise<session.Frame>;
 export function Step():Promise<void>;
 
 export function Stop():Promise<void>;
+
+export function Stretch(arg1:number,arg2:string,arg3:number,arg4:number,arg5:number,arg6:number):Promise<void>;
+
+export function Turn(arg1:number,arg2:string,arg3:number,arg4:number,arg5:number,arg6:number):Promise<void>;
 
 export function Zoom(arg1:number):Promise<void>;

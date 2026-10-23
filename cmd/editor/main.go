@@ -27,6 +27,7 @@ import (
 	"github.com/Cn8001/ASCDII-Engine/frontend"
 	"github.com/Cn8001/ASCDII-Engine/internal/dragonfall"
 	"github.com/Cn8001/ASCDII-Engine/internal/editor/brand"
+	"github.com/Cn8001/ASCDII-Engine/internal/editor/launch"
 	"github.com/Cn8001/ASCDII-Engine/internal/editor/players"
 	"github.com/Cn8001/ASCDII-Engine/internal/editor/recent"
 	"github.com/Cn8001/ASCDII-Engine/internal/editor/service"
@@ -53,6 +54,9 @@ func packageDir() string {
 }
 
 func run() error {
+	if !openDirectly && !launch.FromLauncher() {
+		return handOver()
+	}
 	store, err := recent.Default()
 	if err != nil {
 		return err
@@ -83,6 +87,12 @@ func run() error {
 		AssetServer:      &assetserver.Options{Assets: frontend.Dist(), Middleware: frames(sess)},
 		OnStartup: func(ctx context.Context) {
 			appCtx.Set(ctx)
+			// Before the page loads, so it starts with the project already open.
+			if len(os.Args) > 1 {
+				if _, err := svc.Project.Open(os.Args[1]); err != nil {
+					fmt.Fprintln(os.Stderr, err)
+				}
+			}
 			go sess.Run(ctx, 60)
 		},
 		OnShutdown: func(context.Context) { sess.Close() },
@@ -91,6 +101,19 @@ func run() error {
 		DragAndDrop: &options.DragAndDrop{EnableFileDrop: true},
 		Linux:       &linux.Options{Icon: icon.Bytes(), ProgramName: "ascdii-editor"},
 	})
+}
+
+// handOver opens ascdii, the launcher, for an editor started directly.
+func handOver() error {
+	self, err := os.Executable()
+	if err != nil {
+		return fmt.Errorf("locate executable: %w", err)
+	}
+	cli, err := launch.Find(self, launch.CLI)
+	if err != nil {
+		return fmt.Errorf("the editor opens from %s: %w", launch.CLI, err)
+	}
+	return launch.OpenCLI(context.Background(), cli)
 }
 
 // frames serves the latest frame as raw bytes; the frame event only says a
