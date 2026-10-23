@@ -188,6 +188,9 @@ func (s *Session) Apply(ctx context.Context, id uint64, name string) error {
 	if err != nil {
 		return err
 	}
+	if locked(rel) {
+		return lockedErr(rel)
+	}
 	src, err := scene.DecodePrefab(bytes.NewReader(raw), s.reg)
 	if err != nil {
 		return err
@@ -400,6 +403,9 @@ func (s *Session) SavePrefab(ctx context.Context, id uint64, rel string) error {
 	}
 	if !strings.HasSuffix(rel, ".prefab.json") {
 		rel += ".prefab.json"
+	}
+	if locked(rel) {
+		return lockedErr(rel)
 	}
 	e, err := s.edit.ByID(id)
 	if err != nil {

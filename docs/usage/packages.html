@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Packages | ASCDII Engine</title>
+<link rel="icon" href="img/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="layout">
+<aside class="side">
+<a class="brand" href="index.html"><img src="img/logo.svg" alt=""><span>ASCDII Engine<small>0.0.1 docs</small></span></a>
+<h4>Start</h4>
+<a href="index.html">Welcome</a>
+<a href="install.html">Install</a>
+<a href="first-game.html">Your first game</a>
+<h4>Guides</h4>
+<a href="editor.html">The editor</a>
+<a href="gameobjects.html">GameObjects and components</a>
+<a href="scenes.html">Scenes and prefabs</a>
+<a href="assets.html">Assets and import</a>
+<a href="packages.html" class="on">Packages</a>
+<a href="textures.html">Textures and materials</a>
+<a href="models.html">Models</a>
+<a href="animation.html">Animation</a>
+<a href="scripting.html">Lua scripting</a>
+<a href="rendering.html">Rendering</a>
+<a href="building.html">Build and release</a>
+<h4>Reference</h4>
+<a href="lua-api.html">Lua API</a>
+<a href="cli.html">CLI reference</a>
+<a href="go-api.html">Go API</a>
+<a href="architecture.html">Architecture</a>
+</aside>
+<main>
+<div class="kicker">Guides</div>
+<h1>Packages</h1>
+<p class="lead">A package is a set of assets, with their .meta files, that you add to a project and take out again as a whole, like a Unity package. It is built like a project but does not run on its own: it brings prefabs, models, textures, materials, scripts and scenes for your game to use.</p>
+<figure><img src="img/editor-packages.png" alt="Package Manager"><figcaption>The Package Manager with the Dragonfall sample installed.</figcaption></figure>
+
+<h2>The Package Manager</h2>
+<p>Open it with the package button in the toolbar. On the left are the packages <b>In Project</b> and those <b>Available</b> to install; on the right are the details of the one you pick.</p>
+<ul>
+<li><b>Install</b> copies the package into <code>packages/&lt;name&gt;/</code> and loads it. Its prefabs, models and scripts are ready to use at once.</li>
+<li><b>Update</b> appears when a newer version is available and replaces the installed one.</li>
+<li><b>Remove</b> takes the package out of the project. Anything in your scenes that used its assets shows as missing.</li>
+<li><b>Install from file</b> installs a <code>.ascdiipack</code> from anywhere on disk.</li>
+</ul>
+<p>Available packages come from two places: those built into the editor, such as the <b>Dragonfall</b> sample, and every <code>.ascdiipack</code> in your package folder (<code>~/.config/ascdii/packages</code> on Linux, <code>%AppData%\ascdii\packages</code> on Windows). Put the packages you use often there.</p>
+
+<h2>Installed packages are read only</h2>
+<figure><img src="img/editor-package-tree.png" alt="Packages in the Project window"><figcaption>Installed packages appear under Packages in the Project window, apart from your own assets.</figcaption></figure>
+<p>Packages appear under <b>Packages</b> in the Project window. Use their assets as you would your own: drag a prefab into the scene, put a material on an object, open a sample scene and press play. You cannot rename, move, delete or change files inside a package, and scenes inside a package cannot be saved, so updating or removing it never loses your work. To change a package asset, copy what you need into your own folders first.</p>
+
+<h2>Code modules</h2>
+<p>Some packages use components written in Go, which have to be built into the editor and the player. Dragonfall's terrain, castle, dragon and knight are such a <b>module</b>. A package names the modules it needs; installing it adds them to the project manifest, and their components appear in the GameObject menu and Add Component. Removing the package removes its modules again, unless your own scenes or another package still use them. A package that needs a module this editor was built without shows a warning and cannot be installed.</p>
+<p>A new, empty project has no modules, so it shows only the engine's own components.</p>
+
+<h2>Making a package</h2>
+<ol class="steps">
+<li>Put the assets in one folder of your project, for example <code>props/street</code>, with everything they need.</li>
+<li>Right click the folder in the Project window and choose <b>Export Package</b>. Right click <b>Assets</b> to export the whole project.</li>
+<li>Give it a name (lower case letters, digits, dots and dashes) and a version, then pick where to save the <code>.ascdiipack</code>.</li>
+</ol>
+<p>The file is a zip with the assets, their .meta files and a <code>pack.json</code>:</p>
+<pre><code>{
+  "format": 1,
+  "name": "street-props",
+  "version": "1.0.0",
+  "engine": "0.0.1",
+  "description": "Lanterns, benches and signs",
+  "modules": []
+}</code></pre>
+<p>Assets keep their GUIDs, so references between them survive the trip. If a project already has an asset with one of the package's GUIDs outside the package, installing stops and names the clashing files, since one id cannot name two assets.</p>
+
+<h2>From the command line</h2>
+<pre><code>ascdii pack list MyGame
+ascdii pack install MyGame dragonfall
+ascdii pack install MyGame ~/Downloads/street-props-1.0.0.ascdiipack
+ascdii pack remove MyGame street-props
+ascdii pack export MyGame/props/street -name street-props -version 1.0.0</code></pre>
+<nav class="pager"><a class="prev" href="assets.html"><small>Previous</small>Assets and import</a><a class="next" href="textures.html"><small>Next</small>Textures and materials</a></nav>
+</main>
+</div>
+</body>
+</html>

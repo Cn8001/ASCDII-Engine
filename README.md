@@ -30,7 +30,7 @@ A game is a folder you can keep in git:
 
 ```
 MyGame/
-  MyGame.ascdiiproj      manifest: name, version, engine, start scene, packs
+  MyGame.ascdiiproj      manifest: name, version, engine, start scene, modules
   scenes/*.scene.json    GameObject trees, camera, environment, animation clips
   prefabs/*.prefab.json  reusable GameObject trees, instanced by reference
   models/*.obj           models with their .mtl files
@@ -38,6 +38,7 @@ MyGame/
   materials/*.material.json
   art/*.json | *.xp      glyph art (JSON palette art or REXPaint)
   scripts/*.lua          Lua scripts with Inspector fields
+  packages/<name>/       installed packages, read only
   **/*.meta              UUIDv7 per asset, plus import settings
   build/                 output, ignored by the generated .gitignore
 ```
@@ -50,6 +51,8 @@ ascdii run MyGame
 ascdii preview MyGame -size 160x50 -time 2
 ascdii build MyGame                          # one executable, project appended
 ascdii release MyGame -players bin/players   # per platform exe + zip + SHA256SUMS
+ascdii pack install MyGame dragonfall        # the sample as a package
+ascdii pack export MyGame/props -name props  # share a folder as a .ascdiipack
 ascdii version
 ```
 
@@ -65,6 +68,12 @@ orbit, wheel zoom, click to pick, drag the handle to move, drop files, prefabs,
 models and materials), Inspector with component cards and reference slots that
 take drags, Project window with real folders and file import, pipeline,
 timeline, console, build and release.
+
+Packages work like Unity's: assets with their .meta files and a pack.json,
+shared as one `.ascdiipack`, installed into `packages/` read only and removed
+as a whole from the Package Manager. New projects start empty; the Dragonfall
+sample is a package, and its Go components are a code module that only
+projects using it load.
 
 GameObjects carry any number of components. Lua scripts are components too:
 they declare `fields` the Inspector edits and reach objects, components, the

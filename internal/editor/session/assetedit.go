@@ -34,6 +34,9 @@ func (s *Session) CreateMaterial(ctx context.Context, name string) (string, erro
 	if !strings.Contains(rel, "/") {
 		rel = "materials/" + rel
 	}
+	if locked(rel) {
+		return "", lockedErr(rel)
+	}
 	rel = s.freeName(rel + material.Ext)
 	m := material.Default()
 	var b bytes.Buffer
@@ -141,6 +144,9 @@ func (s *Session) SetAssetProp(ctx context.Context, ref, name string, v any) err
 	defer s.mu.Unlock()
 	if err := s.need(); err != nil {
 		return err
+	}
+	if p := s.lib.Resolve(ref); locked(p) {
+		return lockedErr(p)
 	}
 	st, err := s.settingsOf(ref)
 	if err != nil {

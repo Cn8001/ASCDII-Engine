@@ -69,6 +69,9 @@ func (s *Session) CreateFolder(ctx context.Context, rel string) (string, error) 
 	if err != nil || rel == "" {
 		return "", fmt.Errorf("create folder %q: %w", rel, ErrBadPath)
 	}
+	if locked(rel) {
+		return "", lockedErr(rel)
+	}
 	if err := ctx.Err(); err != nil {
 		return "", err
 	}
@@ -127,6 +130,9 @@ func (s *Session) moveFolder(ctx context.Context, from, to string) (string, erro
 	if to, err = clean(to); err != nil {
 		return "", err
 	}
+	if locked(from) || locked(to) {
+		return "", lockedErr(from)
+	}
 	if strings.HasPrefix(to+"/", from+"/") {
 		return "", fmt.Errorf("move %s into itself: %w", from, ErrBadPath)
 	}
@@ -173,6 +179,9 @@ func (s *Session) Delete(ctx context.Context, rel string) error {
 	rel, err := clean(s.lib.Resolve(rel))
 	if err != nil || rel == "" {
 		return fmt.Errorf("delete: %w", ErrBadPath)
+	}
+	if locked(rel) {
+		return fmt.Errorf("delete %s: remove the package in the package manager: %w", rel, ErrPackageLocked)
 	}
 	if rel == s.scenePath {
 		return fmt.Errorf("delete %s: %w", rel, ErrNotEditable) // the open scene

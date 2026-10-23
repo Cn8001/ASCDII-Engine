@@ -46,6 +46,9 @@ func (s *Session) Import(ctx context.Context, files []string, folder string) ([]
 	if err := s.need(); err != nil {
 		return nil, err
 	}
+	if locked(folder) {
+		return nil, lockedErr(folder)
+	}
 	var out []string
 	var errs []error
 	for _, src := range files {

@@ -21,11 +21,14 @@ type fakeDialogs struct{ file, dir string }
 
 func (f fakeDialogs) OpenFile(context.Context, string, []Filter) (string, error) { return f.file, nil }
 func (f fakeDialogs) PickDir(context.Context, string) (string, error)            { return f.dir, nil }
+func (f fakeDialogs) SaveFile(context.Context, string, string, []Filter) (string, error) {
+	return f.file, nil
+}
 
 func services(t *testing.T, d fakeDialogs) *Services {
 	t.Helper()
 	s := session.New(session.Deps{
-		Packs:     []project.Pack{dragonfall.Pack()},
+		Modules:   []project.Module{dragonfall.Module()},
 		Templates: []session.Template{{Name: "empty"}, {Name: "dragonfall", FS: dragonfall.Template()}},
 		Players:   players.Source{FS: fstest.MapFS{}},
 	})

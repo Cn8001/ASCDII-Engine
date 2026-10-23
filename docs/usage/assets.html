@@ -20,6 +20,7 @@
 <a href="gameobjects.html">GameObjects and components</a>
 <a href="scenes.html">Scenes and prefabs</a>
 <a href="assets.html" class="on">Assets and import</a>
+<a href="packages.html">Packages</a>
 <a href="textures.html">Textures and materials</a>
 <a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
@@ -45,6 +46,8 @@
 <li>Drag tiles or folders onto a folder in the tree, a folder tile or the path to move them. The <code>.meta</code> files move along, so references keep working.</li>
 <li>Right click a folder to rename or delete it, and a tile to rename or delete it. Deleting asks first and removes the files from disk; anything that used them shows <b>Missing</b>.</li>
 <li>Search and the type filter look through every folder; right click a result and choose <b>Show in Folder</b>.</li>
+<li>Installed packages are listed under <b>Packages</b>, below your own folders, and are read only.</li>
+<li>Right click a folder and choose <b>Export Package</b> to share it, see <a href="packages.html">Packages</a>.</li>
 </ul>
 
 <h2>Importing files</h2>
@@ -76,9 +79,10 @@
 <p>Commit <code>.meta</code> files together with their assets. A teammate who clones the project gets the same ids, so their scenes and yours agree.</p>
 
 <h2>Sharing between projects</h2>
+<p>For sets of assets you reuse, make a <a href="packages.html">package</a>: one file, installed and removed as a whole. For a one off copy, the folder works too:</p>
 <p>To move a set of assets to another project, for example a prefab with its scripts, models and art, copy their folder <b>with the .meta files</b> and drop it on the other project's Project window. Imported assets keep their GUIDs, so the prefab still finds its scripts and textures. If the other project already has an asset with the same GUID, the copy gets a new one, which keeps both apart; files that are not assets, such as notes, are copied as they are.</p>
 <div class="note"><b>Changes made outside the editor</b>Files you change in another program are picked up while the editor runs: scripts reload, art, models, textures and materials refresh. The reload button in the Project window rescans everything.</div>
-<nav class="pager"><a class="prev" href="scenes.html"><small>Previous</small>Scenes and prefabs</a><a class="next" href="textures.html"><small>Next</small>Textures and materials</a></nav>
+<nav class="pager"><a class="prev" href="scenes.html"><small>Previous</small>Scenes and prefabs</a><a class="next" href="packages.html"><small>Next</small>Packages</a></nav>
 </main>
 </div>
 </body>

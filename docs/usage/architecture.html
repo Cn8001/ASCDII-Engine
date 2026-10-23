@@ -20,6 +20,7 @@
 <a href="gameobjects.html">GameObjects and components</a>
 <a href="scenes.html">Scenes and prefabs</a>
 <a href="assets.html">Assets and import</a>
+<a href="packages.html">Packages</a>
 <a href="textures.html">Textures and materials</a>
 <a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
@@ -46,11 +47,12 @@
   assets/    asset (catalog, .meta, library, glyph art), mesh (OBJ), material
   script/    vm (Lua: VM, scripts, fields, API)
   platform/  the backend contract, terminal, headless
-  runtime/   app, loop, bundle, project, version
+  runtime/   app, loop, bundle, project (manifest, modules), pack (packages), version
 internal/editor/   session, service (the Wails boundary), players, recent, brand
-internal/dragonfall/  the sample content pack
-cmd/      ascdii (CLI and player), launcher (menu), editor (Wails), snapshot, hello</code></pre>
-<p>Dependencies point one way: <code>core</code> ← <code>render</code> ← <code>world</code> ← <code>script</code>, with <code>assets</code> using core, render and world types, and <code>runtime</code> tying it together. The editor and content packs depend on the engine; the engine never depends on them. Nothing keeps package level state: registries, libraries and VMs are created at startup and passed in.</p>
+internal/dragonfall/  the sample: a code module and a package
+cmd/      ascdii (CLI and player), launcher (menu program, menu code in launcher/menu),
+          editor (Wails), snapshot, hello</code></pre>
+<p>Dependencies point one way: <code>core</code> ← <code>render</code> ← <code>world</code> ← <code>script</code>, with <code>assets</code> using core, render and world types, and <code>runtime</code> tying it together. The editor and content modules depend on the engine; the engine never depends on them. Nothing keeps package level state: registries, libraries and VMs are created at startup and passed in.</p>
 
 <h2>A frame</h2>
 <ol class="steps">
@@ -85,6 +87,9 @@ cmd/      ascdii (CLI and player), launcher (menu), editor (Wails), snapshot, he
 <li><code>runtime/app</code> runs any pair with <code>Engine.RunOn(ctx, display, input)</code>.</li>
 </ul>
 <div class="tip"><b>Adding SDL</b>A window backend would live in <code>platform/sdl</code>: open a window in <code>Open</code>, draw <code>Frame.Dots</code> as pixels or <code>Frame.Cells</code> with a font in <code>Present</code>, and turn window key down and key up events into <code>input.Event</code>s. Nothing else in the engine changes.</div>
+
+<h2>Modules and packages</h2>
+<p>A <b>module</b> (<code>project.Module</code>) is Go code: a name and a function that registers component kinds. Modules are compiled into the editor and the player, and a project lists the ones it uses in its manifest; only those are installed into its registry. A <b>package</b> (<code>runtime/pack</code>) is data: assets with .meta files and a <code>pack.json</code> naming the modules they need. Installing a package copies it into <code>packages/&lt;name&gt;/</code> and adds its modules; see <a href="packages.html">Packages</a>.</p>
 
 <h2>The editor</h2>
 <p><code>editor/session</code> owns the open project, the edited scene, a cloned scene while playing, undo history and the render loop. <code>editor/service</code> is the boundary to the Vue interface: Wails binds its methods, and every error leaves it with a stable code such as <code>not_found:</code> or <code>prefab_locked:</code>. Frames go to the interface as raw bytes from a small HTTP handler, not as JSON, so a 220 by 60 view stays cheap at 60 frames a second.</p>

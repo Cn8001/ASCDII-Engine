@@ -61,7 +61,7 @@ type (
 	Stage         = pipeline.Stage
 	Prop          = prop.Prop
 	Binder        = prop.Binder
-	Pack          = project.Pack
+	Module        = project.Module
 	Library       = asset.Library
 )
 

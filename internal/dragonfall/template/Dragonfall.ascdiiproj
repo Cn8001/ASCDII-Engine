@@ -7,7 +7,7 @@
   "cols": 160,
   "rows": 50,
   "fps": 30,
-  "packs": [
+  "modules": [
     "dragonfall"
   ]
 }

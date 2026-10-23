@@ -21,6 +21,7 @@ import (
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/render/pipeline"
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/render/view"
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/app"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/pack"
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/project"
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/version"
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/world/scene"
@@ -42,13 +43,15 @@ type Template struct {
 }
 
 type Deps struct {
-	Packs     []project.Pack
-	Templates []Template
-	Players   players.Source
-	Binary    bool        // frames are fetched with Raw instead of riding in events
-	IDs       guid.Source // asset ids; guid.Default() when zero
-	Emit      Emitter
-	Now       func() time.Time
+	Modules    []project.Module
+	Packages   []pack.Source // built into the editor, such as the Dragonfall sample
+	PackageDir string        // where the user keeps .ascdiipack files
+	Templates  []Template
+	Players    players.Source
+	Binary     bool        // frames are fetched with Raw instead of riding in events
+	IDs        guid.Source // asset ids; guid.Default() when zero
+	Emit       Emitter
+	Now        func() time.Time
 }
 
 type Mode string
@@ -96,7 +99,7 @@ func New(d Deps) *Session {
 	if d.IDs.Rand == nil {
 		d.IDs = guid.Default()
 	}
-	reg, lib := project.Registry(d.Packs)
+	reg, lib := project.Registry(d.Modules)
 	s := &Session{d: d, reg: reg, lib: lib, edit: scene.New("untitled"), mode: Edit, live: false, dirty: true, viewMode: SceneView, appCtx: context.Background()}
 	s.cam = s.edit.Camera
 	s.pipe = app.NewPipeline(s.current, d.Now)
@@ -172,7 +175,7 @@ func (s *Session) Open(ctx context.Context, manifest string) error {
 	if err != nil {
 		return err
 	}
-	p, err := project.Open(ctx, os.DirFS(dir), s.d.Packs)
+	p, err := project.Open(ctx, os.DirFS(dir), s.d.Modules)
 	if err != nil {
 		return err
 	}
@@ -299,6 +302,9 @@ func (s *Session) save(ctx context.Context, rel string) error {
 	if err := s.need(); err != nil {
 		return err
 	}
+	if locked(rel) {
+		return lockedErr(rel)
+	}
 	var b bytes.Buffer
 	if err := scene.Encode(&b, s.edit); err != nil {
 		return err
@@ -320,6 +326,9 @@ func (s *Session) NewScene(ctx context.Context, rel string) error {
 	defer s.mu.Unlock()
 	if err := s.need(); err != nil {
 		return err
+	}
+	if locked(rel) {
+		return lockedErr(rel)
 	}
 	var b bytes.Buffer
 	if err := scene.Encode(&b, project.Starter(s.proj.Manifest.Name)); err != nil {
@@ -355,7 +364,7 @@ func (s *Session) CloseProject() {
 		s.stopWatch()
 		s.stopWatch = nil
 	}
-	s.reg, s.lib = project.Registry(s.d.Packs)
+	s.reg, s.lib = project.Registry(s.d.Modules)
 	s.proj, s.dir = nil, ""
 	s.load(scene.New("untitled"), "")
 }

@@ -48,7 +48,7 @@ func run(ctx context.Context) error {
 }
 
 func play(ctx context.Context, fsys fs.FS) error {
-	e, err := app.Open(ctx, fsys, app.Options{Packs: []project.Pack{dragonfall.Pack()}})
+	e, err := app.Open(ctx, fsys, app.Options{Modules: []project.Module{dragonfall.Module()}})
 	if err != nil {
 		return err
 	}

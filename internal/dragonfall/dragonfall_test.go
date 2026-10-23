@@ -14,7 +14,7 @@ import (
 
 func open(t testing.TB) *app.Engine {
 	t.Helper()
-	e, err := app.Open(context.Background(), Template(), app.Options{Cols: 160, Rows: 50, Packs: []project.Pack{Pack()}})
+	e, err := app.Open(context.Background(), Template(), app.Options{Cols: 160, Rows: 50, Modules: []project.Module{Module()}})
 	if err != nil {
 		t.Fatal(err)
 	}

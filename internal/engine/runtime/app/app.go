@@ -24,7 +24,7 @@ import (
 type Options struct {
 	Cols, Rows int
 	FPS        int
-	Packs      []project.Pack
+	Modules    []project.Module
 	Now        func() time.Time
 }
 
@@ -74,7 +74,7 @@ func build(o Options, reg *scene.Registry, lib *asset.Library, s *scene.Scene) *
 // New starts with an empty scene and every built in kind registered.
 func New(o Options) *Engine {
 	o = o.withDefaults()
-	reg, lib := project.Registry(o.Packs)
+	reg, lib := project.Registry(o.Modules)
 	s := scene.New("untitled")
 	s.UsePrefabs(lib)
 	return build(o, reg, lib, s)
@@ -82,7 +82,7 @@ func New(o Options) *Engine {
 
 // Open loads a project and its start scene.
 func Open(ctx context.Context, fsys fs.FS, o Options) (*Engine, error) {
-	p, err := project.Open(ctx, fsys, o.Packs)
+	p, err := project.Open(ctx, fsys, o.Modules)
 	if err != nil {
 		return nil, err
 	}

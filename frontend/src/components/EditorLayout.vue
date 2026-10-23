@@ -12,6 +12,7 @@ import FloatingWindow from './FloatingWindow.vue'
 import Icon from './Icon.vue'
 import AssetInspector from './AssetInspector.vue'
 import NewProjectDialog from './NewProjectDialog.vue'
+import PackageManager from './PackageManager.vue'
 import Inspector from './Inspector.vue'
 import PipelinePanel from './PipelinePanel.vue'
 import ProjectWindow from './ProjectWindow.vue'
@@ -157,5 +158,6 @@ function tab(active: boolean) {
     </FloatingWindow>
     <BuildDialog v-if="store.buildOpen" />
     <NewProjectDialog />
+  <PackageManager />
 </div>
 </template>

@@ -39,7 +39,7 @@ func run(ctx context.Context) error {
 	flag.Func("off", "render pass to disable, repeatable", func(v string) error { off = append(off, v); return nil })
 	flag.Func("set", "entity:prop=json, repeatable", func(v string) error { sets = append(sets, v); return nil })
 	flag.Parse()
-	e, err := app.Open(ctx, os.DirFS(*dir), app.Options{Cols: *cols, Rows: *rows, Packs: []project.Pack{dragonfall.Pack()}})
+	e, err := app.Open(ctx, os.DirFS(*dir), app.Options{Cols: *cols, Rows: *rows, Modules: []project.Module{dragonfall.Module()}})
 	if err != nil {
 		return err
 	}
