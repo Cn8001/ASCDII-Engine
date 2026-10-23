@@ -50,9 +50,13 @@ func Bundled(ctx context.Context, exe string, modules []project.Module) (Game, i
 	if !errors.Is(err, bundle.ErrNoBundle) {
 		return Game{}, nil, err
 	}
-	if fsys, err := bundle.OpenData(exe); err == nil {
+	fsys, err = bundle.OpenData(exe)
+	switch {
+	case err == nil:
 		g.FS = fsys
 		return g, noClose{}, nil
+	case errors.Is(err, bundle.ErrWrongKey):
+		return Game{}, nil, err
 	}
 	return Game{}, nil, ErrNoGame
 }

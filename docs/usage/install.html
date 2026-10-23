@@ -106,6 +106,7 @@ make cli              <span class="c"># ascdii and ascdii-player for both platfo
 make editor-linux     <span class="c"># ascdii-editor into bin/linux</span>
 make editor-windows   <span class="c"># ascdii-editor.exe into bin/windows</span>
 make dist             <span class="c"># the archives listed under Installation, in bin/dist</span></code></pre>
+<p>The first <code>make</code> writes <code>.env</code> with a random key for game data, which git ignores; keep it, see <a href="building.html#key">The game data key</a>.</p>
 <p><code>bin/linux</code> and <code>bin/windows</code> each hold one complete installation with the same files as the release archive of that platform: <code>ascdii</code>, <code>ascdii-editor</code> and <code>ascdii-player</code>, all for that platform only. A folder runs from any location it is copied to; <code>ascdii</code> starts the editor next to it. Every target first runs <code>make brand</code>, which draws the program icons and the Windows resources that embed them. Windows programs are cross compiled from Linux and WSL without additional toolchains. <code>make editor-dev</code> starts the editor with hot reload and without the launcher, and serves it at <code>http://localhost:34115</code> for browser developer tools.</p>
 <nav class="pager"><a class="prev" href="index.html"><small>Previous</small>Welcome</a><a class="next" href="first-game.html"><small>Next</small>Your first game</a></nav>
 </main>

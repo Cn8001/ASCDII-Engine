@@ -23,12 +23,13 @@ const DataDir = "data"
 
 const pakMagic = "ASCDIIPAK1"
 
-// pakSecret is mixed with a random salt per pak. The key ships with the
-// player, so this keeps a game's files from being browsed or opened as a
-// project; it does not stop someone who reverse engineers the player.
-const pakSecret = "ascdii engine game data 0.0.1"
+// Read from .env in engine built, each engine build has its own pak key to encrypt its game
+var pakSecret = "ascdii development key"
 
-var ErrBadPak = errors.New("not a game data pak")
+var (
+	ErrBadPak   = errors.New("not a game data pak")
+	ErrWrongKey = errors.New("game data was built by an engine with a different key")
+)
 
 // PakFile is the game data of a folder build, in its data folder.
 const PakFile = "game.pak"
@@ -139,7 +140,8 @@ func Unpack(b []byte) (fs.FS, error) {
 	s.XORKeyStream(plain, b[head:])
 	z, err := zip.NewReader(bytes.NewReader(plain), int64(len(plain)))
 	if err != nil {
-		return nil, fmt.Errorf("open game data: %w: %w", ErrBadPak, err)
+		// The header was right, so the key is what differs.
+		return nil, fmt.Errorf("open game data: %w", ErrWrongKey)
 	}
 	return z, nil
 }

@@ -129,3 +129,22 @@ func TestUnit_FolderBuildPacksOnlyGameData(t *testing.T) {
 		t.Fatalf("sums %s", sums)
 	}
 }
+
+func TestUnit_PakOpensOnlyWithItsKey(t *testing.T) {
+	// Arrange
+	defer func(k string) { pakSecret = k }(pakSecret)
+	var b bytes.Buffer
+	if _, err := Pack(context.Background(), &b, fstest.MapFS{"g.ascdiiproj": {Data: []byte(`{}`)}}); err != nil {
+		t.Fatal(err)
+	}
+
+	// Act
+	_, same := Unpack(b.Bytes())
+	pakSecret = "another engine's key"
+	_, other := Unpack(b.Bytes())
+
+	// Assert
+	if same != nil || !errors.Is(other, ErrWrongKey) {
+		t.Fatalf("same key %v, other key %v", same, other)
+	}
+}

@@ -77,7 +77,15 @@ build/windows/Dragonfall/
 <li><code>.meta</code> files are not included; their ids and import settings are compiled into one index inside the pak.</li>
 <li>The pak is compressed and encrypted, so the build cannot be browsed or opened as a project.</li>
 </ul>
-<div class="note"><b>Protection</b>The key is part of the player, so a determined person who analyzes the player can extract the files, as with any engine. The encryption prevents copying the project's files from the build folder.</div>
+<h2 id="key">The game data key</h2>
+<p>The key that encrypts <code>game.pak</code> is not part of the engine's source. It is read from the file <code>.env</code> in the engine's folder when the programs are built from source, as <code>ASCDII_PAK_SECRET</code>, and compiled into <code>ascdii</code>, the editor and <code>ascdii-player</code>. The first <code>make</code> writes <code>.env</code> with a random key; <code>.env.example</code> shows the format.</p>
+<ul>
+<li>A game opens only in a player built with the same key. Every build includes its player, so a game is never affected by the key of another installation.</li>
+<li>An engine built from the same source with another key cannot open the game's data; such a player reports <i>game data was built by an engine with a different key</i>.</li>
+<li>Keep <code>.env</code> private. A new key only affects programs built after the change; every game carries its own player, so existing builds keep working.</li>
+<li>Programs built with <code>go build</code> or <code>go run</code> instead of <code>make</code> use a development key.</li>
+</ul>
+<div class="note"><b>Protection</b>The key is part of the player, so a determined person who analyzes the player can extract the files, as with any engine. The encryption prevents copying the project's files from the build folder, and the engine's source alone does not open them.</div>
 
 <h2>From the command line</h2>
 <pre><code><span class="c"># a folder build for this platform, in build/Quest</span>
