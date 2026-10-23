@@ -4,17 +4,19 @@ import { Assets, EventsOn, Project, Scene } from '../lib/api'
 import { openMenu, type MenuItem } from '../lib/menu'
 import { ask, confirmAction } from '../lib/dialog'
 import { call, refresh, refreshAssets, select, store, toast } from '../lib/store'
+import type { FileDrop } from '../lib/filedrop'
 import type { asset } from '../wailsjs/go/models'
 import ArtThumb from './ArtThumb.vue'
 import Icon from './Icon.vue'
 
-const folder = ref<'all' | 'scene' | 'prefab' | 'art' | 'script'>('all')
+const folder = ref<'all' | 'scene' | 'prefab' | 'model' | 'art' | 'script'>('all')
 const search = ref('')
 const picked = ref('')
 const folders = [
   { id: 'all', label: 'All', icon: 'grid' },
   { id: 'scene', label: 'Scenes', icon: 'scene' },
   { id: 'prefab', label: 'Prefabs', icon: 'package' },
+  { id: 'model', label: 'Models', icon: 'box' },
   { id: 'art', label: 'Art', icon: 'image' },
   { id: 'script', label: 'Scripts', icon: 'file' },
 ] as const
@@ -33,11 +35,20 @@ onMounted(async () => {
 onBeforeUnmount(() => off?.())
 
 function name(p: string) {
-  return p.split('/').pop()?.replace(/\.(prefab|scene)\.json$/, '').replace(/\.(json|xp|lua)$/, '') ?? p
+  return p.split('/').pop()?.replace(/\.(prefab|scene)\.json$/, '').replace(/\.(json|xp|lua|obj)$/, '') ?? p
 }
 
 function icon(k: string) {
-  return { scene: 'scene', prefab: 'package', art: 'image', script: 'file' }[k] ?? 'file'
+  return { scene: 'scene', prefab: 'package', model: 'box', art: 'image', script: 'file' }[k] ?? 'file'
+}
+
+// dropFolder is where OS drops land: the folder of the open filter, or one
+// picked by file type.
+const dropFolder = computed(() => ({ scene: 'scenes', prefab: 'prefabs', model: 'models', art: 'art', script: 'scripts' })[folder.value as string] ?? '')
+
+function fileDrop(e: Event) {
+  const paths = (e as CustomEvent<FileDrop>).detail.paths
+  picked.value = paths[0] ?? ''
 }
 
 function dragStart(e: DragEvent, a: asset.Entry) {
@@ -53,8 +64,8 @@ async function open(a: asset.Entry) {
     await refresh()
   } else if (a.kind === 'script') {
     await call(() => Assets.OpenExternal(a.path, 0))
-  } else if (a.kind === 'prefab') {
-    const id = await call(() => Scene.Add(0, 'prefab:' + a.path))
+  } else if (a.kind === 'prefab' || a.kind === 'model') {
+    const id = await call(() => Scene.Add(0, `${a.kind}:${a.path}`))
     if (id !== undefined) {
       await refresh()
       await select(id)
@@ -143,7 +154,7 @@ async function reload() {
         <input v-model="search" class="field h-6 w-44" placeholder="Search" />
         <button class="icon-btn size-6" title="Reload" @click="reload"><Icon name="refresh" :size="12" /></button>
       </div>
-      <div class="flex-1 overflow-auto p-2" @click.self="picked = ''">
+      <div class="flex-1 overflow-auto p-2" data-drop="project" :data-folder="dropFolder" @click.self="picked = ''" @filedrop="fileDrop">
         <div class="grid grid-cols-[repeat(auto-fill,minmax(88px,1fr))] gap-1">
           <button
             v-for="a in items"
@@ -159,12 +170,12 @@ async function reload() {
           >
             <div class="grid h-12 w-16 place-items-center rounded-md bg-ink-950/60">
               <ArtThumb v-if="a.kind === 'art'" :path="a.path" />
-              <Icon v-else :name="icon(a.kind)" :size="22" :class="a.kind === 'prefab' ? 'text-amber-soft' : a.kind === 'script' ? 'text-ok' : 'text-ink-400'" />
+              <Icon v-else :name="icon(a.kind)" :size="22" :class="a.kind === 'prefab' ? 'text-amber-soft' : a.kind === 'script' ? 'text-ok' : a.kind === 'model' ? 'text-ink-200' : 'text-ink-400'" />
             </div>
             <span class="w-full truncate text-center text-[11px] text-ink-300 group-hover:text-ink-100">{{ name(a.path) }}</span>
           </button>
         </div>
-        <div v-if="!items.length" class="grid h-full place-items-center text-ink-600">-</div>
+        <div v-if="!items.length" class="grid h-full place-items-center text-[12px] text-ink-600">Drop files here</div>
       </div>
     </div>
   </div>

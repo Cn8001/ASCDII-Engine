@@ -5,38 +5,41 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"path"
 	"path/filepath"
 	"strings"
 
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/geom"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/prop"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/scene"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/geom"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/prop"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/components"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/scene"
 )
 
 var (
-	ErrNotEditable = errors.New("not editable")
-	ErrNotInstance = errors.New("not part of a prefab instance")
+	ErrNotEditable  = errors.New("not editable")
+	ErrNotInstance  = errors.New("not part of a prefab instance")
+	ErrNotReference = errors.New("not a matching reference")
 )
 
 type Node struct {
 	ID         uint64   `json:"id"`
 	Name       string   `json:"name"`
-	Kind       string   `json:"kind"`
+	Kind       string   `json:"kind"` // the main component, for the tree icon
 	Visible    bool     `json:"visible"`
 	Prefab     string   `json:"prefab,omitempty"`
 	Overrides  int      `json:"overrides,omitempty"`
 	Inherited  bool     `json:"inherited,omitempty"`
-	Behaviours []string `json:"behaviours,omitempty"`
+	Components []string `json:"components,omitempty"`
 	Children   []Node   `json:"children,omitempty"`
 }
 
-func nodeOf(e *scene.Entity) Node {
+func nodeOf(e *scene.GameObject) Node {
 	n := Node{ID: e.ID, Name: e.Name, Visible: e.Visible, Prefab: e.Prefab, Overrides: len(e.Overrides), Inherited: e.Inherited()}
-	if e.Node != nil {
-		n.Kind = e.Node.Kind()
+	if m := e.Main(); m != nil {
+		n.Kind = m.Kind()
 	}
-	for _, b := range e.Behaviours {
-		n.Behaviours = append(n.Behaviours, b.Kind())
+	for _, c := range e.Components {
+		n.Components = append(n.Components, c.Kind())
 	}
 	for _, c := range e.Children {
 		n.Children = append(n.Children, nodeOf(c))
@@ -54,16 +57,25 @@ func (s *Session) Tree() []Node {
 	return out
 }
 
+type Kind struct {
+	Kind string `json:"kind"`
+	scene.Meta
+}
+
 type Kinds struct {
-	Nodes      []string `json:"nodes"`
-	Behaviours []string `json:"behaviours"`
+	Components []Kind   `json:"components"`
 	Prefabs    []string `json:"prefabs"`
+	Models     []string `json:"models"`
 }
 
 func (s *Session) Kinds() Kinds {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return Kinds{Nodes: s.reg.NodeKinds(), Behaviours: s.reg.BehaviourKinds(), Prefabs: s.lib.PrefabNames()}
+	out := Kinds{Components: []Kind{}, Prefabs: s.lib.PrefabNames(), Models: s.lib.ModelNames()}
+	for _, k := range s.reg.Kinds() {
+		out.Components = append(out.Components, Kind{Kind: k, Meta: s.reg.Meta(k)})
+	}
+	return out
 }
 
 func (s *Session) Props(id uint64) ([]prop.Prop, error) {
@@ -78,7 +90,7 @@ func (s *Session) Props(id uint64) ([]prop.Prop, error) {
 
 // edit1 runs fn on an entity of the edited scene, or of the play copy while
 // playing, recording undo only for the former.
-func (s *Session) edit1(id uint64, label string, fn func(sc *scene.Scene, e *scene.Entity) error) error {
+func (s *Session) edit1(id uint64, label string, fn func(sc *scene.Scene, e *scene.GameObject) error) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	sc := s.current()
@@ -97,22 +109,63 @@ func (s *Session) edit1(id uint64, label string, fn func(sc *scene.Scene, e *sce
 }
 
 func (s *Session) SetProp(id uint64, name string, v any) error {
-	return s.edit1(id, fmt.Sprintf("prop:%d:%s", id, name), func(sc *scene.Scene, e *scene.Entity) error {
+	return s.edit1(id, fmt.Sprintf("prop:%d:%s", id, name), func(sc *scene.Scene, e *scene.GameObject) error {
 		p, ok := prop.Get(e, name)
 		if ok && p.Locked {
 			return fmt.Errorf("set %s: %w", name, scene.ErrPrefabLocked)
 		}
-		if str, isStr := v.(string); ok && isStr && (p.Type == prop.Asset || p.Type == prop.ScriptRef) {
+		if str, isStr := v.(string); ok && isStr && p.Type.Ref() {
 			v = s.lib.Ref(str)
 		}
 		return sc.SetProp(e, name, v)
 	})
 }
 
+// SetRef points a reference property of id at another object, or at one of
+// its components: key names it ("light#2"), or "" picks the first one of
+// the kind the property wants. target 0 clears the reference.
+func (s *Session) SetRef(id uint64, name string, target uint64, key string) error {
+	s.mu.Lock()
+	sc := s.current()
+	o, err := sc.ByID(id)
+	var t *scene.GameObject
+	if err == nil && target != 0 {
+		t, err = sc.ByID(target)
+	}
+	if err != nil {
+		s.mu.Unlock()
+		return err
+	}
+	name = o.Resolve(name)
+	p, ok := prop.Get(o, name)
+	s.mu.Unlock()
+	if !ok || (p.Type != prop.ObjectRef && p.Type != prop.CompRef) {
+		return fmt.Errorf("set %s: %w", name, ErrNotReference)
+	}
+	ref := ""
+	switch {
+	case t == nil:
+	case p.Type == prop.ObjectRef:
+		ref = scene.RefOf(o, t)
+	default:
+		c := t.ComponentByKey(key)
+		if c == nil && key == "" && len(p.Options) > 0 {
+			c = t.Component(p.Options[0])
+		} else if c == nil && key == "" {
+			c = t.Main()
+		}
+		if c == nil || (len(p.Options) > 0 && c.Kind() != p.Options[0]) {
+			return fmt.Errorf("set %s: %s has no matching component: %w", name, t.Name, ErrNotReference)
+		}
+		ref = scene.CompRefOf(o, t, c)
+	}
+	return s.SetProp(id, name, ref)
+}
+
 // Revert drops overrides on an entity inside a prefab instance: one property,
 // or every override of the instance when called on its root with "".
 func (s *Session) Revert(id uint64, name string) error {
-	return s.edit1(id, "", func(sc *scene.Scene, e *scene.Entity) error { return sc.Revert(e, name) })
+	return s.edit1(id, "", func(sc *scene.Scene, e *scene.GameObject) error { return sc.Revert(e, name) })
 }
 
 // Apply writes overrides back into the prefab file, so every instance gets
@@ -171,7 +224,41 @@ func (s *Session) spawnPoint() geom.Vec3 {
 	return geom.V3(t.X, t.Y, 0)
 }
 
-// Add creates "empty", a registered node kind or "prefab:<path>" under parent.
+// object builds what the GameObject menu and drops create: "empty",
+// "prefab:<ref>", "art:<ref>", "model:<ref>" or a registered component kind.
+func (s *Session) object(kind string) (*scene.GameObject, error) {
+	base := func(ref string) string {
+		p := s.lib.Resolve(ref)
+		return strings.TrimSuffix(path.Base(p), path.Ext(p))
+	}
+	switch {
+	case kind == "empty":
+		return scene.NewGameObject("GameObject"), nil
+	case strings.HasPrefix(kind, "prefab:"):
+		e := scene.NewGameObject("")
+		e.Prefab = s.lib.Ref(strings.TrimPrefix(kind, "prefab:"))
+		return e, nil
+	case strings.HasPrefix(kind, "art:"):
+		ref := strings.TrimPrefix(kind, "art:")
+		if _, err := s.lib.Art(ref); err != nil {
+			return nil, err
+		}
+		return scene.NewGameObject(base(ref), components.NewSprite(s.lib, s.lib.Ref(ref))), nil
+	case strings.HasPrefix(kind, "model:"):
+		ref := strings.TrimPrefix(kind, "model:")
+		if _, err := s.lib.Model(ref); err != nil {
+			return nil, err
+		}
+		return scene.NewGameObject(base(ref), components.NewMesh(s.lib, s.lib.Ref(ref))), nil
+	}
+	c, err := s.reg.New(kind)
+	if err != nil {
+		return nil, err
+	}
+	return scene.NewGameObject(s.reg.Meta(kind).Label, c), nil
+}
+
+// Add creates an object (see object for kinds) under parent.
 func (s *Session) Add(parent uint64, kind string) (uint64, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -183,27 +270,16 @@ func (s *Session) Add(parent uint64, kind string) (uint64, error) {
 			return 0, err
 		}
 	}
+	e, err := s.object(kind)
+	if err != nil {
+		return 0, err
+	}
 	if s.play == nil {
 		s.checkpoint("")
 	}
-	var node scene.Node
-	name, prefab := kind, ""
-	switch {
-	case kind == "empty":
-	case strings.HasPrefix(kind, "prefab:"):
-		prefab, name = s.lib.Ref(strings.TrimPrefix(kind, "prefab:")), ""
-	default:
-		n, err := s.reg.NewNode(kind)
-		if err != nil {
-			return 0, err
-		}
-		node = n
-	}
-	e := scene.NewEntity(name, node)
 	if parent == 0 {
 		e.Local.Pos = s.spawnPoint()
 	}
-	e.Prefab = prefab
 	got, err := sc.Graft(p, e, -1)
 	if err != nil {
 		return 0, err
@@ -213,34 +289,61 @@ func (s *Session) Add(parent uint64, kind string) (uint64, error) {
 	return got.ID, nil
 }
 
-func (s *Session) AddBehaviour(id uint64, kind string) error {
-	return s.edit1(id, "", func(_ *scene.Scene, e *scene.Entity) error {
+// components edits the component list of an object the scene owns outright;
+// prefab instances only carry property overrides.
+func (s *Session) components(id uint64, fn func(e *scene.GameObject) error) error {
+	return s.edit1(id, "", func(_ *scene.Scene, e *scene.GameObject) error {
 		if e.Prefab != "" || e.Inherited() {
-			return scene.ErrPrefabLocked
+			return fmt.Errorf("edit components of %s: %w", e.Name, scene.ErrPrefabLocked)
 		}
-		b, err := s.reg.NewBehaviour(kind)
+		return fn(e)
+	})
+}
+
+// AddComponent returns the new component's key, the prefix of its properties.
+func (s *Session) AddComponent(id uint64, kind string) (string, error) {
+	key := ""
+	err := s.components(id, func(e *scene.GameObject) error {
+		c, err := s.reg.New(kind)
 		if err != nil {
 			return err
 		}
-		e.With(b)
+		e.With(c)
+		key = e.Key(c)
+		return nil
+	})
+	return key, err
+}
+
+func (s *Session) RemoveComponent(id uint64, index int) error {
+	return s.components(id, func(e *scene.GameObject) error { return e.RemoveComponent(index) })
+}
+
+func (s *Session) MoveComponent(id uint64, from, to int) error {
+	return s.components(id, func(e *scene.GameObject) error { return e.MoveComponent(from, to) })
+}
+
+// ResetComponent puts a component back to the defaults of its kind.
+func (s *Session) ResetComponent(id uint64, index int) error {
+	return s.components(id, func(e *scene.GameObject) error {
+		if index < 0 || index >= len(e.Components) {
+			return fmt.Errorf("reset component %d: %w", index, scene.ErrUnknownKind)
+		}
+		old := e.Components[index]
+		c, err := s.reg.New(old.Kind())
+		if err != nil {
+			return err
+		}
+		on := e.Enabled(old)
+		e.SetEnabled(old, true)
+		e.Components[index] = c
+		e.SetEnabled(c, on)
 		return nil
 	})
 }
 
-func (s *Session) RemoveBehaviour(id uint64, kind string) error {
-	return s.edit1(id, "", func(_ *scene.Scene, e *scene.Entity) error {
-		for i, b := range e.Behaviours {
-			if b.Kind() == kind {
-				e.Behaviours = append(e.Behaviours[:i], e.Behaviours[i+1:]...)
-				return nil
-			}
-		}
-		return fmt.Errorf("%w: behaviour %s", scene.ErrUnknownKind, kind)
-	})
-}
-
 func (s *Session) Remove(id uint64) error {
-	return s.edit1(id, "", func(sc *scene.Scene, e *scene.Entity) error {
+	return s.edit1(id, "", func(sc *scene.Scene, e *scene.GameObject) error {
 		if s.sel == id {
 			s.sel = 0
 		}
@@ -249,16 +352,16 @@ func (s *Session) Remove(id uint64) error {
 }
 
 func (s *Session) Reparent(id, parent uint64, index int) error {
-	return s.edit1(id, "", func(sc *scene.Scene, e *scene.Entity) error { return sc.Reparent(e.ID, parent, index) })
+	return s.edit1(id, "", func(sc *scene.Scene, e *scene.GameObject) error { return sc.Reparent(e.ID, parent, index) })
 }
 
 func (s *Session) Unpack(id uint64) error {
-	return s.edit1(id, "", func(sc *scene.Scene, e *scene.Entity) error { return sc.Unpack(e.ID) })
+	return s.edit1(id, "", func(sc *scene.Scene, e *scene.GameObject) error { return sc.Unpack(e.ID) })
 }
 
 func (s *Session) Duplicate(id uint64) (uint64, error) {
 	var out uint64
-	err := s.edit1(id, "", func(sc *scene.Scene, e *scene.Entity) error {
+	err := s.edit1(id, "", func(sc *scene.Scene, e *scene.GameObject) error {
 		if e.Inherited() {
 			return scene.ErrPrefabLocked
 		}
@@ -274,12 +377,14 @@ func (s *Session) Duplicate(id uint64) (uint64, error) {
 		c.Overrides = append([]scene.Override(nil), e.Overrides...)
 		c.Local.Pos = c.Local.Pos.Add(geom.V3(2, 1, 0))
 		if c.Prefab != "" {
-			c.Node, c.Behaviours, c.Children = nil, nil, nil
+			c.Components, c.Children = nil, nil
 		}
+		old := scene.FIDs(c)
 		got, err := sc.Graft(e.Parent(), c, -1)
 		if err != nil {
 			return err
 		}
+		scene.Remap(got, old)
 		out, s.sel = got.ID, got.ID
 		return nil
 	})
@@ -300,6 +405,7 @@ func (s *Session) SavePrefab(ctx context.Context, id uint64, rel string) error {
 	if err != nil {
 		return err
 	}
+	scene.Localize(e)
 	var b bytes.Buffer
 	if err := scene.EncodePrefab(&b, e); err != nil {
 		return err

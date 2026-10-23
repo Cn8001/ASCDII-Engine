@@ -15,15 +15,15 @@ import (
 	"time"
 
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/editor/players"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/app"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/asset"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/guid"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/input"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/pipeline"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/project"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/scene"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/version"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/view"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/asset"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/guid"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/input"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/pipeline"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/view"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/app"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/project"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/version"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/scene"
 )
 
 var (
@@ -101,8 +101,13 @@ func New(d Deps) *Session {
 	s.cam = s.edit.Camera
 	s.pipe = app.NewPipeline(s.current, d.Now)
 	s.frame = pipeline.NewFrame(120, 40)
-	s.sctx.Log = func(level, source, msg string) { s.Log(s.appCtx, level, source, msg) }
+	s.resetCtx()
 	return s
+}
+
+// resetCtx starts a run from scratch: no Lua state or time scale carried over.
+func (s *Session) resetCtx() {
+	s.sctx = scene.Ctx{Pipeline: s.pipe, Input: input.NewState(), Log: func(level, source, msg string) { s.Log(s.appCtx, level, source, msg) }}
 }
 
 func (s *Session) current() *scene.Scene {

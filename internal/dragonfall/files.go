@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"strings"
 
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/asset"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/project"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/scene"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/version"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/asset"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/project"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/version"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/scene"
 )
 
 // TemplateFiles renders every generated file of the template project.

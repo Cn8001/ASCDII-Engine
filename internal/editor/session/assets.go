@@ -6,11 +6,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/asset"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/cell"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/kit"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/project"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/scene"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/asset"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/cell"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/project"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/components"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/scene"
 )
 
 type Preview struct {
@@ -75,7 +75,7 @@ func (s *Session) AddSprite(name string) (uint64, error) {
 	}
 	sc := s.current()
 	file := s.lib.Resolve(name)
-	e := scene.NewEntity(strings.TrimSuffix(filepath.Base(file), filepath.Ext(file)), kit.NewSprite(s.lib, s.lib.Ref(file)))
+	e := scene.NewGameObject(strings.TrimSuffix(filepath.Base(file), filepath.Ext(file)), components.NewSprite(s.lib, s.lib.Ref(file)))
 	e.Local.Pos = s.spawnPoint()
 	got, err := sc.Graft(nil, e, -1)
 	if err != nil {

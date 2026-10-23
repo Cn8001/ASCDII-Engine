@@ -13,8 +13,8 @@ import (
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/editor/players"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/editor/recent"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/editor/session"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/project"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/scene"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/project"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/scene"
 )
 
 type fakeDialogs struct{ file, dir string }
@@ -100,7 +100,7 @@ func TestUnit_ServicesRoundTrip(t *testing.T) {
 	}
 	found := false
 	for _, p := range props {
-		if p.Name == "radius" && p.Value.(float64) == 3 {
+		if p.Name == "cone.radius" && p.Value.(float64) == 3 {
 			found = true
 		}
 	}

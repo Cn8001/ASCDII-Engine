@@ -3,14 +3,14 @@ package dragonfall
 import (
 	"math"
 
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/anim"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/color"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/draw"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/fx"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/geom"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/light"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/prop"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/scene"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/color"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/geom"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/prop"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/draw"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/light"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/anim"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/fx"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/scene"
 )
 
 const dragonScale = .1
@@ -62,10 +62,10 @@ func (d *Dragon) bind() *prop.Binder {
 func (d *Dragon) Props() []prop.Prop        { return d.bind().Props() }
 func (d *Dragon) Set(n string, v any) error { return d.bind().Set(n, v) }
 func (d *Dragon) Bounds(t scene.Transform) geom.AABB {
-	return geom.Footprint(t.Pos, geom.V3(9, 4, 10).Scale(scaleOf(t)))
+	return geom.Footprint(t.Pos, t.Size(geom.V3(9, 4, 10)))
 }
 
-func (d *Dragon) Tick(_ *scene.Ctx, _ *scene.Entity, dt float64) {
+func (d *Dragon) Tick(_ *scene.Ctx, _ *scene.GameObject, dt float64) {
 	target := 0.0
 	if d.Awake {
 		target = 1
@@ -74,7 +74,7 @@ func (d *Dragon) Tick(_ *scene.Ctx, _ *scene.Entity, dt float64) {
 }
 
 func (d *Dragon) Draw(c *draw.Context, t scene.Transform) {
-	k := scaleOf(t)
+	k := t.Uniform()
 	c.Shadow(t.Pos, 6*k, 3*k, .7)
 	s := c.Sprite(t.Pos, dragonScale*k, t.Flip)
 	if !s.Visible(160) {

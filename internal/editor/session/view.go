@@ -4,15 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"path/filepath"
-	"strings"
 
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/geom"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/input"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/kit"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/raster"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/scene"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/view"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/geom"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/input"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/raster"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/view"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/scene"
 )
 
 const (
@@ -167,15 +164,7 @@ func (s *Session) Drag(id uint64, axis string, fromCol, fromRow, toCol, toRow fl
 		return fmt.Errorf("drag %s: %w: %s", e.Name, ErrBadAxis, axis)
 	}
 	if p := e.Parent(); p != nil {
-		pw := p.World()
-		k := pw.Scale
-		if k == 0 {
-			k = 1
-		}
-		d = d.Scale(1 / k)
-		if pw.Flip {
-			d.X = -d.X
-		}
+		d = p.World().Inward(d)
 	}
 	e.Local.Pos = e.Local.Pos.Add(d)
 	s.changed()
@@ -183,31 +172,15 @@ func (s *Session) Drag(id uint64, axis string, fromCol, fromRow, toCol, toRow fl
 }
 
 // Drop places an asset or node kind on the ground under a cell, which is how
-// assets are dragged into the viewport. Kinds are "prefab:<path>",
-// "art:<path>" or a registered node kind.
+// assets are dragged into the viewport; kinds are those of object.
 func (s *Session) Drop(kind string, col, row float64) (uint64, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	sc := s.current()
 	at := ground(s.view(), col, row, 0)
-	var e *scene.Entity
-	switch {
-	case strings.HasPrefix(kind, "prefab:"):
-		p := strings.TrimPrefix(kind, "prefab:")
-		e = scene.NewEntity("", nil)
-		e.Prefab = s.lib.Ref(p)
-	case strings.HasPrefix(kind, "art:"):
-		p := strings.TrimPrefix(kind, "art:")
-		if _, err := s.lib.Art(p); err != nil {
-			return 0, err
-		}
-		e = scene.NewEntity(strings.TrimSuffix(filepath.Base(s.lib.Resolve(p)), filepath.Ext(s.lib.Resolve(p))), kit.NewSprite(s.lib, s.lib.Ref(p)))
-	default:
-		n, err := s.reg.NewNode(kind)
-		if err != nil {
-			return 0, err
-		}
-		e = scene.NewEntity(kind, n)
+	e, err := s.object(kind)
+	if err != nil {
+		return 0, err
 	}
 	if s.play == nil {
 		s.checkpoint("")
@@ -234,5 +207,20 @@ func (s *Session) Key(name string) error {
 		return ErrNotPlaying
 	}
 	s.keys = append(s.keys, k)
+	s.sctx.Input.Apply(input.Event{Key: k, Down: true}, s.play.Time)
+	return nil
+}
+
+// KeyUp releases a key; unlike terminals, the editor knows when keys go up.
+func (s *Session) KeyUp(name string) error {
+	k, err := input.ParseName(name)
+	if err != nil {
+		return err
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.play != nil {
+		s.sctx.Input.Apply(input.Event{Key: k}, s.play.Time)
+	}
 	return nil
 }

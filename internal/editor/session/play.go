@@ -1,6 +1,6 @@
 package session
 
-import "gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/scene"
+import "gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/scene"
 
 // Play runs a copy of the edited scene so playing never changes the file.
 func (s *Session) Play() error {
@@ -18,6 +18,7 @@ func (s *Session) Play() error {
 		return err
 	}
 	s.play, s.mode, s.keys = c, Play, nil
+	s.resetCtx()
 	s.touch()
 	return nil
 }

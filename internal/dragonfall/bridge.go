@@ -1,11 +1,11 @@
 package dragonfall
 
 import (
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/color"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/draw"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/geom"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/prop"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/scene"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/color"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/geom"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/prop"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/draw"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/scene"
 )
 
 // Bridge is a plank deck with posts and rails, spanning along y.

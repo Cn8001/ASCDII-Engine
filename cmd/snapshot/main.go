@@ -7,19 +7,16 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"image"
-	stdcolor "image/color"
-	"image/png"
 	"os"
 	"os/signal"
 	"strings"
 
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/dragonfall"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/app"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/braille"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/cell"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/project"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/scene"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/platform/headless"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/cell"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/app"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/project"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/scene"
 )
 
 func main() {
@@ -89,52 +86,13 @@ func apply(s *scene.Scene, kv string) error {
 }
 
 func write(ctx context.Context, path string, g *cell.Grid) error {
-	if err := ctx.Err(); err != nil {
-		return err
-	}
-	const cw, ch = 8, 16
-	img := image.NewRGBA(image.Rect(0, 0, g.W*cw, g.H*ch))
-	for cy := 0; cy < g.H; cy++ {
-		for cx := 0; cx < g.W; cx++ {
-			c, _ := g.At(cx, cy)
-			bg := stdcolor.RGBA{c.BG.R, c.BG.G, c.BG.B, 255}
-			fg := stdcolor.RGBA{c.FG.R, c.FG.G, c.FG.B, 255}
-			for y := 0; y < ch; y++ {
-				for x := 0; x < cw; x++ {
-					img.SetRGBA(cx*cw+x, cy*ch+y, bg)
-				}
-			}
-			switch {
-			case c.Rune >= 0x2800 && c.Rune <= 0x28ff:
-				mask := uint8(c.Rune - 0x2800)
-				for dy := 0; dy < 4; dy++ {
-					for dx := 0; dx < 2; dx++ {
-						if mask&braille.Bit(dx, dy) == 0 {
-							continue
-						}
-						for y := 0; y < 3; y++ {
-							for x := 0; x < 3; x++ {
-								img.SetRGBA(cx*cw+dx*4+x, cy*ch+dy*4+y, fg)
-							}
-						}
-					}
-				}
-			case c.Rune != ' ':
-				for y := 4; y < 12; y++ {
-					for x := 2; x < 6; x++ {
-						img.SetRGBA(cx*cw+x, cy*ch+y, fg)
-					}
-				}
-			}
-		}
-	}
 	f, err := os.Create(path)
 	if err != nil {
 		return fmt.Errorf("create %s: %w", path, err)
 	}
-	if err := png.Encode(f, img); err != nil {
+	if err := headless.WritePNG(ctx, f, g); err != nil {
 		f.Close()
-		return fmt.Errorf("encode png: %w", err)
+		return err
 	}
 	return f.Close()
 }

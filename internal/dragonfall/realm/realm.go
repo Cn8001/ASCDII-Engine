@@ -6,7 +6,7 @@ import (
 	"math"
 	"sync"
 
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/noise"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/noise"
 )
 
 type Kind uint8

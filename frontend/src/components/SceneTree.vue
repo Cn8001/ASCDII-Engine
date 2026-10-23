@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { Scene } from '../lib/api'
-import { addMenu, dropAsset } from '../lib/actions'
+import { add, addMenu, dropAsset } from '../lib/actions'
+import { assetKind, type FileDrop } from '../lib/filedrop'
 import { openMenu } from '../lib/menu'
 import { call, refresh, select, store } from '../lib/store'
 import Icon from './Icon.vue'
@@ -19,6 +20,18 @@ async function dropRoot(e: DragEvent) {
   await refresh()
 }
 
+// placeFiles adds models and prefabs dropped from the OS, under the row
+// they were dropped on.
+async function placeFiles(e: Event) {
+  const d = (e as CustomEvent<FileDrop>).detail
+  const row = document.elementFromPoint(d.x, d.y)?.closest<HTMLElement>('[data-node]')
+  const parent = Number(row?.dataset.node ?? 0)
+  for (const p of d.paths) {
+    const kind = assetKind(p)
+    if (kind === 'model' || kind === 'prefab') await add(parent, `${kind}:${p}`)
+  }
+}
+
 function matches(name: string) {
   return !filter.value || name.toLowerCase().includes(filter.value.toLowerCase())
 }
@@ -34,12 +47,14 @@ function matches(name: string) {
       <button class="icon-btn" title="Add" @click="(e) => openMenu(e, addMenu(0))"><Icon name="plus" :size="15" /></button>
     </div>
     <div
+      data-drop="hierarchy"
       class="flex-1 overflow-auto px-1 pb-4"
       :class="over ? 'bg-amber-glow/[.03]' : ''"
       @click.self="select(0)"
       @dragover.prevent="over = true"
       @dragleave.self="over = false"
       @drop.prevent="dropRoot"
+      @filedrop="placeFiles"
       @contextmenu.self.prevent="(e) => openMenu(e, addMenu(0))"
     >
       <button class="mb-1 flex h-7 w-full items-center gap-2 rounded-md px-2 text-left text-[12.5px] transition" :class="store.selected === 0 ? 'bg-amber-glow/12 text-ink-100' : 'text-ink-400 hover:bg-ink-800'" @click="select(0)">

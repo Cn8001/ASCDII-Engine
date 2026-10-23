@@ -7,9 +7,9 @@ import (
 
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/dragonfall/realm"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/dragonfall/vegetation"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/asset"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/project"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/scene"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/asset"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/project"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/scene"
 )
 
 const (
@@ -23,16 +23,19 @@ func Pack() project.Pack { return project.Pack{Name: Name, Install: Install} }
 // forest, grass and HUD agree on the same valley.
 func Install(r *scene.Registry, _ *asset.Library) {
 	cache := realm.NewCache()
-	r.Node("df.terrain", func() scene.Node { return &Terrain{Seed: Seed, Water: -.9, cache: cache} })
-	r.Node("df.forest", func() scene.Node { return &Forest{Seed: Seed, Density: 1, Sway: .35, cache: cache} })
-	r.Node("df.grass", func() scene.Node {
+	m := func(label string, object bool) scene.Meta {
+		return scene.Meta{Category: Name, Label: label, Object: object}
+	}
+	r.Register("df.terrain", func() scene.Component { return &Terrain{Seed: Seed, Water: -.9, cache: cache} }, m("Terrain", true))
+	r.Register("df.forest", func() scene.Component { return &Forest{Seed: Seed, Density: 1, Sway: .35, cache: cache} }, m("Forest", true))
+	r.Register("df.grass", func() scene.Component {
 		return &Grass{Seed: Seed, Density: .85, Detail: false, cache: cache, field: vegetation.New()}
-	})
-	r.Node("df.castle", func() scene.Node { return NewCastle() })
-	r.Node("df.bridge", func() scene.Node { return NewBridge() })
-	r.Node("df.dragon", func() scene.Node { return NewDragon() })
-	r.Node("df.hero", func() scene.Node { return NewHero() })
-	r.Node("df.hud", func() scene.Node { return &HUD{Title: "DRAGONFALL", Seed: Seed, cache: cache} })
+	}, m("Grass", true))
+	r.Register("df.castle", func() scene.Component { return NewCastle() }, m("Castle", true))
+	r.Register("df.bridge", func() scene.Component { return NewBridge() }, m("Bridge", true))
+	r.Register("df.dragon", func() scene.Component { return NewDragon() }, m("Dragon", true))
+	r.Register("df.hero", func() scene.Component { return NewHero() }, m("Hero", true))
+	r.Register("df.hud", func() scene.Component { return &HUD{Title: "DRAGONFALL", Seed: Seed, cache: cache} }, m("HUD", true))
 }
 
 // Template is the Dragonfall project used by "ascdii new -template dragonfall"

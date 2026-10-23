@@ -30,8 +30,8 @@ import (
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/editor/recent"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/editor/service"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/editor/session"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/project"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/version"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/project"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/version"
 )
 
 func main() {
@@ -74,7 +74,9 @@ func run() error {
 		},
 		OnShutdown: func(context.Context) { sess.Close() },
 		Bind:       svc.All(),
-		Linux:      &linux.Options{Icon: icon.Bytes(), ProgramName: "ascdii-editor"},
+		// Webview drops stay on, so drags inside the editor keep working.
+		DragAndDrop: &options.DragAndDrop{EnableFileDrop: true},
+		Linux:       &linux.Options{Icon: icon.Bytes(), ProgramName: "ascdii-editor"},
 	})
 }
 

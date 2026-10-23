@@ -5,13 +5,13 @@ import (
 
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/dragonfall/realm"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/dragonfall/vegetation"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/color"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/draw"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/geom"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/kit"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/noise"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/prop"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/scene"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/color"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/geom"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/noise"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/prop"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/draw"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/components"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/scene"
 )
 
 const bladeScale = .06 // world units per blade art pixel, matching the hero
@@ -30,14 +30,13 @@ func (*Grass) Kind() string { return "df.grass" }
 func (g *Grass) bind() *prop.Binder {
 	return prop.Bind().Int("seed", &g.Seed, 0, 99999).Float("density", &g.Density, 0, 1).Bool("detail", &g.Detail)
 }
-func (g *Grass) Props() []prop.Prop               { return g.bind().Props() }
-func (g *Grass) Set(n string, v any) error        { return g.bind().Set(n, v) }
-func (g *Grass) Bounds(scene.Transform) geom.AABB { return geom.AABB{} }
+func (g *Grass) Props() []prop.Prop        { return g.bind().Props() }
+func (g *Grass) Set(n string, v any) error { return g.bind().Set(n, v) }
 
-func (g *Grass) Tick(c *scene.Ctx, _ *scene.Entity, dt float64) {
+func (g *Grass) Tick(c *scene.Ctx, _ *scene.GameObject, dt float64) {
 	g.field.Step(dt)
-	c.Scene.Walk(func(e *scene.Entity, _ bool) bool {
-		p, ok := e.Behaviour("player").(*kit.Player)
+	c.Scene.Walk(func(e *scene.GameObject, _ bool) bool {
+		p, ok := e.Component("player").(*components.Player)
 		if ok && p.Moving() && e.Local.Pos.Z < .3 {
 			dx := 1.0
 			if e.Local.Flip {

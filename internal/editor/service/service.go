@@ -12,12 +12,12 @@ import (
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/editor/players"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/editor/recent"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/editor/session"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/asset"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/input"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/pipeline"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/project"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/prop"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/scene"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/asset"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/input"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/prop"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/pipeline"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/project"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/scene"
 )
 
 // Context holds the Wails app context, which only exists after startup.
@@ -104,6 +104,8 @@ func Code(err error) string {
 		{session.ErrNotPlaying, "not_playing"},
 		{session.ErrBadAxis, "bad_axis"},
 		{session.ErrNotInstance, "not_instance"},
+		{session.ErrUnsupported, "unsupported"},
+		{session.ErrNotReference, "not_reference"},
 		{asset.ErrExists, "exists"},
 		{session.ErrUnknownTemplate, "unknown_template"},
 		{project.ErrNoManifest, "no_manifest"},

@@ -1,0 +1,73 @@
+package scene
+
+import (
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/pipeline"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/view"
+)
+
+// Geometry draws every visible node whose bounds touch the screen, tagging dots
+// with the entity id for picking.
+type Geometry struct{ Scene func() *Scene }
+
+func (*Geometry) Name() string          { return "scene" }
+func (*Geometry) Stage() pipeline.Stage { return pipeline.Geometry }
+func (g *Geometry) Run(f *pipeline.Frame) {
+	s := g.Scene()
+	s.Walk(func(e *GameObject, visible bool) bool {
+		if !visible {
+			return false
+		}
+		t := e.World()
+		f.Buf.SetTag(uint32(e.ID))
+		for _, c := range e.Components {
+			r, ok := c.(Renderer)
+			if !ok || !e.Enabled(c) {
+				continue
+			}
+			if b, ok := c.(Bounder); ok {
+				if bb := b.Bounds(t); !bb.Empty() && !f.View.Visible(bb) {
+					continue
+				}
+			}
+			r.Draw(f.Ctx, t)
+		}
+		return true
+	})
+	f.Buf.SetTag(0)
+}
+
+type Cells struct{ Scene func() *Scene }
+
+func (*Cells) Name() string          { return "cells" }
+func (*Cells) Stage() pipeline.Stage { return pipeline.Overlay }
+func (c *Cells) Run(f *pipeline.Frame) {
+	c.Scene().Walk(func(e *GameObject, visible bool) bool {
+		if !visible {
+			return false
+		}
+		for _, c := range e.Components {
+			if d, ok := c.(CellDrawer); ok && e.Enabled(c) {
+				d.DrawCells(f, e.World())
+			}
+		}
+		return true
+	})
+}
+
+// Render binds the scene camera, time and environment, then runs the pipeline.
+func Render(p *pipeline.Pipeline, f *pipeline.Frame, s *Scene) {
+	f.Begin(s.Camera, s.Time, s.Env)
+	p.Render(f)
+}
+
+// Pick maps a cell to the entity drawn nearest there.
+func Pick(f *pipeline.Frame, s *Scene, col, row int) (*GameObject, error) {
+	tag := f.Buf.Pick(col, row)
+	return s.ByID(uint64(tag))
+}
+
+// RenderWith draws the scene through another camera, the editor's free view.
+func RenderWith(p *pipeline.Pipeline, f *pipeline.Frame, s *Scene, cam view.Camera) {
+	f.Begin(cam, s.Time, s.Env)
+	p.Render(f)
+}

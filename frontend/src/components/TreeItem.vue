@@ -61,6 +61,7 @@ async function drop(e: DragEvent) {
       class="group flex h-7 cursor-default items-center gap-1 rounded-md pr-1 transition-colors"
       :class="[active ? 'bg-amber-glow/12 text-ink-100' : 'text-ink-300 hover:bg-ink-800', over ? 'ring-1 ring-amber-soft' : '']"
       :style="{ paddingLeft: depth * 14 + 4 + 'px' }"
+      :data-node="node.inherited || node.prefab ? undefined : node.id"
       :draggable="!node.inherited"
       @dragstart="dragStart"
       @dragover.prevent="over = true"
@@ -77,7 +78,6 @@ async function drop(e: DragEvent) {
       <input v-if="renaming" ref="input" v-model="draft" class="field h-5 flex-1 px-1" @keydown.enter="commit" @keydown.esc="renaming = false" @blur="commit" @click.stop />
       <span v-else class="flex-1 truncate text-[12.5px]" :class="[node.visible ? '' : 'opacity-40', node.inherited ? 'italic text-ink-400' : '']">{{ node.name }}</span>
       <span v-if="node.overrides" class="size-1.5 rounded-full bg-amber-glow" title="Has overrides" />
-      <span v-if="node.behaviours?.length" class="font-mono text-[10px] text-ink-500">{{ node.behaviours.length }}</span>
       <button class="icon-btn size-5 opacity-0 group-hover:opacity-100" :class="node.visible ? '' : 'opacity-100'" @click.stop="toggleVisible">
         <Icon :name="node.visible ? 'eye' : 'eyeoff'" :size="12" />
       </button>

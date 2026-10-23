@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { Project, Viewport } from '../lib/api'
+import { addMenu, createParent } from '../lib/actions'
 import { ask, confirmAction } from '../lib/dialog'
+import { openBelow } from '../lib/menu'
 import { call, refresh, refreshInfo, store, toast } from '../lib/store'
 import Icon from './Icon.vue'
 import Logo from './Logo.vue'
@@ -105,6 +107,8 @@ defineExpose({ save, undo, redo, play, stop })
         <option value="+">+ scene</option>
       </select>
       <button class="icon-btn" title="Start scene" @click="setStart"><Icon name="key" :size="11" /></button>
+      <span class="mx-1 h-5 w-px bg-ink-700" />
+      <button class="btn h-7 px-2 text-ink-300" @click="(e) => openBelow(e, addMenu(createParent()))"><Icon name="box" :size="13" /> GameObject <Icon name="chevdown" :size="11" class="text-ink-500" /></button>
     </div>
 
     <div class="flex flex-1 justify-center">

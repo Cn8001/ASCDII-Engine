@@ -8,11 +8,11 @@ import (
 	"strings"
 	"time"
 
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/cell"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/geom"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/pipeline"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/raster"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/scene"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/geom"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/cell"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/pipeline"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/raster"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/scene"
 )
 
 const FrameEvent = "frame"
@@ -101,6 +101,7 @@ func (s *Session) Tick(dt float64) (*Frame, error) {
 		s.sctx.Scene, s.sctx.Quit = s.play, false
 		err = s.play.Update(&s.sctx, dt, s.keys)
 		s.keys = s.keys[:0]
+		s.sctx.Input.EndFrame()
 		if s.sctx.Quit {
 			s.stop()
 		}

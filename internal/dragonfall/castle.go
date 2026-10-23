@@ -3,12 +3,12 @@ package dragonfall
 import (
 	"math"
 
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/color"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/draw"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/geom"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/light"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/prop"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/scene"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/color"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/geom"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/prop"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/draw"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/light"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/scene"
 )
 
 // Castle is anchored at the middle of the gate. Every part below is in the
@@ -31,15 +31,8 @@ func (k *Castle) bind() *prop.Binder {
 func (k *Castle) Props() []prop.Prop        { return k.bind().Props() }
 func (k *Castle) Set(n string, v any) error { return k.bind().Set(n, v) }
 
-func scaleOf(t scene.Transform) float64 {
-	if t.Scale == 0 {
-		return 1
-	}
-	return t.Scale
-}
-
 func (k *Castle) Bounds(t scene.Transform) geom.AABB {
-	s := scaleOf(t)
+	s := t.Uniform()
 	return geom.AABB{Min: geom.V3(-21, -14, 0), Max: geom.V3(21, 1.5, 28.5)}.Scaled(s).Translate(t.Pos)
 }
 
@@ -55,7 +48,7 @@ func castleWalls() []part {
 func castleTowers() []geom.Vec3 { return []geom.Vec3{geom.V3(-17, -2, 0), geom.V3(17, -2, 0)} }
 
 func (k *Castle) Draw(c *draw.Context, t scene.Transform) {
-	s := scaleOf(t)
+	s := t.Uniform()
 	at := func(v geom.Vec3) geom.Vec3 { return t.Pos.Add(v.Scale(s)) }
 	box := func(lo, hi geom.Vec3) geom.AABB { return geom.AABB{Min: at(lo), Max: at(hi)} }
 	stone, top := draw.M(k.Stone), draw.M(color.Scale(k.Stone, 1.15))
@@ -114,7 +107,7 @@ func (k *Castle) torch(c *draw.Context, base geom.Vec3, s float64) {
 }
 
 func (k *Castle) Blocks(t scene.Transform, p geom.Vec2) bool {
-	s := scaleOf(t)
+	s := t.Uniform()
 	l := p.Sub(t.Pos.XY()).Scale(1 / s)
 	for _, w := range castleWalls() {
 		if l.X >= w.lo.X && l.X < w.hi.X && l.Y >= w.lo.Y && l.Y < w.hi.Y {

@@ -6,10 +6,10 @@ import (
 	"io/fs"
 	"testing"
 
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/app"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/geom"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/input"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/project"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/geom"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/input"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/app"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/project"
 )
 
 func open(t testing.TB) *app.Engine {
@@ -97,7 +97,7 @@ func TestUnit_HeroCannotWalkThroughTheWall(t *testing.T) {
 	if y := hero.Local.Pos.Y; y < 70 || y > 73 {
 		t.Fatalf("hero y %f", y)
 	}
-	if !hero.Node.(*Hero).Walking {
+	if !hero.Component("df.hero").(*Hero).Walking {
 		t.Fatal("player behaviour did not drive the walk cycle")
 	}
 }
@@ -110,14 +110,14 @@ func TestUnit_KeysToggleDragonAndMap(t *testing.T) {
 	_, err := e.Update(.1, []input.Key{'e', 'm'})
 
 	// Assert
-	if err != nil || !e.Scene().Find("dragon").Node.(*Dragon).Awake || !e.Scene().Find("hud").Node.(*HUD).ShowMap {
+	if err != nil || !e.Scene().Find("dragon").Component("df.dragon").(*Dragon).Awake || !e.Scene().Find("hud").Component("df.hud").(*HUD).ShowMap {
 		t.Fatalf("toggles failed: %v", err)
 	}
 }
 
 func BenchmarkScene160x50(b *testing.B) {
 	e := open(b)
-	e.Scene().Find("dragon").Node.(*Dragon).Awake = true
+	e.Scene().Find("dragon").Component("df.dragon").(*Dragon).Awake = true
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_, _ = e.Update(1.0/30, nil)

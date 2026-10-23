@@ -14,9 +14,10 @@ import (
 
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/dragonfall"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/editor/players"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/guid"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/project"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/scene"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/guid"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/project"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/components"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/scene"
 )
 
 type recorder struct {
@@ -54,7 +55,7 @@ func newSession(t *testing.T, template string) (*Session, *recorder, string) {
 	return s, rec, dir
 }
 
-func find(s *Session, name string) *scene.Entity {
+func find(s *Session, name string) *scene.GameObject {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.current().Find(name)
@@ -81,16 +82,16 @@ func TestUnit_SetPropThenUndoRedo(t *testing.T) {
 
 	// Act
 	err := s.SetProp(dragon.ID, "awake", true)
-	awake := find(s, "dragon").Node.(*dragonfall.Dragon).Awake
+	awake := find(s, "dragon").Component("df.dragon").(*dragonfall.Dragon).Awake
 	errUndo := s.Undo()
-	undone := find(s, "dragon").Node.(*dragonfall.Dragon).Awake
+	undone := find(s, "dragon").Component("df.dragon").(*dragonfall.Dragon).Awake
 	errRedo := s.Redo()
 
 	// Assert
 	if err != nil || errUndo != nil || errRedo != nil || !awake || undone {
 		t.Fatalf("err %v %v %v awake %v undone %v", err, errUndo, errRedo, awake, undone)
 	}
-	if !find(s, "dragon").Node.(*dragonfall.Dragon).Awake {
+	if !find(s, "dragon").Component("df.dragon").(*dragonfall.Dragon).Awake {
 		t.Fatal("redo lost the change")
 	}
 }
@@ -163,7 +164,7 @@ func TestUnit_AddKeyAnimatesOnScrub(t *testing.T) {
 	clips, _ := s.Clips(id)
 
 	// Assert
-	z := find(s, "box").Local.Pos.Z
+	z := find(s, "Cube").Local.Pos.Z
 	if err1 != nil || err2 != nil || err3 != nil || len(clips) != 1 || z <= 0 || z >= 4 {
 		t.Fatalf("errs %v %v %v clips %d z %f", err1, err2, err3, len(clips), z)
 	}
@@ -238,13 +239,13 @@ func TestUnit_DragMovesOnGround(t *testing.T) {
 	// Arrange
 	s, _, _ := newSession(t, "")
 	id, _ := s.Add(0, "box")
-	before := find(s, "box").Local.Pos
+	before := find(s, "Cube").Local.Pos
 
 	// Act
 	err := s.Drag(id, "free", 10, 10, 14, 10)
 
 	// Assert
-	after := find(s, "box").Local.Pos
+	after := find(s, "Cube").Local.Pos
 	if err != nil || after.X <= before.X || after.Y != before.Y || after.Z != before.Z {
 		t.Fatalf("err %v before %+v after %+v", err, before, after)
 	}
@@ -339,13 +340,13 @@ func TestUnit_DragAxisConstrains(t *testing.T) {
 	// Arrange
 	s, _, _ := newSession(t, "")
 	id, _ := s.Add(0, "box")
-	before := find(s, "box").Local.Pos
+	before := find(s, "Cube").Local.Pos
 
 	// Act
 	errX := s.Drag(id, "x", 10, 10, 14, 13)
-	mid := find(s, "box").Local.Pos
+	mid := find(s, "Cube").Local.Pos
 	errZ := s.Drag(id, "z", 10, 10, 10, 8)
-	after := find(s, "box").Local.Pos
+	after := find(s, "Cube").Local.Pos
 
 	// Assert
 	if errX != nil || errZ != nil || mid.X <= before.X || mid.Y != before.Y || after.Z <= 0 || after.X != mid.X {
@@ -362,7 +363,7 @@ func TestUnit_ScriptLogsReachConsole(t *testing.T) {
 		t.Fatal(err)
 	}
 	id, _ := s.Add(0, "box")
-	_ = s.AddBehaviour(id, "script")
+	_, _ = s.AddComponent(id, "script")
 	_ = s.SetProp(id, "script.file", rel)
 	abs, _ := s.AbsPath(rel)
 	_ = os.WriteFile(abs, []byte(`function update(self) log("hi", 1 + 1) end`), 0o644)
@@ -423,7 +424,7 @@ func TestUnit_CloseProjectReturnsToStart(t *testing.T) {
 	}
 }
 
-func childNamed(s *Session, parent uint64, name string) *scene.Entity {
+func childNamed(s *Session, parent uint64, name string) *scene.GameObject {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	p, _ := s.edit.ByID(parent)
@@ -446,7 +447,7 @@ func TestUnit_InstanceEditBecomesOverrideThenApply(t *testing.T) {
 	// Assert
 	marked := false
 	for _, p := range props {
-		if p.Name == "radius" && p.Overridden {
+		if p.Name == "light.radius" && p.Overridden {
 			marked = true
 		}
 	}
@@ -523,7 +524,7 @@ func TestUnit_OpenMigratesPathReferences(t *testing.T) {
 	err := s.Open(ctx, info.Manifest)
 
 	// Assert
-	props, _ := s.Props(find(s, "sprite").ID)
+	props, _ := s.Props(find(s, "Sprite").ID)
 	for _, p := range props {
 		if p.Name == "asset" && !guidValid(p.Value) {
 			t.Fatalf("not migrated: %v", p.Value)
@@ -537,4 +538,126 @@ func TestUnit_OpenMigratesPathReferences(t *testing.T) {
 func guidValid(v any) bool {
 	str, _ := v.(string)
 	return guid.Valid(str)
+}
+
+func TestUnit_ComponentsAddMoveResetRemove(t *testing.T) {
+	// Arrange
+	s, _, _ := newSession(t, "")
+	id, _ := s.Add(0, "light")
+
+	// Act
+	key, errAdd := s.AddComponent(id, "light")
+	errSet := s.SetProp(id, key+".radius", 30)
+	errMove := s.MoveComponent(id, 1, 0)
+	errReset := s.ResetComponent(id, 0)
+	errRemove := s.RemoveComponent(id, 1)
+
+	// Assert
+	o := find(s, "Point Light")
+	if errAdd != nil || errSet != nil || errMove != nil || errReset != nil || errRemove != nil {
+		t.Fatalf("errs %v %v %v %v %v", errAdd, errSet, errMove, errReset, errRemove)
+	}
+	if key != "light#2" || len(o.Components) != 1 || o.Components[0].(*components.Light).Radius != 8 {
+		t.Fatalf("key %s components %+v", key, o.Components)
+	}
+}
+
+func TestUnit_PrefabInstanceComponentsAreLocked(t *testing.T) {
+	// Arrange
+	s, _, _ := newSession(t, "dragonfall")
+	id, _ := s.Drop("prefab:prefabs/lantern.prefab.json", 40, 15)
+
+	// Act
+	_, err := s.AddComponent(id, "light")
+
+	// Assert
+	if !errors.Is(err, scene.ErrPrefabLocked) {
+		t.Fatalf("err %v", err)
+	}
+}
+
+func TestUnit_ImportModelBringsMaterialsAndDrops(t *testing.T) {
+	// Arrange
+	s, _, dir := newSession(t, "")
+	src := t.TempDir()
+	files := map[string]string{
+		"hut.obj": "mtllib hut.mtl\nv 0 0 0\nv 2 0 0\nv 2 2 0\nusemtl roof\nf 1 2 3\n",
+		"hut.mtl": "newmtl roof\nKd 1 0 0\n",
+	}
+	for name, body := range files {
+		if err := os.WriteFile(filepath.Join(src, name), []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// Act
+	got, err := s.Import(context.Background(), []string{filepath.Join(src, "hut.obj")}, "")
+	again, errAgain := s.Import(context.Background(), []string{filepath.Join(src, "hut.obj")}, "")
+	id, errDrop := s.Drop("model:models/hut.obj", 40, 15)
+	_, errBad := s.Import(context.Background(), []string{filepath.Join(src, "hut.mtl")}, "")
+
+	// Assert
+	if err != nil || errAgain != nil || errDrop != nil || len(got) != 1 || got[0] != "models/hut.obj" || again[0] != "models/hut 2.obj" {
+		t.Fatalf("errs %v %v %v got %v again %v", err, errAgain, errDrop, got, again)
+	}
+	for _, f := range []string{"models/hut.obj.meta", "models/hut.mtl"} {
+		if _, err := os.Stat(filepath.Join(dir, f)); err != nil {
+			t.Fatalf("missing %s", f)
+		}
+	}
+	if !errors.Is(errBad, ErrUnsupported) {
+		t.Fatalf("mtl import err %v", errBad)
+	}
+	s.mu.Lock()
+	o, _ := s.edit.ByID(id)
+	s.mu.Unlock()
+	if o == nil || o.Name != "hut" || o.Component("mesh") == nil {
+		t.Fatalf("dropped %+v", o)
+	}
+}
+
+func TestUnit_SetRefPointsFieldsAtObjectsAndComponents(t *testing.T) {
+	// Arrange
+	s, _, _ := newSession(t, "")
+	lamp, _ := s.Add(0, "light")
+	sw, _ := s.Add(0, "empty")
+	_, _ = s.AddComponent(sw, "toggle")
+
+	// Act
+	err := s.SetRef(sw, "target", lamp, "")
+	props, _ := s.Props(sw)
+	errWrong := s.SetRef(sw, "visible", lamp, "")
+	dup, errDup := s.Duplicate(sw)
+
+	// Assert
+	shown := ""
+	for _, p := range props {
+		if p.Name == "toggle.target" {
+			shown = p.Display
+		}
+	}
+	if err != nil || shown != "Point Light" || !errors.Is(errWrong, ErrNotReference) || errDup != nil || dup == 0 {
+		t.Fatalf("err %v shown %q wrong %v dup %v", err, shown, errWrong, errDup)
+	}
+}
+
+func TestUnit_DuplicateRemapsInternalReferences(t *testing.T) {
+	// Arrange
+	s, _, _ := newSession(t, "")
+	root, _ := s.Add(0, "empty")
+	lamp, _ := s.Add(root, "light")
+	_, _ = s.AddComponent(root, "toggle")
+	_ = s.SetRef(root, "target", lamp, "")
+
+	// Act
+	dup, err := s.Duplicate(root)
+
+	// Assert
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	c, _ := s.edit.ByID(dup)
+	got := s.edit.Lookup(c, c.Component("toggle").(*components.Toggle).Target)
+	if err != nil || got == nil || got.Parent() != c {
+		t.Fatalf("err %v target %+v", err, got)
+	}
 }

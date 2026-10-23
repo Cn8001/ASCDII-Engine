@@ -11,58 +11,58 @@ import (
 	"io/fs"
 	"os"
 
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/anim"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/app"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/asset"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/color"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/draw"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/fx"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/geom"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/input"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/kit"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/light"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/pipeline"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/project"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/prop"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/scene"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/view"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/asset"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/color"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/geom"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/input"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/prop"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/draw"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/light"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/pipeline"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/view"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/app"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/project"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/anim"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/components"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/fx"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/scene"
 )
 
 type (
-	Engine    = app.Engine
-	Options   = app.Options
-	Scene     = scene.Scene
-	Entity    = scene.Entity
-	Node      = scene.Node
-	Behaviour = scene.Behaviour
-	Transform = scene.Transform
-	Ctx       = scene.Ctx
-	Registry  = scene.Registry
-	Camera    = view.Camera
-	Env       = light.Env
-	Vec2      = geom.Vec2
-	Vec3      = geom.Vec3
-	AABB      = geom.AABB
-	Affine    = geom.Affine
-	Color     = color.Color
-	Material  = draw.Material
-	Context   = draw.Context
-	Sprite    = draw.Sprite
-	Clip      = anim.Clip
-	Ease      = anim.Ease
-	Rig       = anim.Rig
-	Bone      = anim.Bone
-	Pose      = anim.Pose
-	Motion    = anim.Motion
-	Particles = fx.Emitter
-	Key       = input.Key
-	Pass      = pipeline.Pass
-	Frame     = pipeline.Frame
-	Stage     = pipeline.Stage
-	Prop      = prop.Prop
-	Binder    = prop.Binder
-	Pack      = project.Pack
-	Library   = asset.Library
+	Engine        = app.Engine
+	Options       = app.Options
+	Scene         = scene.Scene
+	GameObject    = scene.GameObject
+	Component     = scene.Component
+	ComponentMeta = scene.Meta
+	Transform     = scene.Transform
+	Ctx           = scene.Ctx
+	Registry      = scene.Registry
+	Camera        = view.Camera
+	Env           = light.Env
+	Vec2          = geom.Vec2
+	Vec3          = geom.Vec3
+	AABB          = geom.AABB
+	Affine        = geom.Affine
+	Color         = color.Color
+	Material      = draw.Material
+	Context       = draw.Context
+	Sprite        = draw.Sprite
+	Clip          = anim.Clip
+	Ease          = anim.Ease
+	Rig           = anim.Rig
+	Bone          = anim.Bone
+	Pose          = anim.Pose
+	Motion        = anim.Motion
+	Particles     = fx.Emitter
+	Key           = input.Key
+	Pass          = pipeline.Pass
+	Frame         = pipeline.Frame
+	Stage         = pipeline.Stage
+	Prop          = prop.Prop
+	Binder        = prop.Binder
+	Pack          = project.Pack
+	Library       = asset.Library
 )
 
 const (
@@ -102,18 +102,18 @@ func Tween(name string, from, to any, seconds float64, e Ease) Clip {
 	return anim.Tween(name, from, to, seconds, e)
 }
 
-func Box(size Vec3, c Color) Node            { return kit.NewBox(size, c) }
-func Cylinder(r, h float64, c Color) Node    { return kit.NewCylinder(r, h, c) }
-func Cone(r, h float64, c Color) Node        { return kit.NewCone(r, h, c) }
-func Blob(r float64, c Color) Node           { return kit.NewBlob(r, c) }
-func Ground(w, d float64, c Color) Node      { return kit.NewGround(w, d, c) }
-func Water(w, d float64, c Color) Node       { return kit.NewWater(w, d, c) }
-func Light(radius float64, c Color) Node     { return kit.NewLight(radius, c) }
-func Emitter() Node                          { return kit.NewEmitter() }
-func Label(text string) Node                 { return kit.NewLabel(text) }
-func Player() Behaviour                      { return kit.NewPlayer() }
-func Toggle(key, target, p string) Behaviour { return kit.NewToggle(key, target, p) }
-func DayNight() Behaviour                    { return kit.NewDayNight() }
-func Quit(key string) Behaviour              { return &kit.Quit{Press: key} }
-func Fire() Particles                        { return fx.Fire() }
-func Embers() Particles                      { return fx.Embers() }
+func Box(size Vec3, c Color) Component         { return components.NewBox(size, c) }
+func Cylinder(r, h float64, c Color) Component { return components.NewCylinder(r, h, c) }
+func Cone(r, h float64, c Color) Component     { return components.NewCone(r, h, c) }
+func Blob(r float64, c Color) Component        { return components.NewBlob(r, c) }
+func Ground(w, d float64, c Color) Component   { return components.NewGround(w, d, c) }
+func Water(w, d float64, c Color) Component    { return components.NewWater(w, d, c) }
+func Light(radius float64, c Color) Component  { return components.NewLight(radius, c) }
+func Emitter() Component                       { return components.NewEmitter() }
+func Label(text string) Component              { return components.NewLabel(text) }
+func Player() Component                        { return components.NewPlayer() }
+func Toggle(key, target, p string) Component   { return components.NewToggle(key, target, p) }
+func DayNight() Component                      { return components.NewDayNight() }
+func Quit(key string) Component                { return &components.Quit{Press: key} }
+func Fire() Particles                          { return fx.Fire() }
+func Embers() Particles                        { return fx.Embers() }

@@ -2,6 +2,7 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { Project, Viewport } from '../lib/api'
 import { duplicate, remove } from '../lib/actions'
+import { listenFileDrops } from '../lib/filedrop'
 import { typing } from '../lib/keys'
 import { call, refresh, refreshAssets, store, toast } from '../lib/store'
 import AnimationPanel from './AnimationPanel.vue'
@@ -91,6 +92,7 @@ function dock() {
 
 onMounted(async () => {
   window.addEventListener('keydown', shortcut)
+  listenFileDrops()
   await Promise.all([refresh(), refreshAssets()])
 })
 onBeforeUnmount(() => window.removeEventListener('keydown', shortcut))

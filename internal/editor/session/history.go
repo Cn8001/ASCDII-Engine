@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"time"
 
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/scene"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/scene"
 )
 
 const historyLimit = 100

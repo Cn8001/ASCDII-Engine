@@ -6,8 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/asset"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/project"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/asset"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/mesh"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/project"
 )
 
 const AssetsEvent = "assets"
@@ -45,6 +46,10 @@ func (s *Session) reloadFiles(ctx context.Context, dir string, changed []string)
 		case asset.Art:
 			if a, err := asset.DecodeArt(p, b); err == nil {
 				s.lib.PutArt(p, a)
+			}
+		case asset.Model:
+			if m, err := mesh.Load(ctx, os.DirFS(dir), p, mesh.Options{}); err == nil {
+				s.lib.PutModel(p, m)
 			}
 		}
 	}

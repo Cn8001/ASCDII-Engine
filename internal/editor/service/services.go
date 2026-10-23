@@ -4,11 +4,11 @@ import (
 	"path/filepath"
 
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/editor/session"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/anim"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/asset"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/pipeline"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/project"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/prop"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/asset"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/prop"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/pipeline"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/project"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/anim"
 )
 
 type ProjectService struct{ d Deps }
@@ -90,17 +90,28 @@ func (s *SceneService) Props(id uint64) ([]prop.Prop, error) { return wrap1(s.d.
 func (s *SceneService) SetProp(id uint64, name string, value any) error {
 	return wrap(s.d.Session.SetProp(id, name, value))
 }
+
+// SetRef points a reference field at an object, or a component of it by key.
+func (s *SceneService) SetRef(id uint64, name string, target uint64, key string) error {
+	return wrap(s.d.Session.SetRef(id, name, target, key))
+}
 func (s *SceneService) SetSceneProp(name string, value any) error {
 	return wrap(s.d.Session.SetSceneProp(name, value))
 }
 func (s *SceneService) Add(parent uint64, kind string) (uint64, error) {
 	return wrap1(s.d.Session.Add(parent, kind))
 }
-func (s *SceneService) AddBehaviour(id uint64, kind string) error {
-	return wrap(s.d.Session.AddBehaviour(id, kind))
+func (s *SceneService) AddComponent(id uint64, kind string) (string, error) {
+	return wrap1(s.d.Session.AddComponent(id, kind))
 }
-func (s *SceneService) RemoveBehaviour(id uint64, kind string) error {
-	return wrap(s.d.Session.RemoveBehaviour(id, kind))
+func (s *SceneService) RemoveComponent(id uint64, index int) error {
+	return wrap(s.d.Session.RemoveComponent(id, index))
+}
+func (s *SceneService) MoveComponent(id uint64, from, to int) error {
+	return wrap(s.d.Session.MoveComponent(id, from, to))
+}
+func (s *SceneService) ResetComponent(id uint64, index int) error {
+	return wrap(s.d.Session.ResetComponent(id, index))
 }
 func (s *SceneService) Remove(id uint64) error { return wrap(s.d.Session.Remove(id)) }
 func (s *SceneService) Reparent(id, parent uint64, index int) error {
@@ -133,6 +144,7 @@ func (v *ViewportService) Play() error                { return wrap(v.d.Session.
 func (v *ViewportService) Pause()                     { v.d.Session.Pause() }
 func (v *ViewportService) Stop()                      { v.d.Session.Stop() }
 func (v *ViewportService) Key(name string) error      { return wrap(v.d.Session.Key(name)) }
+func (v *ViewportService) KeyUp(name string) error    { return wrap(v.d.Session.KeyUp(name)) }
 func (v *ViewportService) SetLive(on bool)            { v.d.Session.SetLive(on) }
 func (v *ViewportService) SetTime(t float64) error    { return wrap(v.d.Session.SetTime(t)) }
 func (v *ViewportService) Drag(id uint64, axis string, fc, fr, tc, tr float64) error {
@@ -171,6 +183,12 @@ func (a *AssetService) AddSprite(name string) (uint64, error) {
 	return wrap1(a.d.Session.AddSprite(name))
 }
 func (a *AssetService) Reload() error { return wrap(a.d.Session.Reload(a.d.Ctx.Get())) }
+
+// Import copies files dropped from the OS into the project; folder "" picks
+// one by file type.
+func (a *AssetService) Import(paths []string, folder string) ([]string, error) {
+	return wrap1(a.d.Session.Import(a.d.Ctx.Get(), paths, folder))
+}
 func (a *AssetService) Rename(from, to string) (string, error) {
 	return wrap1(a.d.Session.RenameAsset(a.d.Ctx.Get(), from, to))
 }

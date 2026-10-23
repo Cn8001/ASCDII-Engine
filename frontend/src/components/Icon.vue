@@ -39,12 +39,15 @@ const paths: Record<string, string> = {
   scene: 'M3 18l6-8 4 5 3-4 5 7zM16 7a2 2 0 100-4 2 2 0 000 4z',
   key: 'M12 4l7 8-7 8-7-8z',
   dot: 'M12 13a1 1 0 100-2 1 1 0 000 2z',
+  more: 'M5 13.4a1.4 1.4 0 100-2.8 1.4 1.4 0 000 2.8zM12 13.4a1.4 1.4 0 100-2.8 1.4 1.4 0 000 2.8zM19 13.4a1.4 1.4 0 100-2.8 1.4 1.4 0 000 2.8z',
+  arrowup: 'M12 19V5M6 11l6-6 6 6',
+  arrowdown: 'M12 5v14M6 13l6 6 6-6',
   open: 'M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v1H7l-4 9zM7 10h15l-3 9H3',
 }
 </script>
 
 <template>
   <svg :width="size ?? 16" :height="size ?? 16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <path :d="paths[name] ?? paths.dot" :fill="name === 'play' || name === 'diamond' || name === 'key' ? 'currentColor' : 'none'" />
+    <path :d="paths[name] ?? paths.dot" :fill="name === 'play' || name === 'diamond' || name === 'key' || name === 'more' ? 'currentColor' : 'none'" />
   </svg>
 </template>
