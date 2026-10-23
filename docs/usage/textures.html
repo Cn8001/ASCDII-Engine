@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Textures and materials | ASCDII Engine</title>
+<link rel="icon" href="img/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="layout">
+<aside class="side">
+<a class="brand" href="index.html"><img src="img/logo.svg" alt=""><span>ASCDII Engine<small>0.0.1 docs</small></span></a>
+<h4>Start</h4>
+<a href="index.html">Welcome</a>
+<a href="install.html">Install</a>
+<a href="first-game.html">Your first game</a>
+<h4>Guides</h4>
+<a href="editor.html">The editor</a>
+<a href="gameobjects.html">GameObjects and components</a>
+<a href="scenes.html">Scenes and prefabs</a>
+<a href="assets.html">Assets and import</a>
+<a href="textures.html" class="on">Textures and materials</a>
+<a href="models.html">Models</a>
+<a href="animation.html">Animation</a>
+<a href="scripting.html">Lua scripting</a>
+<a href="rendering.html">Rendering</a>
+<a href="building.html">Build and release</a>
+<h4>Reference</h4>
+<a href="lua-api.html">Lua API</a>
+<a href="cli.html">CLI reference</a>
+<a href="go-api.html">Go API</a>
+<a href="architecture.html">Architecture</a>
+</aside>
+<main>
+<div class="kicker">Guides</div>
+<h1>Textures and materials</h1>
+<p class="lead">Import a picture, put it in a material and drop the material on an object. The engine samples the texture for every Braille dot, then lights, shades and fogs it like everything else.</p>
+<figure><img src="img/editor-material.png" alt="Textured cube"><figcaption>A brick texture tiled twice on a rotated cube; the material slot shows in the Cube card.</figcaption></figure>
+
+<h2>In three steps</h2>
+<ol class="steps">
+<li>Drag a <code>.png</code> or <code>.jpg</code> into the Project window. It lands in <code>textures/</code>.</li>
+<li>Right click it and choose <b>Create Material</b>. The new material uses the texture and opens in the Inspector.</li>
+<li>Drag the material tile onto an object in the Scene view or in the Hierarchy, or onto any material slot in the Inspector.</li>
+</ol>
+
+<h2>Import settings</h2>
+<figure><img src="img/editor-texture.png" alt="Texture import settings"></figure>
+<p>Click a texture to see its settings in the Inspector. Changes are saved in the texture's <code>.meta</code> and applied at once.</p>
+<table>
+<tr><th>Setting</th><th>Does</th></tr>
+<tr><td><code>maxSize</code></td><td>The longest side kept, 256 by default. A Braille dot is coarse; small textures look the same and load faster.</td></tr>
+<tr><td><code>filter</code></td><td><code>linear</code> blends neighbouring texels, for photos and painted art. <code>nearest</code> keeps them crisp, for pixel art.</td></tr>
+<tr><td><code>alphaCutoff</code></td><td>Texels more transparent than this are holes, so a quad with a cut out picture shows only the picture.</td></tr>
+</table>
+<p>Textures are mip mapped: a surface far away samples a smaller, averaged copy, so distant textures stay calm instead of flickering as the camera moves.</p>
+
+<h2>Materials</h2>
+<p>A material is a small <code>.material.json</code> asset. Create one with <b>Create</b>, <b>Material</b> and edit it in the Inspector:</p>
+<table>
+<tr><th>Property</th><th>Does</th></tr>
+<tr><td><code>albedo</code></td><td>The base color; it tints the texture, white leaves it as it is.</td></tr>
+<tr><td><code>texture</code></td><td>A texture slot; drag a texture tile onto it.</td></tr>
+<tr><td><code>tilingX</code>, <code>tilingY</code></td><td>How many times the texture repeats across a face.</td></tr>
+<tr><td><code>offsetX</code>, <code>offsetY</code></td><td>Slides the texture.</td></tr>
+<tr><td><code>emissive</code></td><td>Light the surface gives off itself, 0 to 1; it glows at night.</td></tr>
+<tr><td><code>unlit</code></td><td>Ignore lighting entirely.</td></tr>
+</table>
+<p>The Cube, Plane, Quad and Mesh components have a material slot. A cube maps the texture once onto every face, a plane and a quad once onto their surface, and a model uses the texture coordinates of its file. Every object that uses a material changes when you edit it.</p>
+
+<h2>Convert to glyph art</h2>
+<p>Right click a texture and choose <b>Convert to Art</b>, or use the button under its preview. The picture becomes glyph art in <code>art/</code>, 48 cells wide: each cell shows two pixels stacked with a half block, which keeps the picture's proportions in a terminal cell. Use it as a sprite, for logos, portraits and signs that should look sharp rather than lit.</p>
+<nav class="pager"><a class="prev" href="assets.html"><small>Previous</small>Assets and import</a><a class="next" href="models.html"><small>Next</small>Models</a></nav>
+</main>
+</div>
+</body>
+</html>

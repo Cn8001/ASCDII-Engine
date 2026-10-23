@@ -46,6 +46,7 @@ type Frag struct {
 	Row0     int     // reference row for the per row slopes below
 	RowDepth float64 // lets flat 2D shapes stand as vertical planes
 	RowZ     float64
+	Tex      Sampler // multiplies Albedo per dot; triangles only
 }
 
 type Dot struct {

@@ -14,7 +14,10 @@ export function assetKind(p: string): string {
   if (l.endsWith('.scene.json')) return 'scene'
   if (l.endsWith('.lua')) return 'script'
   if (l.endsWith('.obj')) return 'model'
-  return 'art'
+  if (l.endsWith('.material.json')) return 'material'
+  if (/\.(png|jpe?g|gif)$/.test(l)) return 'texture'
+  if (l.endsWith('.json') || l.endsWith('.xp')) return 'art'
+  return '' // a folder or a file the engine does not use
 }
 
 // listenFileDrops imports files dropped from the OS and hands the project

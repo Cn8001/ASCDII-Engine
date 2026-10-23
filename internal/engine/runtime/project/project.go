@@ -101,12 +101,17 @@ func Open(ctx context.Context, fsys fs.FS, packs []Pack) (*Project, error) {
 	if err != nil {
 		return nil, err
 	}
+	// Only the packs the manifest names are installed, so a new project shows
+	// the engine's own components and not those of a sample it never uses.
+	var use []Pack
 	for _, need := range m.Packs {
-		if !slices.ContainsFunc(packs, func(p Pack) bool { return p.Name == need }) {
+		i := slices.IndexFunc(packs, func(p Pack) bool { return p.Name == need })
+		if i < 0 {
 			return nil, fmt.Errorf("%w: %s", ErrMissingPack, need)
 		}
+		use = append(use, packs[i])
 	}
-	reg, lib := Registry(packs)
+	reg, lib := Registry(use)
 	if err := lib.Load(ctx, fsys, BuildDir); err != nil {
 		return nil, fmt.Errorf("open %s: %w", m.Name, err)
 	}

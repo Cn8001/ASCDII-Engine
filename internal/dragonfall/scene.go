@@ -22,23 +22,37 @@ const (
 )
 
 const crystalLua = `-- The moon crystal greets the knight and glows brighter up close.
+-- Fields show up in the Inspector; drop the hero there or leave it empty.
+fields = {
+  hero = object(),
+  reach = range(6, 1, 20),
+  message = "the moon remembers",
+}
+
 function update(self, dt)
-  local hero = find("hero")
+  local hero = self.hero or find("hero")
   if not hero then return end
-  if dist(self, hero) < 6 then
-    say("the moon remembers", 0.5)
-    self:set("glow", 1)
+  local glow = self:component("blob")
+  if self:distance(hero) < self.reach then
+    say(self.message, 0.5)
+    glow.glow = 1
   else
-    self:set("glow", 0.6)
+    glow.glow = 0.6
   end
 end
 `
 
 const dragonLua = `-- A hint while the dragon sleeps and the knight is close.
+fields = {
+  reach = range(14, 2, 40),
+  hint = "press E",
+}
+
 function update(self, dt)
   local hero = find("hero")
-  if hero and not self:get("awake") and dist(self, hero) < 14 then
-    say("press E", 0.4)
+  local dragon = self:component("df.dragon")
+  if hero and not dragon.awake and self:distance(hero) < self.reach then
+    say(self.hint, 0.4)
   end
 end
 `
@@ -76,6 +90,7 @@ func (b *builder) node(kind string) scene.Component {
 // Lantern is the prefab placed along the road: a post, a small flame and a light.
 func Lantern() *scene.GameObject {
 	s := scene.New("lantern")
+	s.UseFIDs(scene.CountingFIDs())
 	root := s.Add("lantern", components.NewCylinder(.14, 3, color.RGB(92, 70, 52))).Blocking()
 	flame := components.NewEmitter()
 	flame.FX = fx.Emitter{Rate: 18, Life: .6, Speed: 1.1, Dir: geom.V3(0, 0, 1), Spread: .3, Gravity: -1.5, Size: .5,
@@ -94,6 +109,7 @@ func Lantern() *scene.GameObject {
 func BuildScene(reg *scene.Registry) (*scene.Scene, error) {
 	b := &builder{reg: reg}
 	s := scene.New("Dragonfall")
+	s.UseFIDs(scene.CountingFIDs())
 	s.Camera.Target, s.Camera.Span, s.Camera.Pitch, s.Camera.AnchorY = geom.V3(114, 79.5, 0), 38, 52, .6
 	s.Add("terrain", b.node("df.terrain")).Blocking()
 	s.Add("forest", b.node("df.forest")).Blocking()

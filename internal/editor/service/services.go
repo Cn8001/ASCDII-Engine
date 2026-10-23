@@ -184,6 +184,45 @@ func (a *AssetService) AddSprite(name string) (uint64, error) {
 }
 func (a *AssetService) Reload() error { return wrap(a.d.Session.Reload(a.d.Ctx.Get())) }
 
+func (a *AssetService) CreateMaterial(name string) (string, error) {
+	return wrap1(a.d.Session.CreateMaterial(a.d.Ctx.Get(), name))
+}
+func (a *AssetService) Props(ref string) ([]prop.Prop, error) {
+	return wrap1(a.d.Session.AssetProps(ref))
+}
+func (a *AssetService) SetProp(ref, name string, value any) error {
+	return wrap(a.d.Session.SetAssetProp(a.d.Ctx.Get(), ref, name, value))
+}
+func (a *AssetService) Thumb(ref string, size int) (string, error) {
+	return wrap1(a.d.Session.Thumb(ref, size))
+}
+
+func (a *AssetService) ApplyMaterial(id uint64, ref string) error {
+	return wrap(a.d.Session.ApplyMaterial(id, ref))
+}
+func (a *AssetService) MaterialAt(ref string, col, row int) (uint64, error) {
+	return wrap1(a.d.Session.MaterialAt(ref, col, row))
+}
+
+func (a *AssetService) Folders() ([]string, error) { return wrap1(a.d.Session.Folders(a.d.Ctx.Get())) }
+func (a *AssetService) CreateFolder(rel string) (string, error) {
+	return wrap1(a.d.Session.CreateFolder(a.d.Ctx.Get(), rel))
+}
+
+// Move puts an asset or folder into folder, "" being the project folder.
+func (a *AssetService) Move(from, folder string) (string, error) {
+	return wrap1(a.d.Session.Move(a.d.Ctx.Get(), from, folder))
+}
+func (a *AssetService) RenameFolder(from, name string) (string, error) {
+	return wrap1(a.d.Session.RenameFolder(a.d.Ctx.Get(), from, name))
+}
+func (a *AssetService) Delete(rel string) error { return wrap(a.d.Session.Delete(a.d.Ctx.Get(), rel)) }
+
+// ConvertToArt turns a texture into glyph art cols cells wide.
+func (a *AssetService) ConvertToArt(ref string, cols int) (string, error) {
+	return wrap1(a.d.Session.ConvertToArt(a.d.Ctx.Get(), ref, cols))
+}
+
 // Import copies files dropped from the OS into the project; folder "" picks
 // one by file type.
 func (a *AssetService) Import(paths []string, folder string) ([]string, error) {

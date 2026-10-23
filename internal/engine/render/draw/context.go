@@ -3,6 +3,8 @@
 package draw
 
 import (
+	"math"
+
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/color"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/geom"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/light"
@@ -11,10 +13,38 @@ import (
 )
 
 type Material struct {
-	Albedo   color.Color `json:"albedo"`
-	Emissive float64     `json:"emissive"` // 0..1, light the surface gives off itself
-	Unlit    bool        `json:"unlit"`
-	Water    bool        `json:"water"`
+	Albedo   color.Color    `json:"albedo"`
+	Emissive float64        `json:"emissive"` // 0..1, light the surface gives off itself
+	Unlit    bool           `json:"unlit"`
+	Water    bool           `json:"water"`
+	Texture  raster.Sampler `json:"-"`      // multiplied by Albedo
+	Tiling   geom.Vec2      `json:"tiling"` // repeats per UV unit, 0 means 1
+	Offset   geom.Vec2      `json:"offset"`
+}
+
+// uv applies tiling and offset.
+func (m Material) uv(p geom.Vec2) geom.Vec2 {
+	t := m.Tiling
+	if t.X == 0 {
+		t.X = 1
+	}
+	if t.Y == 0 {
+		t.Y = 1
+	}
+	return geom.V2(p.X*t.X+m.Offset.X, p.Y*t.Y+m.Offset.Y)
+}
+
+// planar maps a point to UVs on the plane its face mostly lies in, one
+// repeat per world unit, so any face can carry a texture without UVs.
+func planar(p, n geom.Vec3) geom.Vec2 {
+	ax, ay, az := math.Abs(n.X), math.Abs(n.Y), math.Abs(n.Z)
+	switch {
+	case az >= ax && az >= ay:
+		return geom.V2(p.X, -p.Y)
+	case ax >= ay:
+		return geom.V2(p.Y, p.Z)
+	}
+	return geom.V2(p.X, p.Z)
 }
 
 func M(c color.Color) Material { return Material{Albedo: c} }
@@ -51,7 +81,7 @@ func (c *Context) Shadow(at geom.Vec3, rx, ry, strength float64) {
 }
 
 func (c *Context) frag(m Material, n geom.Vec3) raster.Frag {
-	f := raster.Frag{Albedo: m.Albedo, Normal: raster.PackNormal(n)}
+	f := raster.Frag{Albedo: m.Albedo, Normal: raster.PackNormal(n), Tex: m.Texture}
 	if m.Emissive > 0 {
 		f.Emissive = uint8(geom.Clamp(m.Emissive, 0, 1) * 255)
 	}
@@ -76,10 +106,37 @@ func (c *Context) Face(pts []geom.Vec3, n geom.Vec3, m Material) {
 		return
 	}
 	f := c.frag(m, n)
-	v0 := c.vertex(pts[0])
-	prev := c.vertex(pts[1])
+	v := func(i int) raster.Vertex {
+		out := c.vertex(pts[i])
+		if m.Texture != nil {
+			uv := m.uv(planar(pts[i], n))
+			out.U, out.V = uv.X, uv.Y
+		}
+		return out
+	}
+	v0, prev := v(0), v(1)
 	for i := 2; i < len(pts); i++ {
-		cur := c.vertex(pts[i])
+		cur := v(i)
+		c.Buf.Triangle(v0, prev, cur, f)
+		prev = cur
+	}
+}
+
+// FaceUV is Face with texture coordinates per corner.
+func (c *Context) FaceUV(pts []geom.Vec3, uvs []geom.Vec2, n geom.Vec3, m Material) {
+	if len(pts) < 3 || len(uvs) != len(pts) || n.Dot(c.View.ToCam) <= 1e-6 {
+		return
+	}
+	f := c.frag(m, n)
+	v := func(i int) raster.Vertex {
+		out := c.vertex(pts[i])
+		uv := m.uv(uvs[i])
+		out.U, out.V = uv.X, uv.Y
+		return out
+	}
+	v0, prev := v(0), v(1)
+	for i := 2; i < len(pts); i++ {
+		cur := v(i)
 		c.Buf.Triangle(v0, prev, cur, f)
 		prev = cur
 	}
@@ -112,6 +169,21 @@ func (c *Context) Facet(a, b, d geom.Vec3, m Material) {
 		return
 	}
 	c.Buf.Triangle(c.vertex(a), c.vertex(b), c.vertex(d), c.frag(m, n.Norm()))
+}
+
+// FacetUV is Facet with texture coordinates per corner.
+func (c *Context) FacetUV(a, b, d geom.Vec3, ua, ub, ud geom.Vec2, m Material) {
+	n := b.Sub(a).Cross(d.Sub(a))
+	if n.Dot(c.View.ToCam) <= 1e-9 {
+		return
+	}
+	v := func(p geom.Vec3, uv geom.Vec2) raster.Vertex {
+		out := c.vertex(p)
+		uv = m.uv(uv)
+		out.U, out.V = uv.X, uv.Y
+		return out
+	}
+	c.Buf.Triangle(v(a, ua), v(b, ub), v(d, ud), c.frag(m, n.Norm()))
 }
 
 // Tri is two sided; the normal is flipped toward the camera when needed.

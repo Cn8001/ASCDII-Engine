@@ -32,12 +32,16 @@ const (
 	ScriptRef Type = "script"
 	ModelRef  Type = "model"
 	PrefabRef Type = "prefab"
+	TexRef    Type = "texture"
+	MatRef    Type = "material"
 	ObjectRef Type = "object"    // a GameObject in the same scene or prefab
 	CompRef   Type = "component" // Options[0], when set, limits the kind
 )
 
 // Ref reports whether values of t name assets, which are stored as GUIDs.
-func (t Type) Ref() bool { return t == Asset || t == ScriptRef || t == ModelRef || t == PrefabRef }
+func (t Type) Ref() bool {
+	return t == Asset || t == ScriptRef || t == ModelRef || t == PrefabRef || t == TexRef || t == MatRef
+}
 
 type Prop struct {
 	Name       string   `json:"name"`

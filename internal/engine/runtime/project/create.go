@@ -10,11 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/color"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/geom"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/guid"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/version"
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/components"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/scene"
 )
 
@@ -140,14 +137,5 @@ func FileName(name string) string {
 func Starter(name string) *scene.Scene {
 	s := scene.New(name)
 	s.Camera.Span = 40
-	s.Add("ground", components.NewGround(48, 48, color.RGB(70, 98, 62)))
-	s.Add("crate", components.NewBox(geom.V3(2, 2, 2), color.RGB(176, 128, 80))).At(-3, 0, 0).Blocking()
-	s.Add("pillar", components.NewCylinder(1, 4, color.RGB(150, 150, 146))).At(4, -2, 0).Blocking()
-	s.Add("player", components.NewBlob(.8, color.RGB(232, 176, 75))).At(0, 4, 0).With(components.NewPlayer())
-	s.Add("lamp", components.NewLight(9, color.RGB(255, 180, 100))).At(0, 0, 3)
-	title := components.NewLabel(name)
-	title.Anchor = "top-left"
-	s.Add("title", title).At(2, 1, 0)
-	s.Add("rules", nil).With(components.NewDayNight(), &components.Quit{Press: "q"})
 	return s
 }

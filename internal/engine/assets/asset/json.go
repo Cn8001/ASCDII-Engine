@@ -10,8 +10,10 @@ import (
 )
 
 type swatchFile struct {
-	Glyph, FG, BG string
-	Transparent   bool
+	Glyph       string `json:"glyph,omitempty"`
+	FG          string `json:"fg,omitempty"`
+	BG          string `json:"bg,omitempty"`
+	Transparent bool   `json:"transparent,omitempty"`
 }
 
 type surfaceFile struct {

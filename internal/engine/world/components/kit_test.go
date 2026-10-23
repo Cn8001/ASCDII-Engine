@@ -1,17 +1,21 @@
 package components
 
 import (
+	"image"
+	stdcolor "image/color"
 	"math"
 	"strings"
 	"testing"
 	"time"
 
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/asset"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/material"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/mesh"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/color"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/geom"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/input"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/pipeline"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/texture"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/scene"
 )
 
@@ -125,7 +129,7 @@ func TestUnit_RegisteredKindsRender(t *testing.T) {
 	scene.Render(p, f, s)
 
 	// Assert
-	if len(reg.Kinds()) != 15 || !reg.Meta("box").Object || reg.Meta("player").Object {
+	if len(reg.Kinds()) != 17 || !reg.Meta("box").Object || reg.Meta("player").Object {
 		t.Fatalf("kinds %v", reg.Kinds())
 	}
 }
@@ -159,5 +163,49 @@ func TestUnit_MeshDrawsRotatedModel(t *testing.T) {
 	}
 	if drawn == 0 || math.Abs(b.Max.X-4*math.Cos(math.Pi/6)) > 1e-9 || math.Abs(b.Max.Y-2) > 1e-9 || math.Abs(b.Max.Z-4) > 1e-9 {
 		t.Fatalf("drawn %d bounds %+v", drawn, b)
+	}
+}
+
+func TestUnit_TexturedRotatedBoxSamplesItsMaterial(t *testing.T) {
+	// Arrange
+	lib := asset.NewLibrary(scene.NewRegistry())
+	img := image.NewNRGBA(image.Rect(0, 0, 2, 2))
+	for i, c := range []stdcolor.NRGBA{{R: 255, A: 255}, {B: 255, A: 255}, {B: 255, A: 255}, {R: 255, A: 255}} {
+		img.Set(i%2, i/2, c)
+	}
+	lib.PutTexture("textures/check.png", texture.FromImage(img, texture.Options{Filter: texture.Nearest}))
+	mat := material.Default()
+	mat.Texture = "textures/check.png"
+	lib.PutMaterial("materials/check.material.json", mat)
+	box := NewBox(geom.V3(4, 4, 4), color.RGB(0, 255, 0))
+	box.lib, box.Material = lib, "materials/check.material.json"
+	s := scene.New("t")
+	o := s.Add("box", box)
+	o.Local.Rot = geom.V3(0, 0, 30)
+	get := func() *scene.Scene { return s }
+	p := pipeline.New(time.Now, &scene.Geometry{Scene: get})
+	f := pipeline.NewFrame(60, 30)
+	s.Camera.Target, s.Camera.Span = geom.V3(0, 0, 2), 14
+
+	// Act
+	scene.Render(p, f, s)
+
+	// Assert
+	red, blue, green := 0, 0, 0
+	for _, d := range f.Buf.Dots() {
+		if d.Tag != uint32(o.ID) {
+			continue
+		}
+		switch {
+		case d.Albedo.R > 200 && d.Albedo.B < 50:
+			red++
+		case d.Albedo.B > 200 && d.Albedo.R < 50:
+			blue++
+		case d.Albedo.G > 200:
+			green++
+		}
+	}
+	if red == 0 || blue == 0 || green != 0 {
+		t.Fatalf("red %d blue %d green %d", red, blue, green)
 	}
 }

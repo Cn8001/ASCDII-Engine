@@ -1,9 +1,13 @@
 package session
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"errors"
+	"image"
+	stdcolor "image/color"
+	"image/png"
 	"os"
 	"path/filepath"
 	"strings"
@@ -659,5 +663,141 @@ func TestUnit_DuplicateRemapsInternalReferences(t *testing.T) {
 	got := s.edit.Lookup(c, c.Component("toggle").(*components.Toggle).Target)
 	if err != nil || got == nil || got.Parent() != c {
 		t.Fatalf("err %v target %+v", err, got)
+	}
+}
+
+func TestUnit_MaterialTextureAndArtFromImportedPicture(t *testing.T) {
+	// Arrange
+	s, _, dir := newSession(t, "")
+	ctx := context.Background()
+	src := filepath.Join(t.TempDir(), "brick.png")
+	img := image.NewNRGBA(image.Rect(0, 0, 8, 8))
+	for i := 0; i < 64; i++ {
+		img.Set(i%8, i/8, stdcolor.NRGBA{R: 180, G: 70, B: 50, A: 255})
+	}
+	var b bytes.Buffer
+	_ = png.Encode(&b, img)
+	_ = os.WriteFile(src, b.Bytes(), 0o644)
+
+	// Act
+	tex, errImp := s.Import(ctx, []string{src}, "")
+	mat, errMat := s.CreateMaterial(ctx, "brick")
+	errSet := s.SetAssetProp(ctx, mat, "texture", tex[0])
+	errTex := s.SetAssetProp(ctx, tex[0], "filter", "nearest")
+	art, errArt := s.ConvertToArt(ctx, tex[0], 6)
+	thumb, errThumb := s.Thumb(tex[0], 32)
+	id, _ := s.Add(0, "box")
+	errBox := s.SetProp(id, "material", mat)
+
+	// Assert
+	for _, err := range []error{errImp, errMat, errSet, errTex, errArt, errThumb, errBox} {
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	raw, _ := os.ReadFile(filepath.Join(dir, filepath.FromSlash(mat)))
+	meta, _ := os.ReadFile(filepath.Join(dir, "textures", "brick.png.meta"))
+	if tex[0] != "textures/brick.png" || !strings.Contains(string(raw), `"texture"`) || !strings.Contains(string(meta), "nearest") {
+		t.Fatalf("tex %v material %s meta %s", tex, raw, meta)
+	}
+	if art != "art/brick.json" || !strings.HasPrefix(thumb, "data:image/png;base64,") {
+		t.Fatalf("art %s thumb %.30s", art, thumb)
+	}
+	if _, ok := s.lib.DrawMaterial(mat); !ok {
+		t.Fatal("material not loaded")
+	}
+}
+
+func TestUnit_FoldersMoveAssetsAndKeepReferences(t *testing.T) {
+	// Arrange
+	s, _, dir := newSession(t, "dragonfall")
+	ctx := context.Background()
+	id, _ := s.Drop("prefab:prefabs/lantern.prefab.json", 40, 15)
+
+	// Act
+	folder, errMk := s.CreateFolder(ctx, "props/street")
+	moved, errMv := s.Move(ctx, "prefabs/lantern.prefab.json", folder)
+	renamed, errRn := s.RenameFolder(ctx, "props", "decor")
+	errInto := func() error { _, err := s.Move(ctx, "decor", "decor/street"); return err }()
+	folders, _ := s.Folders(ctx)
+	errReload := s.Reload(ctx)
+
+	// Assert
+	for _, err := range []error{errMk, errMv, errRn, errReload} {
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	if moved != "props/street/lantern.prefab.json" || renamed != "decor" || !errors.Is(errInto, ErrBadPath) {
+		t.Fatalf("moved %s renamed %s into %v", moved, renamed, errInto)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "decor/street/lantern.prefab.json.meta")); err != nil {
+		t.Fatal("meta did not move along")
+	}
+	s.mu.Lock()
+	inst, _ := s.edit.ByID(id)
+	kids := len(inst.Children)
+	s.mu.Unlock()
+	if kids == 0 || !strings.Contains(strings.Join(folders, ","), "decor/street") {
+		t.Fatalf("instance lost its prefab (%d children) folders %v", kids, folders)
+	}
+}
+
+func TestUnit_DeleteForgetsAssets(t *testing.T) {
+	// Arrange
+	s, _, dir := newSession(t, "")
+	ctx := context.Background()
+	rel, _ := s.CreateMaterial(ctx, "old")
+
+	// Act
+	err := s.Delete(ctx, rel)
+	errOut := s.Delete(ctx, "")
+
+	// Assert
+	if _, statErr := os.Stat(filepath.Join(dir, rel+".meta")); err != nil || statErr == nil {
+		t.Fatalf("err %v meta still there", err)
+	}
+	if _, ok := s.lib.DrawMaterial(rel); ok || !errors.Is(errOut, ErrBadPath) {
+		t.Fatalf("material still known, deleting the project err %v", errOut)
+	}
+}
+
+func TestUnit_ImportedFolderKeepsGUIDsFromItsMetas(t *testing.T) {
+	// Arrange
+	src, _, from := newSession(t, "dragonfall")
+	pkg := filepath.Join(t.TempDir(), "street")
+	for _, f := range []string{"prefabs/lantern.prefab.json", "prefabs/lantern.prefab.json.meta", "scripts/crystal.lua", "scripts/crystal.lua.meta"} {
+		b, err := os.ReadFile(filepath.Join(from, f))
+		if err != nil {
+			t.Fatal(err)
+		}
+		_ = os.MkdirAll(filepath.Dir(filepath.Join(pkg, f)), 0o755)
+		_ = os.WriteFile(filepath.Join(pkg, f), b, 0o644)
+	}
+	_ = os.WriteFile(filepath.Join(pkg, "notes.txt"), []byte("hi"), 0o644)
+	want := src.lib.Ref("prefabs/lantern.prefab.json")
+	s, _, dir := newSession(t, "")
+	ctx := context.Background()
+
+	// Act
+	got, err := s.Import(ctx, []string{pkg}, "")
+	again, errAgain := s.Import(ctx, []string{pkg}, "")
+	id, errDrop := s.Drop("prefab:"+want, 30, 10)
+
+	// Assert
+	if err != nil || errAgain != nil || errDrop != nil || got[0] != "street" || again[0] != "street 2" {
+		t.Fatalf("errs %v %v %v got %v again %v", err, errAgain, errDrop, got, again)
+	}
+	if s.lib.Resolve(want) != "street/prefabs/lantern.prefab.json" || s.lib.Ref("street 2/prefabs/lantern.prefab.json") == want {
+		t.Fatalf("guid %s resolves to %s", want, s.lib.Resolve(want))
+	}
+	if _, err := os.Stat(filepath.Join(dir, "street", "notes.txt")); err != nil {
+		t.Fatal("plain files should come along")
+	}
+	s.mu.Lock()
+	inst, _ := s.edit.ByID(id)
+	s.mu.Unlock()
+	if len(inst.Children) == 0 {
+		t.Fatal("instance of the imported prefab is empty")
 	}
 }

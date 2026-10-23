@@ -40,10 +40,10 @@ editor-dev: players
 	cd $(EDITOR) && WAILS_DEV_ALLOWED_HOSTS=wails.localhost $(WAILS) dev -tags $(LINUXTAG)
 
 editor-linux: players
-	cd $(EDITOR) && $(WAILS) build -tags $(LINUXTAG) -clean
+	cd $(EDITOR) && $(WAILS) build -tags $(LINUXTAG)
 
 editor-windows: players
-	cd $(EDITOR) && $(WAILS) build -platform windows/amd64 -clean
+	cd $(EDITOR) && $(WAILS) build -platform windows/amd64
 
 clean:
 	rm -rf $(BIN) $(EDITOR)/build/bin

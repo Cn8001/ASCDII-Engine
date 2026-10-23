@@ -11,18 +11,22 @@ import (
 	"strings"
 	"sync"
 
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/material"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/mesh"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/texture"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/scene"
 )
 
 type Kind string
 
 const (
-	Art    Kind = "art"
-	Prefab Kind = "prefab"
-	Scene  Kind = "scene"
-	Script Kind = "script"
-	Model  Kind = "model"
+	Art      Kind = "art"
+	Prefab   Kind = "prefab"
+	Scene    Kind = "scene"
+	Script   Kind = "script"
+	Model    Kind = "model"
+	Texture  Kind = "texture"
+	Material Kind = "material"
 )
 
 const (
@@ -50,6 +54,10 @@ func Classify(p string) (Kind, bool) {
 		return Script, true
 	case strings.HasSuffix(l, ModelExt):
 		return Model, true
+	case strings.HasSuffix(l, material.Ext):
+		return Material, true
+	case strings.HasSuffix(l, ".png"), strings.HasSuffix(l, ".jpg"), strings.HasSuffix(l, ".jpeg"), strings.HasSuffix(l, ".gif"):
+		return Texture, true
 	case strings.HasSuffix(l, ".xp"), strings.HasSuffix(l, ".json"):
 		return Art, true
 	}
@@ -103,6 +111,8 @@ type Library struct {
 	prefabs map[string][]byte
 	scripts map[string]source
 	models  map[string]*mesh.Mesh
+	tex     map[string]*texture.Texture
+	mats    map[string]*material.Material
 	byGUID  map[string]string
 	byPath  map[string]string
 }
@@ -114,7 +124,7 @@ type source struct {
 
 func NewLibrary(reg *scene.Registry) *Library {
 	return &Library{reg: reg, art: map[string]Surface{}, prefabs: map[string][]byte{}, scripts: map[string]source{},
-		models: map[string]*mesh.Mesh{}, byGUID: map[string]string{}, byPath: map[string]string{}}
+		models: map[string]*mesh.Mesh{}, tex: map[string]*texture.Texture{}, mats: map[string]*material.Material{}, byGUID: map[string]string{}, byPath: map[string]string{}}
 }
 
 // Load reads every art file and prefab from fsys.
@@ -130,8 +140,14 @@ func (l *Library) Load(ctx context.Context, fsys fs.FS, skip ...string) error {
 		if e.Kind == Scene {
 			continue
 		}
+		if e.Kind == Texture {
+			if t, err := LoadTexture(fsys, e.Path); err == nil {
+				l.PutTexture(e.Path, t)
+			}
+			continue
+		}
 		if e.Kind == Model {
-			m, err := mesh.Load(ctx, fsys, e.Path, mesh.Options{})
+			m, err := mesh.Load(ctx, fsys, e.Path, ModelOptions(fsys, e.Path))
 			if err != nil {
 				continue // a broken model shows as missing, like stray art
 			}
@@ -147,6 +163,10 @@ func (l *Library) Load(ctx context.Context, fsys fs.FS, skip ...string) error {
 			l.PutScript(e.Path, string(b))
 		case Prefab:
 			l.PutPrefab(e.Path, b)
+		case Material:
+			if m, err := material.Decode(bytes.NewReader(b)); err == nil {
+				l.PutMaterial(e.Path, m)
+			}
 		case Art:
 			s, err := DecodeArt(e.Path, b)
 			if err != nil {
@@ -190,6 +210,14 @@ func (l *Library) Resolve(ref string) string {
 	return path.Clean(ref)
 }
 
+// Known reports whether a GUID already names an asset of the project.
+func (l *Library) Known(id string) bool {
+	l.mu.RLock()
+	defer l.mu.RUnlock()
+	_, ok := l.byGUID[id]
+	return ok
+}
+
 // Ref is the reference to store for a path: its GUID when known.
 func (l *Library) Ref(p string) string {
 	l.mu.RLock()
@@ -221,9 +249,34 @@ func (l *Library) Rename(from, to string) {
 		l.models[to] = v
 		delete(l.models, from)
 	}
+	if v, ok := l.tex[from]; ok {
+		l.tex[to] = v
+		delete(l.tex, from)
+	}
+	if v, ok := l.mats[from]; ok {
+		l.mats[to] = v
+		delete(l.mats, from)
+	}
 	if id, ok := l.byPath[from]; ok {
 		delete(l.byPath, from)
 		l.byPath[to], l.byGUID[id] = id, to
+	}
+}
+
+// Remove forgets a deleted asset, so references to it show as missing.
+func (l *Library) Remove(p string) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	p = path.Clean(p)
+	delete(l.art, p)
+	delete(l.prefabs, p)
+	delete(l.scripts, p)
+	delete(l.models, p)
+	delete(l.tex, p)
+	delete(l.mats, p)
+	if id, ok := l.byPath[p]; ok {
+		delete(l.byGUID, id)
+		delete(l.byPath, p)
 	}
 }
 

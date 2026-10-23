@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ASCDII Engine | ASCDII Engine</title>
+<title>ASCDII Engine</title>
 <link rel="icon" href="img/logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -17,14 +17,20 @@
 <a href="first-game.html">Your first game</a>
 <h4>Guides</h4>
 <a href="editor.html">The editor</a>
+<a href="gameobjects.html">GameObjects and components</a>
 <a href="scenes.html">Scenes and prefabs</a>
+<a href="assets.html">Assets and import</a>
+<a href="textures.html">Textures and materials</a>
+<a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
 <a href="scripting.html">Lua scripting</a>
 <a href="rendering.html">Rendering</a>
 <a href="building.html">Build and release</a>
 <h4>Reference</h4>
+<a href="lua-api.html">Lua API</a>
 <a href="cli.html">CLI reference</a>
 <a href="go-api.html">Go API</a>
+<a href="architecture.html">Architecture</a>
 </aside>
 <main>
 <div class="kicker">Start</div>
@@ -36,7 +42,8 @@
 <ul>
   <li><b>A real 2.5D renderer.</b> Boxes, towers, roofs, terrain with cliffs, camera facing sprites, shadows, point lights, fog and water, all resolved per Braille dot.</li>
   <li><b>An editor that feels familiar.</b> Hierarchy, Scene and Game views, Inspector with components, Project window, Console and an Animation window, in the layout you know from Unity.</li>
-  <li><b>Lua scripting.</b> Write behaviours in your own code editor. Saving a file reloads it in the running scene.</li>
+  <li><b>Lua scripting.</b> Write scripts in your own code editor, expose fields to the Inspector and reach any object, component, the camera or the render pipeline. Saving a file reloads it in the running scene.</li>
+  <li><b>Textures, materials and models.</b> Drop pictures and .obj models into the editor; they draw in Braille, lit and shaded.</li>
   <li><b>Plain project files.</b> A game is a folder of JSON, Lua and art, made to live in git.</li>
   <li><b>One file releases.</b> Build a Windows or Linux executable, or a full release with zips and checksums, in one click.</li>
 </ul>
@@ -46,12 +53,14 @@
   <a class="card" href="install.html"><strong>Install</strong><span>Tools you need and how to build the editor and CLI.</span></a>
   <a class="card" href="first-game.html"><strong>Your first game</strong><span>A guided tour from an empty folder to a playable scene.</span></a>
   <a class="card" href="editor.html"><strong>The editor</strong><span>Every panel, every shortcut.</span></a>
-  <a class="card" href="scenes.html"><strong>Scenes and prefabs</strong><span>Entities, components, world units and reusable content.</span></a>
+  <a class="card" href="gameobjects.html"><strong>GameObjects</strong><span>Objects, components and references, as in Unity.</span></a>
+  <a class="card" href="scenes.html"><strong>Scenes and prefabs</strong><span>Projects, prefabs, overrides and world units.</span></a>
   <a class="card" href="animation.html"><strong>Animation</strong><span>Record keys, edit timing and easing, loop clips.</span></a>
   <a class="card" href="scripting.html"><strong>Lua scripting</strong><span>Hooks, the full API and hot reload.</span></a>
   <a class="card" href="rendering.html"><strong>Rendering</strong><span>How a frame is made and how to tune it.</span></a>
   <a class="card" href="building.html"><strong>Build and release</strong><span>Ship executables and publish GitHub releases.</span></a>
-  <a class="card" href="go-api.html"><strong>Go API</strong><span>Use the engine from Go and add your own node kinds.</span></a>
+  <a class="card" href="lua-api.html"><strong>Lua API</strong><span>Every function a script can call.</span></a>
+  <a class="card" href="go-api.html"><strong>Go API</strong><span>Use the engine from Go and add your own components.</span></a>
 </div>
 <nav class="pager"><span></span><a class="next" href="install.html"><small>Next</small>Install</a></nav>
 </main>

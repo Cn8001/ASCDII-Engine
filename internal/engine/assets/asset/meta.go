@@ -19,8 +19,9 @@ var ErrExists = errors.New("asset already exists")
 // Meta sits next to every asset, like Unity's .meta files. The id survives
 // renames and moves, so references never break; keep both files in git.
 type Meta struct {
-	Format int    `json:"format"`
-	GUID   string `json:"guid"`
+	Format int             `json:"format"`
+	GUID   string          `json:"guid"`
+	Import json.RawMessage `json:"import,omitempty"` // per kind import settings, such as texture size
 }
 
 func ReadMeta(fsys fs.FS, asset string) (Meta, error) {
@@ -78,6 +79,25 @@ func WriteMeta(ctx context.Context, dir, asset, id string) error {
 	}
 	if err := os.WriteFile(filepath.Join(dir, filepath.FromSlash(asset))+MetaExt, encodeMeta(id), 0o644); err != nil {
 		return fmt.Errorf("write meta: %w", err)
+	}
+	return nil
+}
+
+// WriteImport stores import settings in an asset's existing .meta.
+func WriteImport(ctx context.Context, dir, asset string, settings any) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	m, err := ReadMeta(os.DirFS(dir), asset)
+	if err != nil {
+		return err
+	}
+	if m.Import, err = json.Marshal(settings); err != nil {
+		return fmt.Errorf("write import: %w", err)
+	}
+	b, _ := json.MarshalIndent(m, "", "  ")
+	if err := os.WriteFile(filepath.Join(dir, filepath.FromSlash(asset))+MetaExt, append(b, '\n'), 0o644); err != nil {
+		return fmt.Errorf("write import: %w", err)
 	}
 	return nil
 }

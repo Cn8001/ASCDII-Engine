@@ -4,11 +4,14 @@ import (
 	"context"
 	"errors"
 	"os"
+	"slices"
 	"testing"
 	"testing/fstest"
 
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/asset"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/guid"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/script/vm"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/scene"
 )
 
 func TestUnit_CreateThenOpenStarter(t *testing.T) {
@@ -31,8 +34,8 @@ func TestUnit_CreateThenOpenStarter(t *testing.T) {
 		t.Fatalf("gitignore %q %v", b, err)
 	}
 	s, err := p.StartScene(ctx)
-	if err != nil || s.Find("player") == nil {
-		t.Fatalf("start scene %v", err)
+	if err != nil || len(s.Root.Children) != 0 {
+		t.Fatalf("start scene should be empty: %v", err)
 	}
 }
 
@@ -123,5 +126,27 @@ func TestUnit_CreateWritesMetaAndMigrateUsesGUIDs(t *testing.T) {
 	}
 	if _, err := os.Stat(dir + "/scenes/main.scene.json.meta"); err != nil {
 		t.Fatal("scene has no meta")
+	}
+}
+
+func TestUnit_OnlyNamedPacksAreInstalled(t *testing.T) {
+	// Arrange
+	dir := t.TempDir()
+	ctx := context.Background()
+	installed := false
+	sample := Pack{Name: "sample", Install: func(r *scene.Registry, _ *asset.Library) {
+		installed = true
+		r.Register("sample.thing", func() scene.Component { return nil }, scene.Meta{})
+	}}
+	if _, err := Create(ctx, dir, "Plain", nil); err != nil {
+		t.Fatal(err)
+	}
+
+	// Act
+	p, err := Open(ctx, os.DirFS(dir), []Pack{sample})
+
+	// Assert
+	if err != nil || installed || slices.Contains(p.Registry.Kinds(), "sample.thing") {
+		t.Fatalf("err %v installed %v", err, installed)
 	}
 }

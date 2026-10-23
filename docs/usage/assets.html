@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Assets and import | ASCDII Engine</title>
+<link rel="icon" href="img/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="layout">
+<aside class="side">
+<a class="brand" href="index.html"><img src="img/logo.svg" alt=""><span>ASCDII Engine<small>0.0.1 docs</small></span></a>
+<h4>Start</h4>
+<a href="index.html">Welcome</a>
+<a href="install.html">Install</a>
+<a href="first-game.html">Your first game</a>
+<h4>Guides</h4>
+<a href="editor.html">The editor</a>
+<a href="gameobjects.html">GameObjects and components</a>
+<a href="scenes.html">Scenes and prefabs</a>
+<a href="assets.html" class="on">Assets and import</a>
+<a href="textures.html">Textures and materials</a>
+<a href="models.html">Models</a>
+<a href="animation.html">Animation</a>
+<a href="scripting.html">Lua scripting</a>
+<a href="rendering.html">Rendering</a>
+<a href="building.html">Build and release</a>
+<h4>Reference</h4>
+<a href="lua-api.html">Lua API</a>
+<a href="cli.html">CLI reference</a>
+<a href="go-api.html">Go API</a>
+<a href="architecture.html">Architecture</a>
+</aside>
+<main>
+<div class="kicker">Guides</div>
+<h1>Assets and import</h1>
+<p class="lead">The Project window is the project folder on disk. Organize it in folders, drop files into it from your file manager, and share assets between projects without breaking a single reference.</p>
+<figure><img src="img/editor-project.png" alt="Project window with folders"><figcaption>Folders on the left, the open folder's contents on the right.</figcaption></figure>
+
+<h2>Folders</h2>
+<ul>
+<li>Click a folder in the tree, or double click a folder tile, to open it. The path above the tiles takes you back up.</li>
+<li><b>Create</b>, or right click empty space, makes a folder, a script, a scene or a material in the open folder.</li>
+<li>Drag tiles or folders onto a folder in the tree, a folder tile or the path to move them. The <code>.meta</code> files move along, so references keep working.</li>
+<li>Right click a folder to rename or delete it, and a tile to rename or delete it. Deleting asks first and removes the files from disk; anything that used them shows <b>Missing</b>.</li>
+<li>Search and the type filter look through every folder; right click a result and choose <b>Show in Folder</b>.</li>
+</ul>
+
+<h2>Importing files</h2>
+<p>Drag files or whole folders from your file manager into the editor:</p>
+<table>
+<tr><th>Drop on</th><th>Result</th></tr>
+<tr><td>Project window</td><td>Copied into the open folder. In the top folder each file goes to the folder for its type.</td></tr>
+<tr><td>Scene view</td><td>Imported and placed where you dropped it: models, prefabs and art.</td></tr>
+<tr><td>Hierarchy</td><td>Imported and created under the row you dropped on.</td></tr>
+</table>
+<table>
+<tr><th>File</th><th>Becomes</th><th>Default folder</th></tr>
+<tr><td><code>.obj</code> with <code>.mtl</code></td><td>Model, with its materials and textures</td><td><code>models/</code></td></tr>
+<tr><td><code>.png</code>, <code>.jpg</code>, <code>.gif</code></td><td>Texture</td><td><code>textures/</code></td></tr>
+<tr><td><code>.material.json</code></td><td>Material</td><td><code>materials/</code></td></tr>
+<tr><td><code>.json</code>, <code>.xp</code></td><td>Glyph art (palette JSON or REXPaint)</td><td><code>art/</code></td></tr>
+<tr><td><code>.lua</code></td><td>Script</td><td><code>scripts/</code></td></tr>
+<tr><td><code>.prefab.json</code>, <code>.scene.json</code></td><td>Prefab, scene</td><td><code>prefabs/</code>, <code>scenes/</code></td></tr>
+</table>
+<p>A name that is taken gets a number, as in <code>house 2.obj</code>. Files already inside the project are not copied again.</p>
+
+<h2>.meta files and GUIDs</h2>
+<p>Every asset has a <code>.meta</code> next to it with a UUIDv7 that never changes, and everything refers to assets by that id. Some kinds keep their import settings in it too:</p>
+<pre><code>{
+  "format": 1,
+  "guid": "019a0f3e-7c41-7b2a-9d55-3f1c8e2a9b40",
+  "import": { "maxSize": 128, "filter": "nearest", "alphaCutoff": 0.5 }
+}</code></pre>
+<p>Commit <code>.meta</code> files together with their assets. A teammate who clones the project gets the same ids, so their scenes and yours agree.</p>
+
+<h2>Sharing between projects</h2>
+<p>To move a set of assets to another project, for example a prefab with its scripts, models and art, copy their folder <b>with the .meta files</b> and drop it on the other project's Project window. Imported assets keep their GUIDs, so the prefab still finds its scripts and textures. If the other project already has an asset with the same GUID, the copy gets a new one, which keeps both apart; files that are not assets, such as notes, are copied as they are.</p>
+<div class="note"><b>Changes made outside the editor</b>Files you change in another program are picked up while the editor runs: scripts reload, art, models, textures and materials refresh. The reload button in the Project window rescans everything.</div>
+<nav class="pager"><a class="prev" href="scenes.html"><small>Previous</small>Scenes and prefabs</a><a class="next" href="textures.html"><small>Next</small>Textures and materials</a></nav>
+</main>
+</div>
+</body>
+</html>

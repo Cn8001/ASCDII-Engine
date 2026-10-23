@@ -12,18 +12,21 @@ const props = defineProps<{ p: prop.Prop }>()
 const emit = defineEmits<{ ref: [name: string, target: number, key: string]; set: [name: string, value: unknown] }>()
 const over = ref(false)
 const kind = computed(() => props.p.options?.[0] ?? '')
+// asset slots take files from the Project window instead of scene objects.
+const asset = computed(() => ['prefab', 'texture', 'material'].includes(props.p.type))
 const empty = computed(() => !props.p.value)
 const label = computed(() => {
-  if (props.p.type === 'prefab') return assetPath(String(props.p.value)).replace(/^prefabs\//, '').replace('.prefab.json', '')
+  if (asset.value) return assetPath(String(props.p.value)).split('/').pop()!.replace(/\.(prefab|material)\.json$/, '')
   return props.p.display || String(props.p.value)
 })
-const what = computed(() => (props.p.type === 'object' ? 'Object' : props.p.type === 'prefab' ? 'Prefab' : kind.value ? kindLabel(kind.value) : 'Component'))
-const icon = computed(() => (props.p.type === 'object' ? 'box' : props.p.type === 'prefab' ? 'package' : 'sliders'))
+const names: Record<string, string> = { object: 'Object', prefab: 'Prefab', texture: 'Texture', material: 'Material' }
+const what = computed(() => names[props.p.type] ?? (kind.value ? kindLabel(kind.value) : 'Component'))
+const icon = computed(() => ({ object: 'box', prefab: 'package', texture: 'image', material: 'sun' })[props.p.type] ?? 'sliders')
 const missing = computed(() => props.p.display === 'Missing')
 
 function accepts(e: DragEvent): boolean {
   const types = e.dataTransfer?.types ?? []
-  if (props.p.type === 'prefab') return types.includes('text/asset')
+  if (asset.value) return types.includes('text/asset')
   return types.includes('text/entity') || (props.p.type === 'component' && types.includes('text/component'))
 }
 
@@ -38,9 +41,9 @@ function drop(e: DragEvent) {
   if (props.p.locked) return
   const dt = e.dataTransfer
   if (!dt) return
-  if (props.p.type === 'prefab') {
+  if (asset.value) {
     const [k, ...rest] = dt.getData('text/asset').split(':')
-    if (k === 'prefab') emit('set', props.p.name, rest.join(':'))
+    if (k === props.p.type) emit('set', props.p.name, rest.join(':'))
     return
   }
   const comp = dt.getData('text/component')
@@ -55,9 +58,11 @@ function drop(e: DragEvent) {
 
 // pick lists what fits the slot, for when dragging is not handy.
 function pick(e: MouseEvent) {
-  const items: MenuItem[] = [{ label: 'None', icon: 'x', run: () => (props.p.type === 'prefab' ? emit('set', props.p.name, '') : emit('ref', props.p.name, 0, '')) }, { label: '-' }]
-  if (props.p.type === 'prefab') {
-    for (const p of store.kinds.prefabs) items.push({ label: p.replace(/^prefabs\//, '').replace('.prefab.json', ''), icon: 'package', run: () => emit('set', props.p.name, p) })
+  const items: MenuItem[] = [{ label: 'None', icon: 'x', run: () => (asset.value ? emit('set', props.p.name, '') : emit('ref', props.p.name, 0, '')) }, { label: '-' }]
+  if (asset.value) {
+    for (const a of store.assets.filter((x) => x.kind === props.p.type)) {
+      items.push({ label: a.path.split('/').pop()!.replace(/\.(prefab|material)\.json$/, ''), icon: icon.value, run: () => emit('set', props.p.name, a.guid || a.path) })
+    }
   } else {
     for (const n of allNodes()) {
       if (n.id === store.selected && props.p.type === 'object') continue

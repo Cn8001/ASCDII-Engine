@@ -6,8 +6,11 @@ import (
 	"os"
 	"testing"
 
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/color"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/geom"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/input"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/project"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/components"
 )
 
 func TestUnit_OpenStarterAndPreview(t *testing.T) {
@@ -21,6 +24,8 @@ func TestUnit_OpenStarterAndPreview(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	e.Scene().Add("crate", components.NewBox(geom.V3(8, 8, 8), color.RGB(176, 128, 80)))
+	e.Scene().Camera.Target = geom.V3(0, 0, 0)
 	var out bytes.Buffer
 
 	// Act
@@ -33,7 +38,7 @@ func TestUnit_OpenStarterAndPreview(t *testing.T) {
 			braille++
 		}
 	}
-	if err != nil || braille < 40 {
+	if err != nil || braille < 20 {
 		t.Fatalf("err %v braille %d\n%s", err, braille, out.String())
 	}
 }

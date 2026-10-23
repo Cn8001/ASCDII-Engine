@@ -17,14 +17,20 @@
 <a href="first-game.html">Your first game</a>
 <h4>Guides</h4>
 <a href="editor.html" class="on">The editor</a>
+<a href="gameobjects.html">GameObjects and components</a>
 <a href="scenes.html">Scenes and prefabs</a>
+<a href="assets.html">Assets and import</a>
+<a href="textures.html">Textures and materials</a>
+<a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
 <a href="scripting.html">Lua scripting</a>
 <a href="rendering.html">Rendering</a>
 <a href="building.html">Build and release</a>
 <h4>Reference</h4>
+<a href="lua-api.html">Lua API</a>
 <a href="cli.html">CLI reference</a>
 <a href="go-api.html">Go API</a>
+<a href="architecture.html">Architecture</a>
 </aside>
 <main>
 <div class="kicker">Guides</div>
@@ -33,14 +39,15 @@
 <figure><img src="img/editor-main.png" alt="Editor layout"></figure>
 
 <h2>Toolbar</h2>
-<p>Left: the logo, the project name and version, buttons to open another project or close this one and return to the start screen, and the scene picker. The key next to it marks the open scene as the one a build starts with. Center: <b>Play</b>, <b>Step</b> (one frame while paused) and <b>Stop</b>. Right: undo, redo, save (a dot means unsaved changes) and <b>Build</b>.</p>
+<p>Left: the logo, the project name and version, buttons to open another project or close this one and return to the start screen, and the scene picker. The key next to it marks the open scene as the one a build starts with. <b>GameObject</b> opens the menu that creates objects, see <a href="gameobjects.html">GameObjects and components</a>. Center: <b>Play</b>, <b>Step</b> (one frame while paused) and <b>Stop</b>. Right: undo, redo, save (a dot means unsaved changes) and <b>Build</b>.</p>
 
 <h2>Hierarchy</h2>
 <ul>
-<li>Every entity of the scene in a tree. Drag rows onto each other to parent them; drop on empty space to move to the root.</li>
-<li>Double click a name to rename. The eye hides an entity and its children.</li>
-<li>Right click for Add, Focus, Duplicate, Save prefab, Unpack and Delete.</li>
-<li>Prefab instances show a package icon in amber; their inner entities are listed in italics and cannot be edited directly.</li>
+<li>Every object of the scene in a tree. Drag rows onto each other to parent them; drop on empty space to move to the root.</li>
+<li>Double click a name to rename. The eye hides an object and its children.</li>
+<li>Right click for Create, Focus, Duplicate, Save prefab, Unpack and Delete. The + button opens the same Create menu.</li>
+<li>Drag rows onto object slots in the Inspector to fill references, and Project tiles or files from your file manager onto rows to add models, prefabs and scripts or to apply a material.</li>
+<li>Prefab instances show a package icon in amber; their inner objects are listed in italics.</li>
 <li>Select <b>Scene</b> at the top to edit the camera and the environment: time of day, sun, ambient light, sky and fog.</li>
 </ul>
 
@@ -54,21 +61,22 @@
 <tr><td>Select</td><td>Click</td></tr>
 <tr><td>Move on one axis</td><td>Drag the red (X), green (Y) or amber (height) arrow</td></tr>
 <tr><td>Move freely</td><td>Drag the square handle</td></tr>
-<tr><td>Place an asset</td><td>Drop a prefab or art tile from the Project window</td></tr>
+<tr><td>Place an asset</td><td>Drop a prefab, model or art tile from the Project window, or a file from your file manager</td></tr>
+<tr><td>Apply a material</td><td>Drop a material tile on an object</td></tr>
 </table>
 <p>The view always shows exactly what a terminal will show: the same Braille pattern and the same two colors in every cell. The toolbar only changes how those cells are drawn: <b>dots</b> draws the Braille dots with gaps, like a terminal font, and <b>pixels</b> draws the same dots without gaps, which is easier on the eyes but carries the same information. The toolbar also picks the cell size (smaller cells give more resolution) and toggles <b>Live</b>, which plays water, wind and animation clips while you edit; it starts off. The corner of the view shows the render and paint time of each frame.</p>
 
 <h2>Inspector</h2>
-<p>Components are cards: <b>Transform</b> first, then the node (box, light, hero and so on), then behaviours. Behaviours have a checkbox to switch them off without losing their settings, and an X to remove them. <b>Add Component</b> searches behaviours and your Lua scripts, and can create a new script on the spot.</p>
+<p>The header holds the name, visibility, tag and Solid. Below it come <b>Transform</b> and one card per component, each with a checkbox and a ⋮ menu for Reset, Move Up, Move Down and Remove. <b>Add Component</b> searches every component kind and your Lua scripts, and can create a new script on the spot. Slots for objects, components, prefabs, textures and materials take drops, as described in <a href="gameobjects.html#references">References</a>. Clicking a texture, material or model in the Project window shows its settings here instead.</p>
 <p>Number labels are scrub handles: drag them sideways, hold <kbd>Shift</kbd> for fine steps. The diamond at the end of a row records an animation key for that property.</p>
 
 <h2>Pipeline</h2>
 <p>The second tab on the right lists the render passes by stage with a toggle, live timings and their settings. Drag passes to reorder them inside their stage. <a href="rendering.html">Rendering</a> covers what each one does.</p>
 
 <h2>Project, Console and Animation</h2>
-<figure><img src="img/editor-project.png" alt="Project window"><figcaption>The Project window: folders on the left, tiles on the right. Drag tiles into the view or onto the Hierarchy.</figcaption></figure>
+
 <ul>
-<li><b>Project</b>: scenes, prefabs, art and scripts of the project folder. Double click opens a scene, places a prefab or sprite, or opens a script in your code editor. <b>Create</b> makes a script or a scene. Files you change outside the editor are picked up automatically.</li>
+<li><b>Project</b>: the project folder with its folders. Double click opens a scene, places a prefab, model or sprite, or opens a script in your code editor. Drop files from your file manager to import them. See <a href="assets.html">Assets and import</a>.</li>
 <li><b>Console</b>: messages from scripts and the engine. Filter by level, see repeats collapsed with a count, double click a script error to jump to the line.</li>
 <li><b>Animation</b>: clips and keys of the selection. It can float as its own window. See <a href="animation.html">Animation</a>.</li>
 </ul>
@@ -87,7 +95,7 @@
 <tr><td><kbd>Ctrl</kbd>+<kbd>B</kbd></td><td>Build</td></tr>
 </table>
 <div class="note"><b>Code editor</b>Scripts open in VS Code when the <code>code</code> command is available, otherwise in the system default program. Set <code>ASCDII_EDITOR</code> to use another one, for example <code>ASCDII_EDITOR="subl {file}:{line}"</code>.</div>
-<nav class="pager"><a class="prev" href="first-game.html"><small>Previous</small>Your first game</a><a class="next" href="scenes.html"><small>Next</small>Scenes and prefabs</a></nav>
+<nav class="pager"><a class="prev" href="first-game.html"><small>Previous</small>Your first game</a><a class="next" href="gameobjects.html"><small>Next</small>GameObjects and components</a></nav>
 </main>
 </div>
 </body>

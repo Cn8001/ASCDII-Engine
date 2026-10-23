@@ -131,3 +131,19 @@ func TestUnit_LoadAppliesMaterialsAndTextureColor(t *testing.T) {
 		t.Fatalf("files %v", files)
 	}
 }
+
+func TestUnit_TextureCoordinatesFollowCorners(t *testing.T) {
+	// Arrange
+	src := "v 0 0 0\nv 1 0 0\nv 1 1 0\nvt 0 0\nvt 1 0\nvt 1 1\nf 1/1 2/2 3/3\nf 1 2 3\n"
+
+	// Act
+	m, _, err := ParseOBJ(strings.NewReader(src), Options{})
+
+	// Assert
+	if err != nil || len(m.UV) != 3 || !m.Tris[0].HasUV() || m.Tris[1].HasUV() {
+		t.Fatalf("err %v tris %+v", err, m.Tris)
+	}
+	if m.UV[m.Tris[0].T[1]] != geom.V2(1, 1) {
+		t.Fatalf("winding swap lost the uv pairing: %+v", m.Tris[0])
+	}
+}

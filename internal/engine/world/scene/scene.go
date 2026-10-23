@@ -27,22 +27,24 @@ type Scene struct {
 	Clips   []anim.Clip
 	Time    float64
 	next    atomic.Uint64
-	fid     uint64 // highest FID handed out
+	newFIDs FIDSource
 	prefabs Prefabs
 }
 
 func New(name string) *Scene {
-	s := &Scene{Name: name, Camera: view.Default(), Env: light.DefaultEnv()}
+	s := &Scene{Name: name, Camera: view.Default(), Env: light.DefaultEnv(), newFIDs: RandomFIDs()}
 	s.Root = &GameObject{Name: "root", Visible: true, scene: s}
 	return s
 }
 
 func (s *Scene) UsePrefabs(p Prefabs) { s.prefabs = p }
 
+// UseFIDs replaces the random ids of new objects, for generated content.
+func (s *Scene) UseFIDs(f FIDSource) { s.newFIDs = f }
+
 func (s *Scene) newObject(name string, comps ...Component) *GameObject {
 	o := NewGameObject(name, comps...)
-	s.fid++
-	o.ID, o.FID, o.scene = s.next.Add(1), s.fid, s
+	o.ID, o.FID, o.scene = s.next.Add(1), s.newFID(nil), s
 	return o
 }
 

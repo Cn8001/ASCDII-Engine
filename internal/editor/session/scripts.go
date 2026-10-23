@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/asset"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/material"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/project"
 )
 
@@ -62,6 +63,11 @@ func (s *Session) RenameAsset(ctx context.Context, from, to string) (string, err
 	if !strings.Contains(to, "/") {
 		to = filepath.ToSlash(filepath.Join(filepath.Dir(from), to))
 	}
+	return s.move(ctx, from, to)
+}
+
+// move renames one asset with its .meta and every place that names its path.
+func (s *Session) move(ctx context.Context, from, to string) (string, error) {
 	if k, _ := asset.Classify(from); k != "" {
 		if want := assetExt(from); !strings.HasSuffix(to, want) {
 			to += want
@@ -85,7 +91,7 @@ func (s *Session) RenameAsset(ctx context.Context, from, to string) (string, err
 }
 
 func assetExt(p string) string {
-	for _, ext := range []string{asset.PrefabExt, asset.SceneExt, asset.ScriptExt, ".xp", ".json"} {
+	for _, ext := range []string{asset.PrefabExt, asset.SceneExt, material.Ext, asset.ScriptExt, ".xp", ".json"} {
 		if strings.HasSuffix(strings.ToLower(p), ext) {
 			return ext
 		}

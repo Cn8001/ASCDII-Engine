@@ -17,26 +17,35 @@
 <a href="first-game.html">Your first game</a>
 <h4>Guides</h4>
 <a href="editor.html">The editor</a>
+<a href="gameobjects.html">GameObjects and components</a>
 <a href="scenes.html" class="on">Scenes and prefabs</a>
+<a href="assets.html">Assets and import</a>
+<a href="textures.html">Textures and materials</a>
+<a href="models.html">Models</a>
 <a href="animation.html">Animation</a>
 <a href="scripting.html">Lua scripting</a>
 <a href="rendering.html">Rendering</a>
 <a href="building.html">Build and release</a>
 <h4>Reference</h4>
+<a href="lua-api.html">Lua API</a>
 <a href="cli.html">CLI reference</a>
 <a href="go-api.html">Go API</a>
+<a href="architecture.html">Architecture</a>
 </aside>
 <main>
 <div class="kicker">Guides</div>
 <h1>Scenes and prefabs</h1>
-<p class="lead">How a world is put together: projects, scenes, entities with one node and any number of behaviours, prefabs, and the single unit everything is measured in.</p>
+<p class="lead">How a world is put together: projects, scenes, prefabs and overrides, and the single unit everything is measured in. Objects and their components have their own page, <a href="gameobjects.html">GameObjects and components</a>.</p>
 <h2>The project folder</h2>
 <pre><code>MyGame/
   MyGame.ascdiiproj       <span class="c">manifest</span>
-  scenes/*.scene.json     <span class="c">entity trees, camera, environment, clips</span>
-  prefabs/*.prefab.json   <span class="c">reusable entity trees</span>
+  scenes/*.scene.json     <span class="c">object trees, camera, environment, clips</span>
+  prefabs/*.prefab.json   <span class="c">reusable object trees</span>
+  models/*.obj            <span class="c">models, with their .mtl files</span>
+  textures/*.png          <span class="c">pictures for materials</span>
+  materials/*.material.json
   art/*.json, *.xp        <span class="c">glyph art: palette JSON or REXPaint</span>
-  scripts/*.lua           <span class="c">behaviours in Lua</span>
+  scripts/*.lua           <span class="c">scripts in Lua</span>
   **/*.meta               <span class="c">one per asset: its permanent id</span>
   build/                  <span class="c">output, ignored by git</span></code></pre>
 
@@ -46,7 +55,7 @@
   "format": 1,
   "guid": "019a0f3e-7c41-7b2a-9d55-3f1c8e2a9b40"
 }</code></pre>
-<p>Scenes refer to prefabs, scripts and art by this id, never by path. Rename or move an asset in the Project window (right click, <b>Rename</b>) and the <code>.meta</code> goes with it, so nothing that uses it breaks. Commit the <code>.meta</code> files together with their assets; when you move files with git or a file manager, move the <code>.meta</code> too.</p>
+<p>Scenes refer to prefabs, scripts, models, materials and art by this id, never by path. Rename or move an asset in the Project window (right click, <b>Rename</b>) and the <code>.meta</code> goes with it, so nothing that uses it breaks. Commit the <code>.meta</code> files together with their assets; when you move files with git or a file manager, move the <code>.meta</code> too.</p>
 <div class="note"><b>Older projects</b>Opening a project without <code>.meta</code> files creates them and rewrites path references in the scene to ids. The Console reports how many changed; save to keep the result.</div>
 <p>The manifest is short and readable:</p>
 <pre><code>{
@@ -58,39 +67,19 @@
   "cols": 160, "rows": 50, "fps": 30,
   "packs": ["dragonfall"]
 }</code></pre>
-<p><code>packs</code> lists compiled content packs the project needs; the sample uses the Dragonfall pack for its terrain, castle, dragon and knight. Projects that only use built in nodes leave it out.</p>
-
-<h2>Entities</h2>
-<p>An entity has a name, a transform (position, scale, flip), at most one <b>node</b> that draws it and any number of <b>behaviours</b> that give it logic. Children inherit their parent's transform.</p>
-<table>
-<tr><th>Built in nodes</th><th>What they are</th></tr>
-<tr><td><code>box</code>, <code>cylinder</code>, <code>cone</code>, <code>blob</code></td><td>Lit solids. Blobs are spheres shaded per dot.</td></tr>
-<tr><td><code>ground</code>, <code>water</code></td><td>Flat terrain patches; water gets animated glints.</td></tr>
-<tr><td><code>light</code></td><td>A point light with radius, color and flicker.</td></tr>
-<tr><td><code>emitter</code></td><td>Particles: embers, fire, sparks. Deterministic, so they scrub with time.</td></tr>
-<tr><td><code>label</code></td><td>Text in the world or pinned to a screen corner, for HUDs.</td></tr>
-<tr><td><code>sprite</code></td><td>Glyph art from the <code>art/</code> folder.</td></tr>
-</table>
-<table>
-<tr><th>Built in behaviours</th><th>What they do</th></tr>
-<tr><td><code>player</code></td><td>Walk with WASD or arrows, jump, slide along walls, camera follow.</td></tr>
-<tr><td><code>toggle</code></td><td>Flip a bool property on a key, on itself or on another entity.</td></tr>
-<tr><td><code>daynight</code></td><td>Run the clock to the other phase on a key, so night falls with a sunset.</td></tr>
-<tr><td><code>quit</code></td><td>Leave the game on a key.</td></tr>
-<tr><td><code>script</code></td><td>Run a Lua file. See <a href="scripting.html">Lua scripting</a>.</td></tr>
-</table>
+<p><code>packs</code> lists compiled content packs the project needs; the sample uses the Dragonfall pack for its terrain, castle, dragon and knight. Projects that only use built in components leave it out.</p>
 
 <h2>World units</h2>
 <p>Everything is measured in world units, where one unit is one tile of ground. A knight is about 4 units tall, a castle wall 8, a tower with its roof about 20. You never type dots, cells or depth values: the camera projects positions, and depth comes from the projection. That is also why objects never sink into each other by accident.</p>
-<div class="tip"><b>Collision uses the same shape you see</b>Mark an entity <code>solid</code> and players cannot walk through it. The blocking area is the entity's own bounds, so what you see is what you bump into. Complex nodes such as the castle block with their walls and towers, not their bounding box.</div>
+<div class="tip"><b>Collision uses the same shape you see</b>Mark an object <b>Solid</b> and players cannot walk through it. The blocking area is the object's own bounds, so what you see is what you bump into. Complex components such as the castle block with their walls and towers, not their bounding box.</div>
 
 <h2>Prefabs</h2>
 <ol class="steps">
 <li>Build something once, for example a lantern: a post, a flame emitter and a light as children.</li>
-<li>Right click its root in the Hierarchy and choose <b>Save prefab</b>, then give it a name. The entity becomes an instance of <code>prefabs/&lt;name&gt;.prefab.json</code>.</li>
+<li>Right click its root in the Hierarchy and choose <b>Save prefab</b>, then give it a name. The object becomes an instance of <code>prefabs/&lt;name&gt;.prefab.json</code>.</li>
 <li>Place more of them by dragging the prefab from the Project window into the view or onto the Hierarchy.</li>
 <li>Edit the prefab file (or save a changed copy over it) and every instance updates.</li>
-<li>Need a one off variation? Right click an instance and <b>Unpack</b> it into ordinary entities.</li>
+<li>Need a one off variation? Right click an instance and <b>Unpack</b> it into ordinary objects.</li>
 </ol>
 <p>An instance stores its own name, transform and visibility, the prefab id, and a list of <b>overrides</b>; everything else comes from the prefab. That keeps scene files small and diffs readable.</p>
 
@@ -106,14 +95,14 @@
   "pos": [100, 76.3, 0],
   "prefab": "01a160e8-5000-7dc8-8295-00ff6a1eb491",
   "overrides": [
-    { "path": "glow", "prop": "radius", "value": 18 },
-    { "path": "glow", "prop": "color", "value": "#ff8844" }
+    { "path": "glow", "prop": "light.radius", "value": 18 },
+    { "path": "glow", "prop": "light.color", "value": "#ff8844" }
   ]
 }</code></pre>
 
 <h2>Scenes</h2>
 <p>A project can have many scenes. Use the scene picker in the toolbar or double click a scene in the Project window to open one, and the key button to make the open scene the one a build starts with. New scenes start with a small ground, a crate, a pillar, a player and a lamp.</p>
-<nav class="pager"><a class="prev" href="editor.html"><small>Previous</small>The editor</a><a class="next" href="animation.html"><small>Next</small>Animation</a></nav>
+<nav class="pager"><a class="prev" href="gameobjects.html"><small>Previous</small>GameObjects and components</a><a class="next" href="assets.html"><small>Next</small>Assets and import</a></nav>
 </main>
 </div>
 </body>

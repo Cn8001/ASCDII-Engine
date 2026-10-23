@@ -7,7 +7,7 @@ import Logo from './Logo.vue'
 
 const name = ref('My Game')
 const parent = ref('')
-const template = ref('dragonfall')
+const template = ref('empty')
 const templates = computed(() => store.info?.templates ?? ['empty'])
 
 onMounted(async () => {

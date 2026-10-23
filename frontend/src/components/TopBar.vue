@@ -100,6 +100,7 @@ defineExpose({ save, undo, redo, play, stop })
     </div>
 
     <div class="flex items-center gap-1">
+      <button class="icon-btn" title="New project  Ctrl+N" @click="store.newProject = true"><Icon name="plus" :size="15" /></button>
       <button class="icon-btn" title="Open project" @click="openProject"><Icon name="open" :size="15" /></button>
       <button class="icon-btn" title="Close project" @click="closeProject"><Icon name="x" :size="15" /></button>
       <select class="h-7 max-w-56 rounded-md bg-ink-800 px-2 text-[12px] text-ink-200 outline-none ring-1 ring-ink-700" :value="store.info?.scene" @change="openScene(($event.target as HTMLSelectElement).value)">

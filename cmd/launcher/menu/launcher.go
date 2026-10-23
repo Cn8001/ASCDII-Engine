@@ -192,7 +192,7 @@ func (l *launcher) choose(ctx context.Context, kind int, it Item) (func(context.
 		l.push(newDir, &Menu{Title: "NEW PROJECT  location", Prompt: true, Text: filepath.Join(home, "ascdii", project.FileName(it.Value))})
 	case newDir:
 		l.draft.dir = expand(it.Value)
-		items := []Item{{Label: "Dragonfall", Hint: "sample valley", Value: "dragonfall"}, {Label: "Empty", Hint: "starter scene", Value: "empty"}}
+		items := []Item{{Label: "Empty", Hint: "nothing yet", Value: "empty"}, {Label: "Dragonfall", Hint: "sample valley", Value: "dragonfall"}}
 		l.push(newTemplate, &Menu{Title: "NEW PROJECT  template", Items: items})
 	case newTemplate:
 		manifest, err := project.Create(ctx, l.draft.dir, l.draft.name, l.d.Templates[it.Value])
