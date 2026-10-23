@@ -16,6 +16,7 @@ import (
 const (
 	Env    = "ASCDII_LAUNCHER" // set by ascdii on the editor it starts, to its own path
 	Editor = "ascdii-editor"
+	Player = "ascdii-player"
 	CLI    = "ascdii"
 )
 
@@ -59,8 +60,8 @@ func StartEditor(ctx context.Context, editor, manifest string) error {
 	return cmd.Process.Release()
 }
 
-// Relaunch starts ascdii, which starts the editor again with the launcher's
-// mark, for an editor that was opened directly.
+// Relaunch starts ascdii, which starts the editor again with its mark, for
+// an editor that was opened directly.
 func Relaunch(ctx context.Context, cli string) error {
 	cmd := exec.CommandContext(context.WithoutCancel(ctx), cli)
 	if err := cmd.Start(); err != nil {

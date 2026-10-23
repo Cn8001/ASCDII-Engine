@@ -7,3 +7,4 @@
 *.out
 /dragonfall
 /hello
+/cmd/*/rsrc_windows_*.syso

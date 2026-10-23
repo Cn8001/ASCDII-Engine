@@ -63,7 +63,7 @@ build/windows/Dragonfall/
 <p>A single file build is the player with the compiled project appended, together with a <code>.sha256</code> file.</p>
 
 <h2>Players</h2>
-<p>The player is the <code>ascdii</code> program itself: started with game data, it plays the game. The editor takes the player for its own platform from the <code>ascdii</code> next to it, and the player for another platform from a file named <code>ascdii-&lt;os&gt;-&lt;arch&gt;</code> in the same folder, for example <code>ascdii-windows-amd64.exe</code> next to a Linux editor. An installation contains only the player of its own platform. To build for the other platform, copy the <code>ascdii</code> program of that platform into the editor folder under this name: <code>ascdii-windows-amd64.exe</code> next to a Linux editor, <code>ascdii-linux-amd64</code> next to a Windows editor. Platforms without a player cannot be selected in the build dialog.</p>
+<p>The player is the <code>ascdii-player</code> program, renamed to the game: started with game data, it plays the game. The editor takes the player for its own platform from the <code>ascdii-player</code> next to it. An installation contains only the player of its own platform. To build for the other platform, copy the <code>ascdii-player</code> of that platform into the editor folder under this name: <code>ascdii-player-windows-amd64.exe</code> next to a Linux editor, <code>ascdii-player-linux-amd64</code> next to a Windows editor. Platforms without a player cannot be selected in the build dialog.</p>
 
 <h2>game.pak</h2>
 <ul>
@@ -79,7 +79,7 @@ ascdii build ~/games/quest
 <span class="c"># one executable</span>
 ascdii build ~/games/quest -single
 <span class="c"># another platform, with that platform's player</span>
-ascdii build ~/games/quest -player bin/windows/ascdii.exe -out build/Quest-win</code></pre>
+ascdii build ~/games/quest -player bin/windows/ascdii-player.exe -out build/Quest-win</code></pre>
 
 <h2>Running a build</h2>
 <pre><code>./Quest/Quest                         <span class="c"># Linux</span>

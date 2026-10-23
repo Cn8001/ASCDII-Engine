@@ -57,10 +57,13 @@
   platform/  the backend contract, terminal, headless, speaker (sound output)
   runtime/   app, loop, bundle, project (manifest, modules), pack (packages), version
 internal/editor/   session, service (the Wails boundary), launch (how ascdii starts the editor),
-                   players (finds the ascdii binaries builds start from), recent, brand
+                   players (finds the ascdii-player binaries builds start from), recent,
+                   brand (the program icons)
+internal/player/   plays a game in the terminal, for ascdii-player and ascdii run
 internal/dragonfall/  the sample: a code module and a package
-cmd/      ascdii (CLI and player; starts the editor), editor (Wails), snapshot (PNG renders),
-          docref (component reference for the docs), brand (icons), hello
+cmd/      ascdii (CLI; starts the editor), editor (Wails), player (ascdii-player),
+          snapshot (PNG renders), docref (component reference for the docs),
+          brand (icons and Windows resources), hello
 docs/     usage (these pages), nav.py (rewrites their navigation)</code></pre>
 <p>Dependencies point one way: <code>core</code> ← <code>render</code> ← <code>world</code> ← <code>script</code>; <code>assets</code> uses core, render and world types, and <code>runtime</code> combines them. The editor and content modules depend on the engine; the engine never depends on them. No package keeps state: registries, libraries and VMs are created at startup and passed in.</p>
 

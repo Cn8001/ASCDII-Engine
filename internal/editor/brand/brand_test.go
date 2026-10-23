@@ -22,3 +22,20 @@ func TestUnit_IconHasTransparentCornersAndAmberDots(t *testing.T) {
 		t.Fatalf("unlit dot %+v", off)
 	}
 }
+
+func TestUnit_ProgramsHaveDistinctBadges(t *testing.T) {
+	// Arrange
+	size := 128
+	seen := map[[3]uint8]Program{}
+
+	// Act
+	for _, p := range Programs() {
+		c := Draw(p, size).RGBAAt(int(.77*float64(size)), int(.62*float64(size)))
+		seen[[3]uint8{c.R, c.G, c.B}] = p
+	}
+
+	// Assert
+	if len(seen) != len(Programs()) {
+		t.Fatalf("badges share colors: %v", seen)
+	}
+}
