@@ -61,7 +61,7 @@ func writeRepoFiles(ctx context.Context, dir, name string) error {
 		return err
 	}
 	readme := "# " + name + "\n\nAn ASCDII Engine game. Open the `" + Ext + "` file in the editor, or:\n\n" +
-		"```bash\nascdii run .\nascdii release .\n```\n"
+		"```bash\nascdii run .\nascdii build .\n```\n"
 	return writeFile(ctx, filepath.Join(dir, "README.md"), []byte(readme))
 }
 

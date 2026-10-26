@@ -64,13 +64,17 @@ func Default() Source {
 
 // names are the files that can be the player for a target. <os>/ is the
 // layout of bin/ in the source tree, which ASCDII_PLAYERS points wails dev at.
+// The plain name serves the editor's own platform, and the other one too when
+// only the .exe tells the two apart, so a copied ascdii-player.exe works
+// next to a Linux editor without renaming.
 func names(player, goos, arch string) []string {
 	own := player
 	if goos == "windows" {
 		own += ".exe"
 	}
 	out := []string{Name(player, goos, arch), goos + "/" + own}
-	if goos == runtime.GOOS && arch == runtime.GOARCH {
+	native := goos == runtime.GOOS && arch == runtime.GOARCH
+	if native || (goos == "windows") != (runtime.GOOS == "windows") {
 		out = append(out, own)
 	}
 	return out
