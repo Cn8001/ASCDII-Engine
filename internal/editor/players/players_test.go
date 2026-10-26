@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io/fs"
 	"os"
+	"runtime"
 	"testing"
 	"testing/fstest"
 
@@ -55,6 +56,27 @@ func TestUnit_SourceTreeLayoutServesBothPlatforms(t *testing.T) {
 
 	// Assert
 	if len(got) != 2 {
+		t.Fatalf("available %v", got)
+	}
+}
+
+func TestUnit_CopiedPlayerOfOtherPlatformNeedsNoRename(t *testing.T) {
+	// Arrange
+	other, file := "windows", "ascdii-player.exe"
+	if runtime.GOOS == "windows" {
+		other, file = "linux", "ascdii-player"
+	}
+	s := Source{Dirs: []fs.FS{fstest.MapFS{file: {Data: []byte("other")}}}}
+
+	// Act
+	path, err := s.Extract(context.Background(), launch.Player, other, "amd64", t.TempDir())
+	b, errRead := os.ReadFile(path)
+
+	// Assert
+	if err != nil || errRead != nil || string(b) != "other" {
+		t.Fatalf("got %q %v %v", b, err, errRead)
+	}
+	if got := s.Available(); len(got) != 1 || got[0] != other {
 		t.Fatalf("available %v", got)
 	}
 }
