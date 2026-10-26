@@ -249,19 +249,27 @@ func (s *Scene) ApplyClips() error {
 
 // Instantiate fills prefab instances from their source, replacing any
 // previously inherited content so edits to a prefab propagate.
-func (s *Scene) Instantiate() error {
+func (s *Scene) Instantiate() error { return s.instantiate(s.Root) }
+
+// instantiate fills the instances at or below top only, so adding an object
+// leaves the runtime state of every other instance alone.
+func (s *Scene) instantiate(top *GameObject) error {
 	if s.prefabs == nil {
 		return nil
 	}
 	var errs []error
 	var instances []*GameObject
-	s.Walk(func(e *GameObject, _ bool) bool {
+	var collect func(e *GameObject)
+	collect = func(e *GameObject) {
 		if e.Prefab != "" && !e.inherited {
 			instances = append(instances, e)
-			return false
+			return
 		}
-		return true
-	})
+		for _, c := range e.Children {
+			collect(c)
+		}
+	}
+	collect(top)
 	for _, e := range instances {
 		src, err := s.prefabs.Prefab(e.Prefab)
 		if err != nil {
@@ -335,7 +343,7 @@ func (s *Scene) Graft(parent *GameObject, e *GameObject, index int) (*GameObject
 	s.adopt(e, false)
 	s.number(e, taken)
 	parent.attach(e, index)
-	return e, s.Instantiate()
+	return e, s.instantiate(e)
 }
 
 // Preview advances time for editor playback: clips and node tickers run, but
@@ -373,9 +381,30 @@ func (s *Scene) TweenTo(target *GameObject, name string, to any, seconds float64
 	return nil
 }
 
+// Instance makes a detached instance of prefab for Graft. It starts with the
+// prefab root's own settings, which an instance keeps as its own from then on
+// and Instantiate therefore never copies.
+func (s *Scene) Instance(prefab string) (*GameObject, error) {
+	e := NewGameObject("")
+	e.Prefab = prefab
+	if s.prefabs == nil {
+		return e, nil
+	}
+	src, err := s.prefabs.Prefab(prefab)
+	if err != nil {
+		return nil, fmt.Errorf("instance %s: %w", prefab, err)
+	}
+	e.Visible, e.Solid = src.Visible, src.Solid
+	e.Local.Rot, e.Local.Scale, e.Local.Flip = src.Local.Rot, src.Local.Scale, src.Local.Flip
+	return e, nil
+}
+
 // Spawn instantiates a prefab at a world position under the root.
 func (s *Scene) Spawn(prefab string, pos geom.Vec3) (*GameObject, error) {
-	e := NewGameObject("", nil)
-	e.Prefab, e.Local.Pos = prefab, pos
+	e, err := s.Instance(prefab)
+	if err != nil {
+		return nil, err
+	}
+	e.Local.Pos = pos
 	return s.Graft(nil, e, -1)
 }

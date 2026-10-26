@@ -24,7 +24,7 @@ watchEffect(() => {
 
 <template>
   <Transition leave-active-class="transition duration-500" leave-to-class="opacity-0 scale-[1.02]">
-    <SplashScreen v-if="splash" :version="store.info?.engine ?? '0.0.1'" @done="splash = false" />
+    <SplashScreen v-if="splash" :version="store.info?.engine ?? '0.0.2'" @done="splash = false" />
   </Transition>
   <template v-if="!splash">
     <EditorLayout v-if="store.info?.open" />

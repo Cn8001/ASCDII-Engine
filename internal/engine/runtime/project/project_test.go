@@ -11,6 +11,7 @@ import (
 
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/assets/asset"
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/guid"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/version"
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/script/vm"
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/world/scene"
 )
@@ -28,7 +29,7 @@ func TestUnit_CreateThenOpenStarter(t *testing.T) {
 	if err != nil || errOpen != nil {
 		t.Fatal(err, errOpen)
 	}
-	if p.File != "My-Game.ascdiiproj" || file == "" || p.Manifest.Version != "0.0.1" || p.Manifest.Engine != "0.0.1" {
+	if p.File != "My-Game.ascdiiproj" || file == "" || p.Manifest.Version != "0.0.1" || p.Manifest.Engine != version.Engine {
 		t.Fatalf("file %s manifest %+v", p.File, p.Manifest)
 	}
 	if b, err := os.ReadFile(dir + "/.gitignore"); err != nil || string(b) != "build/\n" {

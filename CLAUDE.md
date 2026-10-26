@@ -81,6 +81,9 @@ at the feet) scaled by `Sprite.Scale` world units per pixel.
   docs/usage/components.html` (and `docs/usage/dragonfall.html dragonfall`)
   regenerates the component reference. Every component property needs a
   description in `cmd/docref/notes.go`.
+- `docs/internals/*.md` is the engine developer reference (packages, types,
+  functions, flows, decisions, debugging notes); `python3
+  docs/internals/build.py` regenerates its `.html` pages and search index.
 - `make hello`, `make dragonfall` run the terminal examples.
 - `make all` builds `bin/linux` and `bin/windows`, each a complete install
   of that platform only (ascdii, ascdii-editor, ascdii-player) that runs

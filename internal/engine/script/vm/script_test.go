@@ -78,6 +78,19 @@ func TestUnit_ErrorsAreLoggedWithLineAndStopScript(t *testing.T) {
 	}
 }
 
+func TestUnit_PrintGoesToTheLog(t *testing.T) {
+	// Arrange
+	s, _, _, l, c := setup(t, `function update(self) print("hp", 3) end`)
+
+	// Act
+	_ = s.Update(c, .1, nil)
+
+	// Assert
+	if len(l.lines) != 1 || l.lines[0] != "info scripts/door.lua hp 3" {
+		t.Fatalf("logs %v", l.lines)
+	}
+}
+
 func TestUnit_SourceChangeReloads(t *testing.T) {
 	// Arrange
 	s, d, lib, l, c := setup(t, "function update(self) self:moveTo(1, 1) end")

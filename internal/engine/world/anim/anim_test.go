@@ -1,6 +1,7 @@
 package anim
 
 import (
+	"errors"
 	"math"
 	"testing"
 
@@ -143,5 +144,22 @@ func TestUnit_MoveKeyRetimesAndKeepsValue(t *testing.T) {
 	}
 	if c.MoveKey("pos.x", 9, 1) {
 		t.Fatal("moved a missing key")
+	}
+}
+
+func TestUnit_ApplySkipsMissingPropertyAndReportsIt(t *testing.T) {
+	// Arrange
+	tg := &target{}
+	c := Clip{Name: "walk", Mode: Once, Tracks: []Track{
+		{Prop: "wing", Keys: []Key{{T: 0, V: 0.0}, {T: 1, V: 1.0}}},
+		{Prop: "pos.x", Keys: []Key{{T: 0, V: 0.0}, {T: 1, V: 4.0}}},
+	}}
+
+	// Act
+	err := c.Apply(1, tg)
+
+	// Assert
+	if !errors.Is(err, prop.ErrUnknownProp) || tg.pos.X != 4 {
+		t.Fatalf("err %v pos %+v", err, tg.pos)
 	}
 }

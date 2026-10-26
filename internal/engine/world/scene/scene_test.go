@@ -395,6 +395,55 @@ func instanceScene(t *testing.T) (*Scene, *GameObject) {
 	return s, inst
 }
 
+func TestUnit_SpawnLeavesOtherInstancesAlone(t *testing.T) {
+	// Arrange
+	s, inst := instanceScene(t)
+	flag, body := inst.Children[0], inst.Component("crate")
+
+	// Act
+	_, err := s.Spawn("tower", geom.V3(5, 5, 0))
+
+	// Assert
+	if err != nil || inst.Children[0] != flag || flag.Parent() != inst || inst.Component("crate") != body {
+		t.Fatalf("err %v: existing instance was rebuilt", err)
+	}
+}
+
+func TestUnit_SpawnTakesPrefabRootSettings(t *testing.T) {
+	// Arrange
+	src := New("src")
+	lamp := src.Add("lamp", newCrate()).Blocking()
+	lamp.Visible, lamp.Local.Rot, lamp.Local.Scale, lamp.Local.Flip = false, geom.V3(0, 0, 90), geom.V3(2, 2, 2), true
+	var pf bytes.Buffer
+	if err := EncodePrefab(&pf, lamp); err != nil {
+		t.Fatal(err)
+	}
+	s := New("level")
+	s.UsePrefabs(prefabMap{"lamp": pf.Bytes()})
+
+	// Act
+	got, err := s.Spawn("lamp", geom.V3(3, 4, 0))
+
+	// Assert
+	if err != nil || !got.Solid || got.Visible || got.Local.Rot != lamp.Local.Rot || got.Local.Scale != lamp.Local.Scale || !got.Local.Flip || got.Local.Pos != geom.V3(3, 4, 0) {
+		t.Fatalf("err %v instance %+v", err, got)
+	}
+}
+
+func TestUnit_SpawnUnknownPrefabAddsNothing(t *testing.T) {
+	// Arrange
+	s := New("level")
+	s.UsePrefabs(prefabMap{})
+
+	// Act
+	_, err := s.Spawn("missing", geom.Vec3{})
+
+	// Assert
+	if err == nil || len(s.Root.Children) != 0 {
+		t.Fatalf("err %v children %d", err, len(s.Root.Children))
+	}
+}
+
 func TestUnit_InstanceTakesPrefabNameWhenUnnamed(t *testing.T) {
 	// Arrange
 	_, inst := instanceScene(t)

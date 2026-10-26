@@ -449,6 +449,45 @@ func TestUnit_StepAdvancesPausedGame(t *testing.T) {
 	}
 }
 
+func TestUnit_StopDropsPendingStep(t *testing.T) {
+	// Arrange
+	s, _, _ := newSession(t, "")
+	_ = s.Play()
+	s.Pause()
+	s.Step()
+
+	// Act
+	s.Stop()
+	_, err := s.Tick(.1)
+
+	// Assert
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if err != nil || s.play != nil || s.step != 0 {
+		t.Fatalf("err %v play %v step %f", err, s.play, s.step)
+	}
+}
+
+func TestUnit_OpenSceneDuringPlayStopsSounds(t *testing.T) {
+	// Arrange
+	s, rec, _ := newSession(t, "")
+	_ = s.Play()
+	s.mu.Lock()
+	path := s.scenePath
+	s.mu.Unlock()
+	before := rec.count("audio")
+
+	// Act
+	err := s.OpenScene(context.Background(), path)
+
+	// Assert
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if err != nil || s.play != nil || rec.count("audio") != before+1 {
+		t.Fatalf("err %v play %v audio events %d -> %d", err, s.play, before, rec.count("audio"))
+	}
+}
+
 func TestUnit_CloseProjectReturnsToStart(t *testing.T) {
 	// Arrange
 	s, _, _ := newSession(t, "")

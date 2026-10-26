@@ -219,7 +219,10 @@ func (s *Session) migrate(ctx context.Context, metas int) {
 }
 
 func (s *Session) load(sc *scene.Scene, path string) {
-	s.edit, s.play, s.scenePath, s.cam = sc, nil, path, startView(sc)
+	if s.play != nil {
+		s.stop() // silences the run's sounds, which the web view would keep playing
+	}
+	s.edit, s.play, s.step, s.scenePath, s.cam = sc, nil, 0, path, startView(sc)
 	s.mode, s.sel, s.unsaved, s.keys = Edit, 0, false, nil
 	s.hist = history{}
 	s.active = -1

@@ -1,4 +1,4 @@
-# ASCDII Engine 0.0.1
+# ASCDII Engine 0.0.2
 
 A 2.5D game engine that draws into Unicode Braille. Every terminal cell holds
 2x4 depth tested, lit subpixels that are reduced to one foreground and one
