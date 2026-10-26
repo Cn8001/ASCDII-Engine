@@ -17,7 +17,7 @@ else
 LDKEY := -X gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/bundle.pakSecret=$(ASCDII_PAK_SECRET)
 endif
 
-.PHONY: all test bench template brand cli hello dragonfall editor-dev editor-linux editor-windows dist clean
+.PHONY: all version test bench template brand cli hello dragonfall editor-dev editor-linux editor-windows dist clean
 
 test:
 	go vet ./...
@@ -28,6 +28,13 @@ bench:
 
 template:
 	go run ./internal/dragonfall/gen
+
+# The engine version is set only in internal/engine/runtime/version/version.go.
+# This copies it to what cannot read Go: wails.json and the Windows resources
+# (brand), the template manifest and the docs. The frontend reads it itself.
+version: brand
+	python3 docs/nav.py
+	@if [ -f docs/internals/build.py ]; then python3 docs/internals/build.py; fi
 
 brand:
 	go run ./cmd/brand
@@ -40,7 +47,7 @@ LINUX   := $(BIN)/linux
 WINDOWS := $(BIN)/windows
 GOREL   := go build -trimpath -ldflags "-s -w $(LDKEY)"
 
-all: cli editor-linux editor-windows
+all: version cli editor-linux editor-windows
 
 # brand also writes the Windows icon resources go build links in.
 # Build lines stay quiet: printed, they would put the key into logs.

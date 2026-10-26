@@ -9,6 +9,8 @@ import StartScreen from './components/StartScreen.vue'
 import Toasts from './components/Toasts.vue'
 import PromptDialog from './components/PromptDialog.vue'
 
+const engine = __ENGINE_VERSION__
+
 const splash = ref(true)
 
 onMounted(refreshInfo)
@@ -24,7 +26,7 @@ watchEffect(() => {
 
 <template>
   <Transition leave-active-class="transition duration-500" leave-to-class="opacity-0 scale-[1.02]">
-    <SplashScreen v-if="splash" :version="store.info?.engine ?? '0.0.2'" @done="splash = false" />
+    <SplashScreen v-if="splash" :version="store.info?.engine ?? engine" @done="splash = false" />
   </Transition>
   <template v-if="!splash">
     <EditorLayout v-if="store.info?.open" />

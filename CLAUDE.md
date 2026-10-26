@@ -84,6 +84,11 @@ at the feet) scaled by `Sprite.Scale` world units per pixel.
 - `docs/internals/*.md` is the engine developer reference (packages, types,
   functions, flows, decisions, debugging notes); `python3
   docs/internals/build.py` regenerates its `.html` pages and search index.
+- The engine version is set only in `internal/engine/runtime/version/version.go`.
+  `make version` (part of `make all`) copies it into `cmd/editor/wails.json`, the
+  Windows resources, the Dragonfall template and the docs; the frontend reads it
+  at build time. Never write the version anywhere else; in docs/usage pages wrap
+  it in `<span class="version">`, which `docs/nav.py` fills in.
 - `make hello`, `make dragonfall` run the terminal examples.
 - `make all` builds `bin/linux` and `bin/windows`, each a complete install
   of that platform only (ascdii, ascdii-editor, ascdii-player) that runs
