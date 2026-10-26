@@ -1,6 +1,7 @@
 // Command brand writes the icons of every program: the editor's PNG and ICO
 // that Wails builds from, and a Windows resource object for each Go program,
-// which go build links into its executable.
+// which go build links into its executable. It also copies the engine version
+// into wails.json, which Wails reads and Go cannot.
 package main
 
 import (
@@ -10,6 +11,7 @@ import (
 	"image/png"
 	"os"
 	"path/filepath"
+	"regexp"
 
 	"github.com/tc-hib/winres"
 	"github.com/tc-hib/winres/version"
@@ -50,6 +52,27 @@ func run(ctx context.Context) error {
 		if err := writeSyso(ctx, p.mark, p.dir, p.desc); err != nil {
 			return err
 		}
+	}
+	return writeWailsVersion(ctx, "cmd/editor/wails.json")
+}
+
+var productVersion = regexp.MustCompile(`("productVersion":\s*")[^"]*(")`)
+
+// writeWailsVersion edits the one field in place, so the file keeps its layout.
+func writeWailsVersion(ctx context.Context, path string) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return fmt.Errorf("brand version: %w", err)
+	}
+	out := productVersion.ReplaceAll(b, []byte("${1}"+ver.Engine+"${2}"))
+	if string(out) == string(b) {
+		return nil
+	}
+	if err := os.WriteFile(path, out, 0o644); err != nil {
+		return fmt.Errorf("brand version: %w", err)
 	}
 	return nil
 }

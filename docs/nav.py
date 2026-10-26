@@ -1,8 +1,11 @@
 """Rewrites the shared frame of every page in docs/usage: head, sidebar and
 pager, from the nav list below. Page content between <main> and the pager is
-kept. Run it after adding, renaming or reordering a page."""
+kept, except that every <span class="version"> is set to the engine version
+from internal/engine/runtime/version/version.go. Run it after adding,
+renaming or reordering a page, and after changing the version."""
 import re, os, sys
 D = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'usage')
+VERSION = re.search(r'Engine = "([^"]+)"', open(os.path.join(D, '..', '..', 'internal/engine/runtime/version/version.go')).read()).group(1)
 nav = [
   ('Start', [('index.html','Welcome'),('install.html','Install'),('first-game.html','Your first game')]),
   ('Guides', [('editor.html','The editor'),('gameobjects.html','GameObjects and components'),('scenes.html','Scenes and prefabs'),
@@ -15,7 +18,7 @@ section = {f: s for s, ps in nav for f, _ in ps}
 titles = dict(order)
 
 def aside(cur):
-    out = ['<aside class="side">','<a class="brand" href="index.html"><img src="img/logo.svg" alt=""><span>ASCDII Engine<small>0.0.2 docs</small></span></a>']
+    out = ['<aside class="side">',f'<a class="brand" href="index.html"><img src="img/logo.svg" alt=""><span>ASCDII Engine<small>{VERSION} docs</small></span></a>']
     for s, ps in nav:
         out.append(f'<h4>{s}</h4>')
         for f, t in ps:
@@ -59,6 +62,7 @@ for f, _ in order:
     src = open(os.path.join(D, f)).read()
     body = src[src.index('<main>')+6:src.index('</main>')]
     body = re.sub(r'<nav class="pager">.*?</nav>', '', body, flags=re.S)
+    body = re.sub(r'<span class="version">[^<]*</span>', f'<span class="version">{VERSION}</span>', body)
     html = page(f, body)
     if '\u2014' in html:
         sys.exit(f'em dash in {f}')
