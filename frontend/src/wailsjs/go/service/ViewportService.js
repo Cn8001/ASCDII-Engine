@@ -58,8 +58,8 @@ export function Pause() {
   return window['go']['service']['ViewportService']['Pause']();
 }
 
-export function Pick(arg1, arg2) {
-  return window['go']['service']['ViewportService']['Pick'](arg1, arg2);
+export function Pick(arg1, arg2, arg3) {
+  return window['go']['service']['ViewportService']['Pick'](arg1, arg2, arg3);
 }
 
 export function Play() {
@@ -68,6 +68,10 @@ export function Play() {
 
 export function Resize(arg1, arg2) {
   return window['go']['service']['ViewportService']['Resize'](arg1, arg2);
+}
+
+export function SelectRect(arg1, arg2, arg3, arg4, arg5) {
+  return window['go']['service']['ViewportService']['SelectRect'](arg1, arg2, arg3, arg4, arg5);
 }
 
 export function SetGizmos(arg1) {
@@ -100,6 +104,10 @@ export function Stop() {
 
 export function Stretch(arg1, arg2, arg3, arg4, arg5, arg6) {
   return window['go']['service']['ViewportService']['Stretch'](arg1, arg2, arg3, arg4, arg5, arg6);
+}
+
+export function TogglePick(arg1, arg2, arg3) {
+  return window['go']['service']['ViewportService']['TogglePick'](arg1, arg2, arg3);
 }
 
 export function Turn(arg1, arg2, arg3, arg4, arg5, arg6) {

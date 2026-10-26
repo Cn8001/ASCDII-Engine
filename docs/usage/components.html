@@ -106,11 +106,11 @@
 <tr><td><code>twoSided</code></td><td>bool</td><td><code>true</code></td><td>Draws the back face as well.</td></tr>
 </table>
 <h3 id="mesh">Mesh <code>mesh</code></h3>
-<p>An imported OBJ model, see Models. <span class="dim">Add Component.</span></p>
+<p>An imported OBJ model, see Models. Below these properties, the card lists one material slot per part of the model, parts/&lt;name&gt; after its usemtl, which replaces that part&#39;s material. <span class="dim">Add Component.</span></p>
 <table>
 <tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr>
 <tr><td><code>model</code></td><td>model</td><td><code>none</code></td><td>The model asset.</td></tr>
-<tr><td><code>material</code></td><td>material</td><td><code>none</code></td><td>A material asset; replaces the model&#39;s own materials when set.</td></tr>
+<tr><td><code>material</code></td><td>material</td><td><code>none</code></td><td>A material asset; replaces the model&#39;s own materials on every part without a slot of its own.</td></tr>
 <tr><td><code>tint</code></td><td>color</td><td><code>#ffffff</code></td><td>Color multiplied into the model&#39;s colors.</td></tr>
 <tr><td><code>emissive</code></td><td>float, 0 to 1</td><td><code>0</code></td><td>Glow independent of light, 0 to 1.</td></tr>
 <tr><td><code>twoSided</code></td><td>bool</td><td><code>false</code></td><td>Draws back faces, for models with open surfaces.</td></tr>

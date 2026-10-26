@@ -13,6 +13,8 @@ export function ClosePrefab():Promise<void>;
 
 export function Duplicate(arg1:number):Promise<number>;
 
+export function DuplicateSelection():Promise<Array<number>>;
+
 export function Kinds():Promise<session.Kinds>;
 
 export function MoveComponent(arg1:number,arg2:number,arg3:number):Promise<void>;
@@ -24,6 +26,8 @@ export function Props(arg1:number):Promise<Array<prop.Prop>>;
 export function Remove(arg1:number):Promise<void>;
 
 export function RemoveComponent(arg1:number,arg2:number):Promise<void>;
+
+export function RemoveSelection():Promise<void>;
 
 export function Reparent(arg1:number,arg2:number,arg3:number):Promise<void>;
 
@@ -38,6 +42,8 @@ export function SceneProps():Promise<Array<prop.Prop>>;
 export function Select(arg1:number):Promise<void>;
 
 export function Selected():Promise<number>;
+
+export function Selection():Promise<Array<number>>;
 
 export function SetProp(arg1:number,arg2:string,arg3:any):Promise<void>;
 

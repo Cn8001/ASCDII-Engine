@@ -18,11 +18,12 @@ import (
 const FrameEvent = "frame"
 
 type Gizmo struct {
-	ID      uint64       `json:"id"`
-	Corners [][2]float64 `json:"corners"` // 8 box corners in cell units, bit 0 x, bit 1 y, bit 2 z
-	Anchor  [2]float64   `json:"anchor"`
-	Axes    [][2]float64 `json:"axes"` // screen tips of the x, y and z move handles
-	Handles []Handle     `json:"handles"`
+	ID      uint64         `json:"id"`
+	Corners [][2]float64   `json:"corners"` // 8 box corners in cell units, bit 0 x, bit 1 y, bit 2 z
+	Anchor  [2]float64     `json:"anchor"`
+	Axes    [][2]float64   `json:"axes"` // screen tips of the x, y and z move handles
+	Handles []Handle       `json:"handles"`
+	Others  [][][2]float64 `json:"others"` // Corners of the other selected objects
 }
 
 // Handle is a point on a collider the Scene view lets you drag.
@@ -33,17 +34,18 @@ type Handle struct {
 }
 
 type Frame struct {
-	Cols    int             `json:"cols"`
-	Rows    int             `json:"rows"`
-	Cells   string          `json:"cells,omitempty"` // base64 of Raw's cell bytes when frames ride in events
-	Seq     uint64          `json:"seq"`
-	Time    float64         `json:"time"`
-	Mode    Mode            `json:"mode"`
-	Millis  float64         `json:"millis"`
-	Passes  []pipeline.Info `json:"passes"`
-	Gizmo   *Gizmo          `json:"gizmo,omitempty"`
-	View    string          `json:"view"`
-	Unsaved bool            `json:"unsaved"` // so the title and save button follow every edit
+	Cols      int             `json:"cols"`
+	Rows      int             `json:"rows"`
+	Cells     string          `json:"cells,omitempty"` // base64 of Raw's cell bytes when frames ride in events
+	Seq       uint64          `json:"seq"`
+	Time      float64         `json:"time"`
+	Mode      Mode            `json:"mode"`
+	Millis    float64         `json:"millis"`
+	Passes    []pipeline.Info `json:"passes"`
+	Gizmo     *Gizmo          `json:"gizmo,omitempty"`
+	View      string          `json:"view"`
+	Unsaved   bool            `json:"unsaved"`   // so the title and save button follow every edit
+	Selection []uint64        `json:"selection"` // every selected object, the primary first
 }
 
 // cellBytes is the wire format: 10 bytes per cell, rune u32 LE, fg rgb, bg rgb.
@@ -85,13 +87,11 @@ func (s *Session) gizmo(sc *scene.Scene) *Gizmo {
 		ax, ay, _ := v.Project(e.World().Pos.Add(d))
 		g.Axes = append(g.Axes, toCell(ax, ay))
 	}
-	b := e.Bounds()
-	if b.Empty() {
-		b = geom.Footprint(e.World().Pos, geom.V3(1, 1, 1))
-	}
-	for _, c := range b.Corners() {
-		x, y, _ := v.Project(c)
-		g.Corners = append(g.Corners, toCell(x, y))
+	g.Corners = s.corners(e)
+	for _, id := range s.selection()[1:] {
+		if o, err := sc.ByID(id); err == nil {
+			g.Others = append(g.Others, s.corners(o))
+		}
 	}
 	t := e.World()
 	for _, c := range e.Components {
@@ -101,6 +101,21 @@ func (s *Session) gizmo(sc *scene.Scene) *Gizmo {
 		}
 	}
 	return g
+}
+
+// corners are the 8 corners of e's bounds in cell units, a unit box for
+// objects that draw nothing.
+func (s *Session) corners(e *scene.GameObject) [][2]float64 {
+	b := e.Bounds()
+	if b.Empty() {
+		b = geom.Footprint(e.World().Pos, geom.V3(1, 1, 1))
+	}
+	var out [][2]float64
+	for _, c := range b.Corners() {
+		x, y, _ := s.frame.View.Project(c)
+		out = append(out, toCell(x, y))
+	}
+	return out
 }
 
 // Tick advances play or live preview by dt and renders when something changed.
@@ -159,7 +174,7 @@ func (s *Session) render() *Frame {
 	return &Frame{
 		Seq: s.seq, Cols: s.frame.Cells.W, Rows: s.frame.Cells.H, Cells: cells,
 		Time: sc.Time, Mode: s.mode, Millis: float64(s.pipe.Total().Microseconds()) / 1000,
-		Passes: s.pipe.Infos(), Gizmo: gz, View: s.viewMode, Unsaved: s.unsaved,
+		Passes: s.pipe.Infos(), Gizmo: gz, View: s.viewMode, Unsaved: s.unsaved, Selection: s.selection(),
 	}
 }
 

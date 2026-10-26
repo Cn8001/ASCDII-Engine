@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { Scene } from '../lib/api'
 import { dropAsset, entityMenu, kindIcon } from '../lib/actions'
 import { openMenu } from '../lib/menu'
@@ -15,6 +15,27 @@ const input = ref<HTMLInputElement | null>(null)
 const over = ref(false)
 const kids = computed(() => props.node.children ?? [])
 const active = computed(() => store.selected === props.node.id)
+// grouped marks the other objects of a selection of several.
+const grouped = computed(() => !active.value && store.frame.selection.includes(props.node.id))
+const row = ref<HTMLElement | null>(null)
+
+function holds(n: session.Node, id: number): boolean {
+  return (n.children ?? []).some((c) => c.id === id || holds(c, id))
+}
+
+// A selection made in the Scene view opens the rows above it and scrolls
+// its row into view, so the Hierarchy always shows what is selected.
+watch(
+  () => store.selected,
+  async (id) => {
+    if (id && !open.value && holds(props.node, id)) open.value = true
+    if (id === props.node.id) {
+      await nextTick()
+      row.value?.scrollIntoView({ block: 'nearest' })
+    }
+  },
+  { immediate: true },
+)
 
 async function toggleVisible() {
   await call(() => Scene.SetProp(props.node.id, 'visible', !props.node.visible))
@@ -58,8 +79,9 @@ async function drop(e: DragEvent) {
 <template>
   <div>
     <div
+      ref="row"
       class="group flex h-7 cursor-default items-center gap-1 rounded-md pr-1 transition-colors"
-      :class="[active ? 'bg-amber-glow/12 text-ink-100' : 'text-ink-300 hover:bg-ink-800', over ? 'ring-1 ring-amber-soft' : '']"
+      :class="[active ? 'bg-amber-glow/12 text-ink-100' : grouped ? 'bg-amber-glow/6 text-ink-200' : 'text-ink-300 hover:bg-ink-800', over ? 'ring-1 ring-amber-soft' : '']"
       :style="{ paddingLeft: depth * 14 + 4 + 'px' }"
       :data-node="node.inherited || node.prefab ? undefined : node.id"
       :draggable="!node.inherited"

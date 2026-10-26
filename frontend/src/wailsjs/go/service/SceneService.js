@@ -22,6 +22,10 @@ export function Duplicate(arg1) {
   return window['go']['service']['SceneService']['Duplicate'](arg1);
 }
 
+export function DuplicateSelection() {
+  return window['go']['service']['SceneService']['DuplicateSelection']();
+}
+
 export function Kinds() {
   return window['go']['service']['SceneService']['Kinds']();
 }
@@ -44,6 +48,10 @@ export function Remove(arg1) {
 
 export function RemoveComponent(arg1, arg2) {
   return window['go']['service']['SceneService']['RemoveComponent'](arg1, arg2);
+}
+
+export function RemoveSelection() {
+  return window['go']['service']['SceneService']['RemoveSelection']();
 }
 
 export function Reparent(arg1, arg2, arg3) {
@@ -72,6 +80,10 @@ export function Select(arg1) {
 
 export function Selected() {
   return window['go']['service']['SceneService']['Selected']();
+}
+
+export function Selection() {
+  return window['go']['service']['SceneService']['Selection']();
 }
 
 export function SetProp(arg1, arg2, arg3) {

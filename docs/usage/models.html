@@ -77,12 +77,26 @@
 <table>
 <tr><th>Property</th><th>Meaning</th></tr>
 <tr><td><code>model</code></td><td>The model asset.</td></tr>
-<tr><td><code>material</code></td><td>Optional; replaces the model's own materials on every part.</td></tr>
+<tr><td><code>material</code></td><td>Optional; replaces the model's own materials on every part that has no material of its own under <b>Parts</b>.</td></tr>
 <tr><td><code>tint</code>, <code>emissive</code></td><td>Color multiplied over the model, and self lighting.</td></tr>
 <tr><td><code>twoSided</code></td><td>Draws back faces as well, for open models or models with inconsistent face directions.</td></tr>
 <tr><td><code>shadow</code></td><td>A soft contact shadow on the ground.</td></tr>
+<tr><td><b>Parts</b></td><td>One material slot per part of the model, named after its <code>usemtl</code>, for example <code>eyes</code>. An empty slot keeps the part's own material.</td></tr>
 </table>
 <p>The object's rotation, scale and flip apply to the model. A solid object blocks with its rotated bounds; a <b>Mesh Collider</b> blocks with the model's outline seen from above, see <a href="physics.html">Physics</a>.</p>
+
+<h2 id="parts">Models with several materials</h2>
+<p>A character such as a figure with separate textures for its eyes, head and body is one model with several parts. In the 3D tool, each part is assigned its own material, and its faces are unwrapped onto that material's texture; the texture coordinates come with the file, so the engine does not unwrap models. The OBJ file then names each part's material with <code>usemtl</code>, and the MTL file gives that material its texture with <code>map_Kd</code>. Each part is drawn with its own texture and its own texture coordinates.</p>
+<p>The Mesh card in the Inspector lists the parts under <b>Parts</b>, one material slot each. A part is drawn with the first of these that is set:</p>
+<ol class="steps">
+<li>its slot under <b>Parts</b>;</li>
+<li>the card's <code>material</code>, which applies to every part;</li>
+<li>its texture from the MTL file, tinted by its <code>Kd</code> color;</li>
+<li>its <code>Kd</code> color.</li>
+</ol>
+<p>Dragging a material from the Project window onto a model in the Scene view fills the slot of the part under the pointer, and a message names the part; dragging it onto a slot in the Inspector works as for any material slot. <code>tint</code> and <code>emissive</code> apply on top of every part. Scripts set a slot by its full name:</p>
+<pre><code>local m = find(<span class="s">"mario"</span>):component(<span class="s">"mesh"</span>)
+m[<span class="s">"parts/eyes"</span>] = <span class="s">"materials/eyes_closed.material.json"</span></code></pre>
 <nav class="pager"><a class="prev" href="textures.html"><small>Previous</small>Textures, materials, sprites</a><a class="next" href="animation.html"><small>Next</small>Animation</a></nav>
 </main>
 </div>

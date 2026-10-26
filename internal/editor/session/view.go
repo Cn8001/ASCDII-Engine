@@ -143,19 +143,10 @@ func (s *Session) AlignGame() {
 	s.changed()
 }
 
-// Pick selects whatever is drawn nearest at a cell; empty ground clears selection.
-func (s *Session) Pick(col, row int) uint64 {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.sel = uint64(s.frame.Buf.Pick(col, row))
-	s.touch()
-	return s.sel
-}
-
 func (s *Session) Select(id uint64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.sel = id
+	s.selectOnly(id)
 	s.touch()
 }
 
@@ -165,8 +156,9 @@ func (s *Session) Selected() uint64 {
 	return s.sel
 }
 
-// Drag moves an entity between two cell positions; axis is "free" on its
-// ground plane, "x" or "y" along one world axis, or "z" for height.
+// Drag moves an entity, and the rest of the selection with it, between two
+// cell positions; axis is "free" on its ground plane, "x" or "y" along one
+// world axis, or "z" for height.
 func (s *Session) Drag(id uint64, axis string, fromCol, fromRow, toCol, toRow float64) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -196,54 +188,61 @@ func (s *Session) Drag(id uint64, axis string, fromCol, fromRow, toCol, toRow fl
 	default:
 		return fmt.Errorf("drag %s: %w: %s", e.Name, ErrBadAxis, axis)
 	}
-	if p := e.Parent(); p != nil {
-		d = p.World().Inward(d)
+	for _, o := range s.movable(id) {
+		local := d
+		if p := o.Parent(); p != nil {
+			local = p.World().Inward(d)
+		}
+		o.Local.Pos = o.Local.Pos.Add(local)
 	}
-	e.Local.Pos = e.Local.Pos.Add(d)
 	s.changed()
 	return nil
 }
 
 // Turn rotates an entity by a drag: around "z" by the angle the pointer
 // sweeps about it on the ground, around "x" or "y" by the sideways distance.
+// The rest of the selection turns by the same angle, each about its own pivot.
 func (s *Session) Turn(id uint64, axis string, fromCol, fromRow, toCol, toRow float64) error {
-	return s.transformDrag(id, "turn", func(e *scene.GameObject, v view.View) error {
+	return s.transformDrag(id, "turn", func(e *scene.GameObject, v view.View) (func(o *scene.GameObject), error) {
 		w := e.World()
+		var turn geom.Vec3
 		switch axis {
 		case "z", "free":
 			a, b := ground(v, fromCol, fromRow, w.Pos.Z).Sub(w.Pos), ground(v, toCol, toRow, w.Pos.Z).Sub(w.Pos)
-			e.Local.Rot.Z += (math.Atan2(b.Y, b.X) - math.Atan2(a.Y, a.X)) * 180 / math.Pi
+			turn.Z = (math.Atan2(b.Y, b.X) - math.Atan2(a.Y, a.X)) * 180 / math.Pi
 		case "x":
-			e.Local.Rot.X += (toCol - fromCol) * degPerCell
+			turn.X = (toCol - fromCol) * degPerCell
 		case "y":
-			e.Local.Rot.Y += (toCol - fromCol) * degPerCell
+			turn.Y = (toCol - fromCol) * degPerCell
 		default:
-			return fmt.Errorf("turn %s: %w: %s", e.Name, ErrBadAxis, axis)
+			return nil, fmt.Errorf("turn %s: %w: %s", e.Name, ErrBadAxis, axis)
 		}
-		return nil
+		return func(o *scene.GameObject) { o.Local.Rot = o.Local.Rot.Add(turn) }, nil
 	})
 }
 
-// Stretch scales an entity by a drag, right or up to grow; "free" scales
-// evenly.
+// Stretch scales an entity, and the rest of the selection by the same factor,
+// by a drag, right or up to grow; "free" scales evenly.
 func (s *Session) Stretch(id uint64, axis string, fromCol, fromRow, toCol, toRow float64) error {
-	return s.transformDrag(id, "stretch", func(e *scene.GameObject, _ view.View) error {
+	return s.transformDrag(id, "stretch", func(e *scene.GameObject, _ view.View) (func(o *scene.GameObject), error) {
 		k := math.Exp((toCol - fromCol - (toRow-fromRow)*2) * scalePerCell)
-		sc := e.Local.Scale
+		f := geom.V3(1, 1, 1)
 		switch axis {
 		case "free":
-			sc = sc.Scale(k)
+			f = geom.V3(k, k, k)
 		case "x":
-			sc.X *= k
+			f.X = k
 		case "y":
-			sc.Y *= k
+			f.Y = k
 		case "z":
-			sc.Z *= k
+			f.Z = k
 		default:
-			return fmt.Errorf("stretch %s: %w: %s", e.Name, ErrBadAxis, axis)
+			return nil, fmt.Errorf("stretch %s: %w: %s", e.Name, ErrBadAxis, axis)
 		}
-		e.Local.Scale = sc
-		return nil
+		return func(o *scene.GameObject) {
+			sc := o.Local.Scale
+			o.Local.Scale = geom.V3(sc.X*f.X, sc.Y*f.Y, sc.Z*f.Z)
+		}, nil
 	})
 }
 
@@ -252,7 +251,9 @@ const (
 	scalePerCell = .03
 )
 
-func (s *Session) transformDrag(id uint64, kind string, fn func(e *scene.GameObject, v view.View) error) error {
+// transformDrag works out a change from the dragged object id, fn returns
+// it, and applies it to every movable object of the selection.
+func (s *Session) transformDrag(id uint64, kind string, fn func(e *scene.GameObject, v view.View) (func(o *scene.GameObject), error)) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.play == nil {
@@ -265,8 +266,12 @@ func (s *Session) transformDrag(id uint64, kind string, fn func(e *scene.GameObj
 	if e.Inherited() {
 		return fmt.Errorf("%s %s: %w", kind, e.Name, scene.ErrPrefabLocked)
 	}
-	if err := fn(e, s.view()); err != nil {
+	apply, err := fn(e, s.view())
+	if err != nil {
 		return err
+	}
+	for _, o := range s.movable(id) {
+		apply(o)
 	}
 	s.changed()
 	return nil
@@ -291,7 +296,7 @@ func (s *Session) Drop(kind string, col, row float64) (uint64, error) {
 	if err != nil {
 		return 0, err
 	}
-	s.sel = got.ID
+	s.selectOnly(got.ID)
 	s.changed()
 	return got.ID, nil
 }

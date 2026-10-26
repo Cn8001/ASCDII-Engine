@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/prop"
 	"image"
 	stdcolor "image/color"
 	"image/png"
@@ -19,6 +18,8 @@ import (
 	"testing"
 	"testing/fstest"
 	"time"
+
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/prop"
 
 	"github.com/Cn8001/ASCDII-Engine/internal/dragonfall"
 	"github.com/Cn8001/ASCDII-Engine/internal/editor/players"
@@ -116,7 +117,7 @@ func TestUnit_AddSelectsAndPickFindsIt(t *testing.T) {
 	id, err := s.Add(0, "box")
 	f := s.Snapshot()
 	col, row := f.Gizmo.Anchor[0], f.Gizmo.Anchor[1]
-	picked := s.Pick(int(col), int(row)-1)
+	picked := s.Pick(int(col), int(row)-1, false)
 
 	// Assert
 	if err != nil || s.Selected() != picked || picked != id {

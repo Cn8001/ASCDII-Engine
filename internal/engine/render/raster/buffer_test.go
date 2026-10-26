@@ -84,6 +84,31 @@ func TestUnit_PickReturnsNearestTag(t *testing.T) {
 	}
 }
 
+func TestUnit_PickPartTellsPartsOfOneObjectApart(t *testing.T) {
+	// Arrange
+	b := New(2, 1)
+	b.Clear(color.Color{})
+	b.SetTag(7)
+	b.SetPart(1)
+	b.Plot(0, 0, frag(color.RGB(1, 1, 1), 1))
+	b.SetPart(3)
+	b.Plot(SubW, 0, frag(color.RGB(1, 1, 1), 1))
+	b.SetTag(8)
+	b.Plot(1, 1, frag(color.RGB(1, 1, 1), 0))
+
+	// Act
+	tagA, partA := b.PickPart(0, 0)
+	tagB, partB := b.PickPart(1, 0)
+
+	// Assert
+	if tagA != 7 || partA != 0 || tagB != 7 || partB != 2 {
+		t.Fatalf("cell 0: %d part %d, cell 1: %d part %d", tagA, partA, tagB, partB)
+	}
+	if b.At(1, 1).Part != 0 {
+		t.Fatal("SetTag should clear the part")
+	}
+}
+
 func TestUnit_ShapesStayInsideBuffer(t *testing.T) {
 	// Arrange
 	b := New(20, 10)

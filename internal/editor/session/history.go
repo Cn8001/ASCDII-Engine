@@ -47,6 +47,7 @@ func (s *Session) restore(snap []byte) error {
 	if _, err := sc.ByID(s.sel); err != nil {
 		s.sel = 0
 	}
+	s.group = nil // a rebuilt scene numbers its objects anew
 	s.hist.label = ""
 	s.changed()
 	return nil

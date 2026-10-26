@@ -81,7 +81,7 @@ func (s *Session) AddSprite(name string) (uint64, error) {
 	if err != nil {
 		return 0, err
 	}
-	s.sel = got.ID
+	s.selectOnly(got.ID)
 	s.changed()
 	return got.ID, nil
 }
