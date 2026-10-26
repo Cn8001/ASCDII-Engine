@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
-import { Assets, Console, EventsOn } from '../lib/api'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { Assets, Console } from '../lib/api'
 import { call, store } from '../lib/store'
 import type { session } from '../wailsjs/go/models'
 import Icon from './Icon.vue'
@@ -13,26 +13,15 @@ const counts = computed(() => {
   return c
 })
 const visible = computed(() => store.logs.filter((l) => show.value[l.level as 'info' | 'warn' | 'error'] ?? true))
-let off: (() => void) | null = null
 
-async function add(e: session.LogEntry) {
-  const last = store.logs[store.logs.length - 1]
-  if (last && last.level === e.level && last.source === e.source && last.text === e.text) {
-    Object.assign(last, e)
-  } else {
-    store.logs.push(e)
-    if (store.logs.length > 300) store.logs.splice(0, store.logs.length - 300)
-  }
-  if (e.level === 'error' && !store.dockOpen) store.dockOpen = true
+// The editor layout keeps store.logs current (lib/logs.ts); this follows
+// the newest line, including a repeat that only raised its count.
+async function follow() {
   await nextTick()
   list.value?.scrollTo({ top: list.value.scrollHeight })
 }
-
-onMounted(async () => {
-  store.logs = (await call(() => Console.Logs())) ?? []
-  off = EventsOn('log', add)
-})
-onBeforeUnmount(() => off?.())
+watch(() => [store.logs.length, store.logs[store.logs.length - 1]?.count], follow)
+onMounted(follow)
 
 async function clear() {
   await call(() => Console.Clear())

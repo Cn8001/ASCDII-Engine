@@ -28,6 +28,7 @@ import (
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/raster"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/pack"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/project"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/anim"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/components"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/scene"
 )
@@ -1115,5 +1116,36 @@ func TestUnit_DragMovesAChildInItsParentsSpace(t *testing.T) {
 	after, worldAfter := c.Local.Pos, c.World().Pos
 	if errSet != nil || err != nil || after == before || worldAfter.X <= worldBefore.X || math.Abs(worldAfter.Y-worldBefore.Y) > 1e-6 {
 		t.Fatalf("err %v %v local %+v -> %+v world %+v -> %+v", errSet, err, before, after, worldBefore, worldAfter)
+	}
+}
+
+func TestUnit_RunReportsTickErrorsInConsole(t *testing.T) {
+	// Arrange
+	s, _, _ := newSession(t, "")
+	id, err := s.Add(0, "empty")
+	if err != nil {
+		t.Fatal(err)
+	}
+	s.mu.Lock()
+	e, _ := s.edit.ByID(id)
+	s.edit.Clips = append(s.edit.Clips, anim.Tween("nope", 0.0, 1.0, 1, anim.Linear))
+	s.edit.Clips[len(s.edit.Clips)-1].Target = e.Name
+	s.mu.Unlock()
+	_ = s.Play()
+	ctx, cancel := context.WithTimeout(context.Background(), 250*time.Millisecond)
+	defer cancel()
+
+	// Act
+	err = s.Run(ctx, 60)
+
+	// Assert
+	var errs []LogEntry
+	for _, l := range s.Logs() {
+		if l.Level == "error" {
+			errs = append(errs, l)
+		}
+	}
+	if err != nil || len(errs) != 1 || errs[0].Source != "scene" || errs[0].Count < 2 || !strings.Contains(errs[0].Text, "nope") {
+		t.Fatalf("err %v console errors %+v", err, errs)
 	}
 }

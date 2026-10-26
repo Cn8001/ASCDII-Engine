@@ -204,8 +204,10 @@ func (r *Rigidbody) Update(c *scene.Ctx, o *scene.GameObject, dt float64) {
 	}
 	keep := math.Max(0, 1-r.Drag*dt)
 	v.X, v.Y = v.X*keep, v.Y*keep
-	before := o.Local.Pos
-	o.Local.Pos = before.Add(v.Scale(dt))
+	// Velocity, pushes and the floor are in world space; MoveWorld turns them
+	// into the parent's space, so bodies under moved or turned parents work.
+	before := o.World().Pos
+	o.MoveWorld(v.Scale(dt))
 	mine := shapes(o)
 	floor := 0.0
 	touching := map[uint64]bool{}
@@ -235,9 +237,9 @@ func (r *Rigidbody) Update(c *scene.Ctx, o *scene.GameObject, dt float64) {
 				share := 1.0
 				if ob := bodyOf(other); ob != nil {
 					share = ob.Mass / (ob.Mass + r.Mass)
-					other.Local.Pos = other.Local.Pos.Sub(geom.V3(push.X, push.Y, 0).Scale(1 - share))
+					other.MoveWorld(geom.V3(push.X, push.Y, 0).Scale(share - 1))
 				}
-				o.Local.Pos = o.Local.Pos.Add(geom.V3(push.X, push.Y, 0).Scale(share))
+				o.MoveWorld(geom.V3(push.X, push.Y, 0).Scale(share))
 				n := push.Norm()
 				if vn := v.X*n.X + v.Y*n.Y; vn < 0 {
 					v.X -= n.X * vn * (1 + r.Bounce)
@@ -247,8 +249,8 @@ func (r *Rigidbody) Update(c *scene.Ctx, o *scene.GameObject, dt float64) {
 		}
 		return true
 	})
-	if o.Local.Pos.Z < floor {
-		o.Local.Pos.Z = floor
+	if z := o.World().Pos.Z; z < floor {
+		o.MoveWorld(geom.V3(0, 0, floor-z))
 		if v.Z < -2 {
 			v.Z = -v.Z * r.Bounce
 		} else {

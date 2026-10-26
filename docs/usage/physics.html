@@ -67,7 +67,7 @@
 <p>Each drag is one undo step. <code>offset</code> and exact values are edited in the Inspector.</p>
 
 <h2>Rigidbody</h2>
-<p>A <b>Rigidbody</b> on an object with a collider moves the object in play mode.</p>
+<p>A <b>Rigidbody</b> on an object with a collider moves the object in play mode. Velocity, gravity and collisions work in world space, so a body behaves the same whether its object sits at the top of the hierarchy or under a moved, turned or scaled parent; the ground is at world height 0.</p>
 <table>
 <tr><th>Property</th><th>Meaning</th></tr>
 <tr><td><code>mass</code></td><td>Heavier bodies push lighter ones further, and forces move them less.</td></tr>

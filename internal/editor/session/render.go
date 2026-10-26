@@ -199,8 +199,8 @@ func (s *Session) Run(ctx context.Context, fps int) error {
 			dt := math.Min(now.Sub(last).Seconds(), .1)
 			last = now
 			f, err := s.Tick(dt)
-			if err != nil && s.d.Emit != nil {
-				s.d.Emit.Emit(ctx, "error", err.Error())
+			if err != nil {
+				s.Log(ctx, "error", "scene", err.Error()) // the console merges a repeat every frame into one counted line
 			}
 			if f != nil && s.d.Emit != nil {
 				s.d.Emit.Emit(ctx, FrameEvent, f)

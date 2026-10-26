@@ -228,6 +228,8 @@ type GameObject struct {
 	Prefab     string // asset reference; components and children come from the prefab
 	Overrides  []Override
 	off        map[Component]bool
+	slots      map[Component]int // the n of a component's key; kept when others are removed or moved
+	high       map[string]int    // highest slot handed out per kind, so a removed one is not reused
 	parent     *GameObject
 	scene      *Scene
 	inherited  bool
@@ -254,7 +256,6 @@ func (o *GameObject) World() Transform {
 	return o.parent.World().Then(o.Local)
 }
 
-// Bounds unites what every component reports, for culling, picking and gizmos.
 // SetWorld moves the object so its world transform becomes w.
 func (o *GameObject) SetWorld(w Transform) {
 	if o.parent == nil {
@@ -264,6 +265,17 @@ func (o *GameObject) SetWorld(w Transform) {
 	o.Local = o.parent.World().Local(w)
 }
 
+// MoveWorld moves the object by d in world units, whatever its parent's
+// position, rotation or scale; physics and walkers move in world space.
+func (o *GameObject) MoveWorld(d geom.Vec3) {
+	if o.parent == nil {
+		o.Local.Pos = o.Local.Pos.Add(d)
+		return
+	}
+	o.Local.Pos = o.Local.Pos.Add(o.parent.World().Inward(d))
+}
+
+// Bounds unites what every component reports, for culling, picking and gizmos.
 func (o *GameObject) Bounds() geom.AABB {
 	var b geom.AABB
 	t := o.World()
@@ -375,17 +387,36 @@ func (o *GameObject) RemoveComponent(i int) error {
 	if i < 0 || i >= len(o.Components) {
 		return fmt.Errorf("%w: component %d", ErrUnknownKind, i)
 	}
+	o.number() // the others keep the keys they had with it present
 	delete(o.off, o.Components[i])
+	delete(o.slots, o.Components[i])
 	o.Components = append(o.Components[:i], o.Components[i+1:]...)
 	return nil
 }
 
-// MoveComponent reorders components, which changes draw order and the
-// "#n" numbering of components of the same kind.
+// ReplaceComponent puts c in place of the component at index; c takes over
+// its key and enabled state, so references to it still hold.
+func (o *GameObject) ReplaceComponent(i int, c Component) error {
+	if i < 0 || i >= len(o.Components) {
+		return fmt.Errorf("%w: component %d", ErrUnknownKind, i)
+	}
+	o.number()
+	old := o.Components[i]
+	on, n := o.Enabled(old), o.slots[old]
+	delete(o.off, old)
+	delete(o.slots, old)
+	o.Components[i] = c
+	o.slots[c] = n
+	o.SetEnabled(c, on)
+	return nil
+}
+
+// MoveComponent reorders components, which changes draw order; keys stay.
 func (o *GameObject) MoveComponent(from, to int) error {
 	if from < 0 || from >= len(o.Components) || to < 0 || to >= len(o.Components) {
 		return fmt.Errorf("%w: component %d", ErrUnknownKind, from)
 	}
+	o.number()
 	c := o.Components[from]
 	o.Components = append(o.Components[:from], o.Components[from+1:]...)
 	o.Components = append(o.Components[:to], append([]Component{c}, o.Components[to:]...)...)
@@ -393,21 +424,37 @@ func (o *GameObject) MoveComponent(from, to int) error {
 }
 
 // Key names a component in property paths: "light" for the first light,
-// "light#2" for the second.
+// "light#2" for the second. Keys are saved in references, overrides and clips,
+// so a component keeps its key when another one is removed or reordered.
 func (o *GameObject) Key(c Component) string {
-	n := 0
-	for _, x := range o.Components {
-		if x.Kind() == c.Kind() {
-			n++
-		}
-		if x == c {
-			break
+	o.number()
+	if n := o.slots[c]; n > 1 {
+		return c.Kind() + "#" + strconv.Itoa(n)
+	}
+	return c.Kind()
+}
+
+// number gives components without a slot the next one of their kind, in
+// list order, so objects built in code number like they always did.
+func (o *GameObject) number() {
+	if o.slots == nil {
+		o.slots, o.high = map[Component]int{}, map[string]int{}
+	}
+	for _, c := range o.Components {
+		if _, ok := o.slots[c]; !ok {
+			o.high[c.Kind()]++
+			o.slots[c] = o.high[c.Kind()]
 		}
 	}
-	if n <= 1 {
-		return c.Kind()
+}
+
+// setSlot gives c a slot read from a file.
+func (o *GameObject) setSlot(c Component, n int) {
+	if o.slots == nil {
+		o.slots, o.high = map[Component]int{}, map[string]int{}
 	}
-	return c.Kind() + "#" + strconv.Itoa(n)
+	o.slots[c] = n
+	o.high[c.Kind()] = max(o.high[c.Kind()], n)
 }
 
 // ComponentByKey finds a component by the key its properties use, such as

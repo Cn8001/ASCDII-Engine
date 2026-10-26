@@ -63,7 +63,7 @@ func (p *Player) Key(c *scene.Ctx, e *scene.GameObject, k input.Key) bool {
 	case keyIs(k, p.Right) || k == input.Right:
 		dir = 3
 	case keyIs(k, p.Jump):
-		if e.Local.Pos.Z <= 0 && p.vz == 0 {
+		if e.World().Pos.Z <= 0 && p.vz == 0 {
 			p.vz = p.JumpSpeed
 		}
 		return true
@@ -113,32 +113,38 @@ func (p *Player) Update(c *scene.Ctx, e *scene.GameObject, dt float64) {
 		d.X++
 	}
 	p.moving = d != (geom.Vec2{})
+	// Walking, jumping and the ground at Z 0 are in world space; MoveWorld
+	// keeps a walker under a moved or turned parent on course.
+	start := e.World().Pos
 	if p.moving {
 		step := d.Norm().Scale(p.Speed * dt)
-		pos := e.Local.Pos
+		pos := start
 		if nx := geom.V2(pos.X+step.X, pos.Y); !p.blocked(c.Scene, e, nx) {
 			pos.X = nx.X
 		}
 		if ny := geom.V2(pos.X, pos.Y+step.Y); !p.blocked(c.Scene, e, ny) {
 			pos.Y = ny.Y
 		}
-		e.Local.Pos = pos
+		e.MoveWorld(pos.Sub(start))
 		if d.X != 0 {
-			e.Local.Flip = d.X < 0
+			parentFlip := e.Parent() != nil && e.Parent().World().Flip
+			e.Local.Flip = (d.X < 0) != parentFlip
 		}
 	}
-	if e.Local.Pos.Z > 0 || p.vz != 0 {
+	if z := e.World().Pos.Z; z > 0 || p.vz != 0 {
 		p.vz -= p.Gravity * dt
-		e.Local.Pos.Z += p.vz * dt
-		if e.Local.Pos.Z <= 0 && p.vz < 0 {
-			e.Local.Pos.Z, p.vz = 0, 0
+		dz := p.vz * dt
+		if z+dz <= 0 && p.vz < 0 {
+			dz, p.vz = -z, 0
 		}
+		e.MoveWorld(geom.V3(0, 0, dz))
 	}
 	if name := e.Resolve("walking"); name != "walking" {
 		_ = e.Set(name, p.moving)
 	}
 	if p.Follow {
-		c.Scene.FollowView(e, geom.V3(e.Local.Pos.X, e.Local.Pos.Y, 0), dt, p.FollowRate)
+		w := e.World().Pos
+		c.Scene.FollowView(e, geom.V3(w.X, w.Y, 0), dt, p.FollowRate)
 	}
 }
 

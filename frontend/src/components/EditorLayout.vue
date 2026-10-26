@@ -4,6 +4,7 @@ import { Project, Viewport } from '../lib/api'
 import { duplicate, remove } from '../lib/actions'
 import { listenAudio } from '../lib/audio'
 import { listenFileDrops } from '../lib/filedrop'
+import { listenLogs } from '../lib/logs'
 import { typing } from '../lib/keys'
 import { call, refresh, refreshAssets, store, toast } from '../lib/store'
 import AnimationPanel from './AnimationPanel.vue'
@@ -32,6 +33,7 @@ const tabs = [
 ] as const
 
 let offAudio = () => {}
+let offLogs = () => {}
 
 async function shortcut(e: KeyboardEvent) {
   if (typing(e)) return
@@ -108,11 +110,13 @@ onMounted(async () => {
   window.addEventListener('keydown', shortcut)
   listenFileDrops()
   offAudio = listenAudio()
+  offLogs = listenLogs()
   await Promise.all([refresh(), refreshAssets()])
 })
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', shortcut)
   offAudio()
+  offLogs()
 })
 
 function tab(active: boolean) {
