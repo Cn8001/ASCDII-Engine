@@ -394,6 +394,7 @@ export namespace session {
 	    anchor: number[];
 	    axes: number[][];
 	    handles: Handle[];
+	    others: number[][][];
 	
 	    static createFrom(source: any = {}) {
 	        return new Gizmo(source);
@@ -406,6 +407,7 @@ export namespace session {
 	        this.anchor = source["anchor"];
 	        this.axes = source["axes"];
 	        this.handles = this.convertValues(source["handles"], Handle);
+	        this.others = source["others"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
@@ -438,6 +440,7 @@ export namespace session {
 	    gizmo?: Gizmo;
 	    view: string;
 	    unsaved: boolean;
+	    selection: number[];
 	
 	    static createFrom(source: any = {}) {
 	        return new Frame(source);
@@ -456,6 +459,7 @@ export namespace session {
 	        this.gizmo = this.convertValues(source["gizmo"], Gizmo);
 	        this.view = source["view"];
 	        this.unsaved = source["unsaved"];
+	        this.selection = source["selection"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
@@ -590,6 +594,20 @@ export namespace session {
 	        this.source = source["source"];
 	        this.text = source["text"];
 	        this.count = source["count"];
+	    }
+	}
+	export class MaterialDrop {
+	    id: number;
+	    part: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new MaterialDrop(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.part = source["part"];
 	    }
 	}
 	export class Node {

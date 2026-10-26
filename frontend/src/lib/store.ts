@@ -18,6 +18,7 @@ export interface FrameMeta {
   fps: number
   passes: pipeline.Info[]
   gizmo: session.Gizmo | null
+  selection: number[] // every selected object, the primary first
 }
 
 export const store = reactive({
@@ -31,7 +32,7 @@ export const store = reactive({
   sceneProps: [] as prop.Prop[],
   assets: [] as asset.Entry[],
   clips: [] as session.Clip[],
-  frame: { cols: 0, rows: 0, time: 0, mode: 'edit', millis: 0, fps: 0, passes: [], gizmo: null } as FrameMeta,
+  frame: { cols: 0, rows: 0, time: 0, mode: 'edit', millis: 0, fps: 0, passes: [], gizmo: null, selection: [] } as FrameMeta,
   toasts: [] as Toast[],
   right: 'inspector' as 'inspector' | 'pipeline',
   dock: 'project' as 'project' | 'console' | 'animation',
@@ -122,6 +123,19 @@ export async function select(id: number) {
   await Promise.all([refreshProps(), refreshClips()])
 }
 
+// adopt shows id, the primary of a selection the backend already made, in
+// the Inspector; select would narrow that selection down to id alone.
+export async function adopt(id: number) {
+  store.selected = id
+  store.asset = ''
+  await Promise.all([refreshProps(), refreshClips()])
+}
+
+// multi reports whether more than one object is selected.
+export function multi(): boolean {
+  return store.frame.selection.length > 1
+}
+
 export function setFrame(f: session.Frame) {
   const now = performance.now()
   const dt = now - lastFrame
@@ -136,6 +150,7 @@ export function setFrame(f: session.Frame) {
   m.fps = dt > 0 ? m.fps * 0.9 + (1000 / dt) * 0.1 : m.fps
   m.passes = markRaw(f.passes ?? [])
   m.gizmo = f.gizmo ? markRaw(f.gizmo) : null
+  m.selection = f.selection ?? []
 }
 
 let lastFrame = performance.now()

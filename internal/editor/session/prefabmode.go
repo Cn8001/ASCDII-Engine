@@ -56,7 +56,7 @@ func (s *Session) OpenPrefab(ref string) error {
 	s.load(sc, "")
 	s.prefab, s.stash = rel, keep
 	s.cam.Target, s.cam.Span = geom.V3(0, 0, 0), 20
-	s.sel = root.ID
+	s.selectOnly(root.ID)
 	return nil
 }
 

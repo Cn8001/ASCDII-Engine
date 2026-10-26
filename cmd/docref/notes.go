@@ -31,8 +31,8 @@ func notes() map[string]note {
 		"quad": {"An upright rectangle facing the camera, for signs and billboards.", map[string]string{
 			"width": "Width in world units.", "height": "Height in world units.", "color": "Surface color.", "material": "A material asset; replaces the color when set.", "twoSided": "Draws the back face as well.",
 		}},
-		"mesh": {"An imported OBJ model, see Models.", map[string]string{
-			"model": "The model asset.", "material": "A material asset; replaces the model's own materials when set.", "tint": "Color multiplied into the model's colors.",
+		"mesh": {"An imported OBJ model, see Models. Below these properties, the card lists one material slot per part of the model, parts/<name> after its usemtl, which replaces that part's material.", map[string]string{
+			"model": "The model asset.", "material": "A material asset; replaces the model's own materials on every part without a slot of its own.", "tint": "Color multiplied into the model's colors.",
 			"emissive": "Glow independent of light, 0 to 1.", "twoSided": "Draws back faces, for models with open surfaces.", "shadow": "Casts a shadow on the ground.",
 		}},
 		"ground": {"A flat terrain patch with a grain pattern.", map[string]string{

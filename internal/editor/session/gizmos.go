@@ -3,6 +3,7 @@ package session
 import (
 	"fmt"
 	"math"
+	"slices"
 
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/color"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/geom"
@@ -20,6 +21,7 @@ func (s *Session) colliders(f *pipeline.Frame) {
 	if s.viewMode != SceneView || s.play != nil || !s.gizmos {
 		return
 	}
+	selected := s.selection()
 	s.edit.Walk(func(o *scene.GameObject, visible bool) bool {
 		if !visible {
 			return false
@@ -34,7 +36,7 @@ func (s *Session) colliders(f *pipeline.Frame) {
 			if col.IsTrigger() {
 				tint = color.RGB(120, 190, 240)
 			}
-			if o.ID != s.sel {
+			if !slices.Contains(selected, o.ID) {
 				tint = color.Scale(tint, .55)
 			}
 			ring := outline(col.Shape(o, t))
@@ -78,12 +80,14 @@ func colliderHandles(c scene.Component) map[string]geom.Vec3 {
 // DragCollider moves one handle of a collider between two cell positions.
 // Sides move on their own, so the opposite side stays where it is.
 func (s *Session) DragCollider(id uint64, key, handle string, fromCol, fromRow, toCol, toRow float64) error {
-	return s.transformDrag(id, "collider", func(e *scene.GameObject, v view.View) error {
+	// The collider of id alone changes; the rest of the selection is left as is.
+	none := func(*scene.GameObject) {}
+	return s.transformDrag(id, "collider", func(e *scene.GameObject, v view.View) (func(*scene.GameObject), error) {
 		c := e.ComponentByKey(key)
 		pts := colliderHandles(c)
 		at, ok := pts[handle]
 		if !ok {
-			return fmt.Errorf("drag %s: %w: %s", key, ErrBadAxis, handle)
+			return nil, fmt.Errorf("drag %s: %w: %s", key, ErrBadAxis, handle)
 		}
 		t := e.World()
 		z := t.Apply(at).Z
@@ -111,7 +115,7 @@ func (s *Session) DragCollider(id uint64, key, handle string, fromCol, fromRow, 
 				col.Height = math.Max(0, col.Height+up)
 			}
 		}
-		return nil
+		return none, nil
 	})
 }
 

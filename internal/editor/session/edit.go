@@ -287,7 +287,7 @@ func (s *Session) Add(parent uint64, kind string) (uint64, error) {
 	if err != nil {
 		return 0, err
 	}
-	s.sel = got.ID
+	s.selectOnly(got.ID)
 	s.changed()
 	return got.ID, nil
 }
@@ -348,7 +348,7 @@ func (s *Session) ResetComponent(id uint64, index int) error {
 func (s *Session) Remove(id uint64) error {
 	return s.edit1(id, "", func(sc *scene.Scene, e *scene.GameObject) error {
 		if s.sel == id {
-			s.sel = 0
+			s.selectOnly(0)
 		}
 		return sc.Remove(e.ID)
 	})
@@ -362,9 +362,13 @@ func (s *Session) Unpack(id uint64) error {
 	return s.edit1(id, "", func(sc *scene.Scene, e *scene.GameObject) error { return sc.Unpack(e.ID) })
 }
 
-func (s *Session) Duplicate(id uint64) (uint64, error) {
+func (s *Session) Duplicate(id uint64) (uint64, error) { return s.duplicate(id, "") }
+
+// duplicate copies id; copies made under the same label merge into one undo
+// step.
+func (s *Session) duplicate(id uint64, label string) (uint64, error) {
 	var out uint64
-	err := s.edit1(id, "", func(sc *scene.Scene, e *scene.GameObject) error {
+	err := s.edit1(id, label, func(sc *scene.Scene, e *scene.GameObject) error {
 		if e.Inherited() {
 			return scene.ErrPrefabLocked
 		}
@@ -388,7 +392,8 @@ func (s *Session) Duplicate(id uint64) (uint64, error) {
 			return err
 		}
 		scene.Remap(got, old)
-		out, s.sel = got.ID, got.ID
+		out = got.ID
+		s.selectOnly(got.ID)
 		return nil
 	})
 	return out, err

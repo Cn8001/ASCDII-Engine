@@ -71,20 +71,32 @@
 <p>The <b>Scene</b> view has an editor camera of its own; navigating it never changes the game. The <b>Game</b> view shows the game camera, which is what players see. <b>Align</b> moves the camera object to the current Scene view, and creates a Main Camera first in a scene without one. A scene without a camera shows <b>No camera</b> in the Game view.</p>
 <table>
 <tr><th>Action</th><th>Input</th></tr>
-<tr><td>Pan</td><td>Left drag on empty ground, or middle drag</td></tr>
+<tr><td>Pan</td><td>Middle drag; in the Game view also left drag</td></tr>
 <tr><td>Orbit</td><td>Right drag</td></tr>
 <tr><td>Zoom</td><td>Mouse wheel</td></tr>
-<tr><td>Select</td><td>Click an object</td></tr>
+<tr><td>Select</td><td>Click an object; see <a href="#selecting">Selecting</a></td></tr>
+<tr><td>Select several</td><td>Left drag a rectangle; <kbd>Ctrl</kbd> or <kbd>Shift</kbd> click to add or remove one object</td></tr>
 <tr><td>Frame the selection</td><td><kbd>F</kbd></td></tr>
 <tr><td>Place an asset</td><td>Drop a prefab, model or sprite tile from the Project window, or a file from the file manager</td></tr>
-<tr><td>Apply a material</td><td>Drop a material tile onto an object</td></tr>
+<tr><td>Apply a material</td><td>Drop a material tile onto an object; on a model with several parts, onto one part, see <a href="models.html#parts">Models with several materials</a></td></tr>
 </table>
+
+<h3 id="selecting">Selecting</h3>
+<ul>
+<li>A click on a prefab instance selects the instance as a whole, its root object. Clicking the same place again selects one level deeper each time, down to the object drawn under the pointer. Objects that are not part of a prefab instance are selected directly.</li>
+<li><kbd>Alt</kbd> click selects the object drawn under the pointer at once, without starting at the prefab root.</li>
+<li>Dragging with the left button from any point draws a rectangle; on release, every object drawn inside it is selected, prefab instances as a whole. With <kbd>Ctrl</kbd> or <kbd>Shift</kbd> held, the rectangle adds to the current selection.</li>
+<li><kbd>Ctrl</kbd> or <kbd>Shift</kbd> click adds an object to the selection, or removes it when it is already selected.</li>
+<li>With several objects selected, the last one clicked is the primary object: the Inspector, the transform handles and the Animation tab show it, the others are outlined, and the label at the handles counts them. Their rows in the Hierarchy are highlighted.</li>
+<li>Move, rotate and scale apply to every selected object as one undo step; each object turns and scales about its own position. Objects whose parent is also selected follow their parent. <kbd>Delete</kbd> and <kbd>Ctrl</kbd>+<kbd>D</kbd> remove and duplicate every selected object, also as one undo step each.</li>
+<li>A click in the Hierarchy selects that one object.</li>
+</ul>
 
 <h3 id="view-toolbar">View toolbar</h3>
 <p>The toolbar in the top left corner of the view, from left to right:</p>
 <table>
 <tr><th>Control</th><th>Function</th></tr>
-<tr><td>Move, Rotate, Scale</td><td>The transform tool for the selected object, also on <kbd>W</kbd>, <kbd>E</kbd> and <kbd>R</kbd>. Move drags the red (X), green (Y) or amber (height) arrow, or the square in the middle along the ground. Rotate drags the amber ring around the up axis, or the red and green handles to tilt. Scale drags a handle to stretch one axis, or the square to scale evenly. Each drag is one undo step.</td></tr>
+<tr><td>Move, Rotate, Scale</td><td>The transform tool for the selected objects, also on <kbd>W</kbd>, <kbd>E</kbd> and <kbd>R</kbd>. Move drags the red (X), green (Y) or amber (height) arrow, or the square in the middle along the ground. Rotate drags the amber ring around the up axis, or the red and green handles to tilt. Scale drags a handle to stretch one axis, or the square to scale evenly. Each drag is one undo step.</td></tr>
 <tr><td>Braille dots, Pixels</td><td>How cells are drawn on screen. <b>Braille dots</b> draws every Braille dot as a separate square with gaps between them, as a terminal font does; this is the most accurate preview of a terminal. <b>Pixels</b> draws the same dots without gaps, which is easier to read at small cell sizes. Both modes show identical information: the same dots and the same two colors per cell that a terminal receives.</td></tr>
 <tr><td>6, 8, 10, 12</td><td>The cell width in screen pixels; a cell is twice as tall as it is wide. Smaller cells fit more columns into the view, so the scene is rendered with more detail. At the default window size, <b>6</b> shows about 155 columns, close to the 160 columns a game is designed for; larger sizes show fewer columns and coarser detail, as a terminal with a larger font would.</td></tr>
 <tr><td>Live</td><td>Runs water, wind, particles and animation clips while editing. Scripts do not run in Live mode. Off by default.</td></tr>

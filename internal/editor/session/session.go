@@ -78,6 +78,7 @@ type Session struct {
 	pipe      *pipeline.Pipeline
 	frame     *pipeline.Frame
 	sel       uint64
+	group     []uint64 // selected with sel; see selection.go
 	dirty     bool
 	unsaved   bool
 	keys      []input.Key

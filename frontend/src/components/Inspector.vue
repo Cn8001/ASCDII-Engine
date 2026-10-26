@@ -21,6 +21,8 @@ const header = ['name', 'tag', 'visible', 'solid']
 const node = computed(() => findNode(store.selected))
 const own = computed(() => !!node.value && !node.value.prefab && !node.value.inherited)
 const field = (name: string) => store.props.find((p) => p.name === name)
+// isPart marks a model part's material slot, such as mesh.parts/eyes.
+const isPart = (name: string) => name.includes('.parts/')
 const cards = computed(() => {
   const list = store.selected ? store.props : store.sceneProps
   const out: Card[] = []
@@ -205,7 +207,10 @@ function icon(c: Card) {
           <button v-if="c.index >= 0 && own" class="icon-btn size-6" title="More" @click="(e) => cardMenu(e, c)"><Icon name="more" :size="14" /></button>
         </div>
         <div v-show="!collapsed[c.key]" class="px-2 py-1">
-          <PropField v-for="p in c.props" :key="p.name" :p="p" :keyable="!!store.selected" @set="set" @ref="setRef" @key="key" @menu="propMenu" />
+          <template v-for="(p, i) in c.props" :key="p.name">
+            <div v-if="isPart(p.name) && !isPart(c.props[i - 1]?.name ?? '')" class="mb-1 mt-2 text-[10px] font-medium uppercase tracking-wider text-ink-500" title="One material slot per part of the model; empty slots keep the model's own texture">Parts</div>
+            <PropField :p="p" :keyable="!!store.selected" @set="set" @ref="setRef" @key="key" @menu="propMenu" />
+          </template>
         </div>
       </section>
       <AddComponent v-if="store.selected && own" />

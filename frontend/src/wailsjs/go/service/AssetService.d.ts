@@ -27,7 +27,7 @@ export function Import(arg1:Array<string>,arg2:string):Promise<Array<string>>;
 
 export function List():Promise<Array<asset.Entry>>;
 
-export function MaterialAt(arg1:string,arg2:number,arg3:number):Promise<number>;
+export function MaterialAt(arg1:string,arg2:number,arg3:number):Promise<session.MaterialDrop>;
 
 export function Move(arg1:string,arg2:string):Promise<string>;
 

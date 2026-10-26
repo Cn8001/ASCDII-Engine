@@ -30,11 +30,13 @@ export function Particles(arg1:number,arg2:string,arg3:string,arg4:string):Promi
 
 export function Pause():Promise<void>;
 
-export function Pick(arg1:number,arg2:number):Promise<number>;
+export function Pick(arg1:number,arg2:number,arg3:boolean):Promise<number>;
 
 export function Play():Promise<void>;
 
 export function Resize(arg1:number,arg2:number):Promise<void>;
+
+export function SelectRect(arg1:number,arg2:number,arg3:number,arg4:number,arg5:boolean):Promise<Array<number>>;
 
 export function SetGizmos(arg1:boolean):Promise<void>;
 
@@ -51,6 +53,8 @@ export function Step():Promise<void>;
 export function Stop():Promise<void>;
 
 export function Stretch(arg1:number,arg2:string,arg3:number,arg4:number,arg5:number,arg6:number):Promise<void>;
+
+export function TogglePick(arg1:number,arg2:number,arg3:boolean):Promise<number>;
 
 export function Turn(arg1:number,arg2:string,arg3:number,arg4:number,arg5:number,arg6:number):Promise<void>;
 

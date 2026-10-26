@@ -59,6 +59,7 @@ type Dot struct {
 	Depth    float32
 	X, Y, Z  float32
 	Tag      uint32
+	Part     uint16
 }
 
 func (d *Dot) World() geom.Vec3 { return geom.V3(float64(d.X), float64(d.Y), float64(d.Z)) }
@@ -68,6 +69,7 @@ type Buffer struct {
 	W, H       int
 	dots       []Dot
 	tag        uint32
+	part       uint16
 }
 
 func New(cols, rows int) *Buffer {
@@ -96,7 +98,7 @@ func (b *Buffer) Clear(bg color.Color) {
 			copy(b.dots[n:], b.dots[:n])
 		}
 	}
-	b.tag = 0
+	b.tag, b.part = 0, 0
 }
 
 // Grow makes the buffer at least w by h dots, keeping it when it is larger,
@@ -120,7 +122,11 @@ func (b *Buffer) ClearRect(x0, y0, x1, y1 int) {
 }
 
 // SetTag marks every following write, which is how the editor picks entities.
-func (b *Buffer) SetTag(tag uint32) { b.tag = tag }
+func (b *Buffer) SetTag(tag uint32) { b.tag, b.part = tag, 0 }
+
+// SetPart marks following writes as part p-1 of the tagged object, so a drop
+// can tell a model's parts apart; 0 clears it.
+func (b *Buffer) SetPart(p uint16) { b.part = p }
 
 func (b *Buffer) Inside(x, y int) bool { return x >= 0 && y >= 0 && x < b.W && y < b.H }
 
@@ -150,23 +156,32 @@ func (b *Buffer) Plot(x, y int, f Frag) {
 	}
 	*d = Dot{
 		Color: f.Albedo, Albedo: f.Albedo, Emissive: f.Emissive, Flags: f.Flags, Normal: f.Normal,
-		Depth: float32(depth), X: float32(f.World.X), Y: float32(f.World.Y), Z: float32(z), Tag: b.tag,
+		Depth: float32(depth), X: float32(f.World.X), Y: float32(f.World.Y), Z: float32(z), Tag: b.tag, Part: b.part,
 	}
 }
 
 // Pick returns the tag of the nearest tagged dot inside a cell, zero if none.
 func (b *Buffer) Pick(col, row int) uint32 {
+	tag, _ := b.PickPart(col, row)
+
+	return tag
+}
+
+// PickPart is Pick with the part of the object that drew the dot, -1 when
+// it marked none.
+func (b *Buffer) PickPart(col int, row int) (uint32, int) {
 	var tag uint32
+	var part = -1
 	best := float32(math.Inf(-1))
 	for dy := 0; dy < SubH; dy++ {
 		for dx := 0; dx < SubW; dx++ {
 			d := b.At(col*SubW+dx, row*SubH+dy)
 			if d != nil && d.Tag != 0 && d.Depth >= best {
-				best, tag = d.Depth, d.Tag
+				best, tag, part = d.Depth, d.Tag, int(d.Part)-1
 			}
 		}
 	}
-	return tag
+	return tag, part
 }
 
 // CellDepth is the nearest depth inside a cell, used to occlude cell sprites.

@@ -4,7 +4,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { Assets, EventsOn, Viewport } from '../lib/api'
 import { decodeBytes, Painter } from '../lib/cells'
 import { engineKey } from '../lib/keys'
-import { call, findNode, refresh, refreshProps, select, setFrame, store } from '../lib/store'
+import { adopt, call, findNode, refresh, refreshProps, select, setFrame, store, toast } from '../lib/store'
 import type { session } from '../wailsjs/go/models'
 import Icon from './Icon.vue'
 
@@ -87,17 +87,22 @@ onBeforeUnmount(() => {
   observer?.disconnect()
 })
 
-const edges = computed(() => {
-  const g = store.frame.gizmo
-  if (!g?.corners || g.corners.length !== 8) return []
+// boxEdges turns 8 box corners in cell units into the 12 edges in pixels.
+function boxEdges(corners: number[][] | undefined): number[][] {
+  if (!corners || corners.length !== 8) return []
   const out: number[][] = []
   for (let a = 0; a < 8; a++) {
     for (const b of [1, 2, 4]) {
-      if (!(a & b)) out.push([...g.corners[a], ...g.corners[a | b]].map((v, i) => v * (i % 2 ? ch.value : cw.value)))
+      if (!(a & b)) out.push([...corners[a], ...corners[a | b]].map((v, i) => v * (i % 2 ? ch.value : cw.value)))
     }
   }
   return out
-})
+}
+const edges = computed(() => boxEdges(store.frame.gizmo?.corners))
+// otherEdges outline the rest of a selection of several objects.
+const otherEdges = computed(() => (store.frame.gizmo?.others ?? []).flatMap((c) => boxEdges(c)))
+// rect is the selection rectangle while the left button drags, in pixels.
+const rect = ref<{ x0: number; y0: number; x1: number; y1: number } | null>(null)
 
 const anchor = computed(() => {
   const g = store.frame.gizmo
@@ -131,7 +136,7 @@ const hover = ref('')
 const selectedName = computed(() => findNode(store.selected)?.name ?? '')
 const playing = computed(() => store.frame.mode !== 'edit')
 
-type DragMode = 'none' | 'pan' | 'orbit' | 'move' | 'paint' | 'collider'
+type DragMode = 'none' | 'pan' | 'orbit' | 'move' | 'paint' | 'collider' | 'rect'
 const tools = [
   { name: 'move', icon: 'move', title: 'Move  W' },
   { name: 'rotate', icon: 'rotate', title: 'Rotate  E' },
@@ -142,6 +147,7 @@ let mode: DragMode = 'none'
 let axis = 'free'
 let handle: { key: string; name: string } | null = null
 let prev = { x: 0, y: 0 }
+let start = { x: 0, y: 0 } // where the button went down
 let moved = 0
 let pending: (() => void) | null = null
 
@@ -169,6 +175,7 @@ function down(e: PointerEvent) {
   host.value?.focus()
   const p = local(e)
   prev = p
+  start = p
   moved = 0
   if (store.brush.on && e.button === 0 && store.selected && store.view === 'scene') {
     mode = 'paint'
@@ -186,6 +193,10 @@ function down(e: PointerEvent) {
   } else if (hit && store.view === 'scene') {
     mode = 'move'
     axis = hit
+  } else if (e.button === 0 && store.view === 'scene') {
+    // In the Scene view the left button clicks or drags a selection
+    // rectangle; the middle button pans.
+    mode = 'rect'
   } else mode = 'pan'
   ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
 }
@@ -221,7 +232,9 @@ function move(e: PointerEvent) {
   const dx = p.x - prev.x
   const dy = p.y - prev.y
   moved += Math.abs(dx) + Math.abs(dy)
-  if (mode === 'pan' && moved > 3) {
+  if (mode === 'rect') {
+    if (moved > 3) rect.value = { x0: start.x, y0: start.y, x1: p.x, y1: p.y }
+  } else if (mode === 'pan' && moved > 3) {
     const from = prev
     queue(() => Viewport.Pan((p.x - from.x) / cw.value, (p.y - from.y) / ch.value))
   } else if (mode === 'orbit') {
@@ -243,13 +256,26 @@ function move(e: PointerEvent) {
   prev = p
 }
 
+// up ends a drag. A click selects: Ctrl or Shift adds to the selection or
+// takes out, Alt picks exactly the object under the pointer instead of its
+// prefab root. A rectangle selects everything drawn inside it.
 async function up(e: PointerEvent) {
   const was = mode
   mode = 'none'
-  if (was === 'pan' && moved <= 3 && e.button === 0) {
-    const p = local(e)
-    const id = await call(() => Viewport.Pick(Math.floor(p.x / cw.value), Math.floor(p.y / ch.value)))
-    await select(id ?? 0)
+  const r = rect.value
+  rect.value = null
+  const p = local(e)
+  const col = (x: number) => Math.floor(x / cw.value)
+  const row = (y: number) => Math.floor(y / ch.value)
+  const add = e.ctrlKey || e.metaKey || e.shiftKey
+  if (was === 'rect' && r) {
+    const ids = await call(() => Viewport.SelectRect(col(r.x0), row(r.y0), col(r.x1), row(r.y1), add))
+    await adopt(ids?.[0] ?? 0)
+  } else if ((was === 'rect' || was === 'pan') && moved <= 3 && e.button === 0) {
+    const id = add
+      ? await call(() => Viewport.TogglePick(col(p.x), row(p.y), e.altKey))
+      : await call(() => Viewport.Pick(col(p.x), row(p.y), e.altKey))
+    await adopt(id ?? 0)
   }
   if (was === 'move' || was === 'paint' || was === 'collider') await refreshProps()
 }
@@ -284,10 +310,11 @@ async function drop(e: DragEvent) {
   const path = rest.join(':')
   if (kind === 'material') {
     const p = local(e)
-    const id = await call(() => Assets.MaterialAt(path, Math.floor(p.x / cw.value), Math.floor(p.y / ch.value)))
-    if (id !== undefined) {
+    const dropped = await call(() => Assets.MaterialAt(path, Math.floor(p.x / cw.value), Math.floor(p.y / ch.value)))
+    if (dropped) {
       await refresh()
-      await select(id)
+      await select(dropped.id)
+      if (dropped.part) toast(`Material applied to ${dropped.part}`, 'ok')
     }
     return
   }
@@ -349,8 +376,15 @@ function setLive() {
       @drop.prevent="drop"
       @filedrop="fileDrop"
     />
+    <div
+      v-if="rect"
+      class="pointer-events-none absolute border border-amber-glow/70 bg-amber-glow/10"
+      :style="{ left: Math.min(rect.x0, rect.x1) + 'px', top: 32 + Math.min(rect.y0, rect.y1) + 'px', width: Math.abs(rect.x1 - rect.x0) + 'px', height: Math.abs(rect.y1 - rect.y0) + 'px' }"
+    />
     <svg v-if="store.view === 'scene' && edges.length" class="pointer-events-none absolute left-0 top-8 h-full w-full overflow-visible">
       <line v-for="(l, i) in edges" :key="i" :x1="l[0]" :y1="l[1]" :x2="l[2]" :y2="l[3]" stroke="var(--color-amber-glow)" stroke-opacity=".45" stroke-width="1" stroke-dasharray="3 3" />
+      <line v-for="(l, i) in otherEdges" :key="'o' + i" :x1="l[0]" :y1="l[1]" :x2="l[2]" :y2="l[3]" stroke="var(--color-amber-glow)" stroke-opacity=".3" stroke-width="1" stroke-dasharray="2 3" />
+      <text v-if="anchor && otherEdges.length" :x="anchor.x + 14" :y="anchor.y + 4" fill="var(--color-ink-400)" font-size="10" font-family="var(--font-mono)">+{{ store.frame.selection.length - 1 }} more</text>
       <circle v-if="store.tool === 'rotate' && anchor" :cx="anchor.x" :cy="anchor.y" :r="ring" fill="none" :stroke="axisColor[2]" :stroke-width="hover === 'z' ? 3 : 2" />
       <g v-for="ax in axes" :key="ax.name">
         <template v-if="store.tool !== 'rotate' || ax.name !== 'z'">

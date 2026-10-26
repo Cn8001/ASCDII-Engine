@@ -11,6 +11,9 @@ const emit = defineEmits<{ set: [name: string, value: unknown]; ref: [name: stri
 
 const label = computed(() => {
   const n = props.p.name
+  // A part slot shows the part's name, which may itself contain dots.
+  const part = n.indexOf('.parts/')
+  if (part >= 0) return n.slice(part + '.parts/'.length)
   const i = n.lastIndexOf('.')
   return i >= 0 ? n.slice(i + 1) : n
 })

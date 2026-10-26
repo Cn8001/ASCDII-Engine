@@ -1,8 +1,9 @@
 package service
 
 import (
-	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/animator"
 	"path/filepath"
+
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/animator"
 
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/editor/session"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/asset"
@@ -127,6 +128,13 @@ func (s *SceneService) Reparent(id, parent uint64, index int) error {
 func (s *SceneService) Duplicate(id uint64) (uint64, error) { return wrap1(s.d.Session.Duplicate(id)) }
 func (s *SceneService) Unpack(id uint64) error              { return wrap(s.d.Session.Unpack(id)) }
 
+// Selection is every selected object, the primary one first.
+func (s *SceneService) Selection() []uint64    { return s.d.Session.Selection() }
+func (s *SceneService) RemoveSelection() error { return wrap(s.d.Session.RemoveSelection()) }
+func (s *SceneService) DuplicateSelection() ([]uint64, error) {
+	return wrap1(s.d.Session.DuplicateSelection())
+}
+
 // OpenPrefab edits a prefab on its own; ClosePrefab goes back to the scene.
 func (s *SceneService) OpenPrefab(ref string) error { return wrap(s.d.Session.OpenPrefab(ref)) }
 func (s *SceneService) ClosePrefab() error          { return wrap(s.d.Session.ClosePrefab()) }
@@ -150,12 +158,20 @@ func (v *ViewportService) Pan(dcol, drow float64)     { v.d.Session.Pan(dcol, dr
 func (v *ViewportService) Orbit(dyaw, dpitch float64) { v.d.Session.Orbit(dyaw, dpitch) }
 func (v *ViewportService) Zoom(k float64)             { v.d.Session.Zoom(k) }
 func (v *ViewportService) Focus(id uint64) error      { return wrap(v.d.Session.Focus(id)) }
-func (v *ViewportService) Pick(col, row int) uint64   { return v.d.Session.Pick(col, row) }
-func (v *ViewportService) Play() error                { return wrap(v.d.Session.Play()) }
-func (v *ViewportService) Pause()                     { v.d.Session.Pause() }
-func (v *ViewportService) Stop()                      { v.d.Session.Stop() }
-func (v *ViewportService) Key(name string) error      { return wrap(v.d.Session.Key(name)) }
-func (v *ViewportService) KeyUp(name string) error    { return wrap(v.d.Session.KeyUp(name)) }
+func (v *ViewportService) Pick(col, row int, exact bool) uint64 {
+	return v.d.Session.Pick(col, row, exact)
+}
+func (v *ViewportService) TogglePick(col, row int, exact bool) uint64 {
+	return v.d.Session.TogglePick(col, row, exact)
+}
+func (v *ViewportService) SelectRect(col0, row0, col1, row1 int, add bool) []uint64 {
+	return v.d.Session.SelectRect(col0, row0, col1, row1, add)
+}
+func (v *ViewportService) Play() error             { return wrap(v.d.Session.Play()) }
+func (v *ViewportService) Pause()                  { v.d.Session.Pause() }
+func (v *ViewportService) Stop()                   { v.d.Session.Stop() }
+func (v *ViewportService) Key(name string) error   { return wrap(v.d.Session.Key(name)) }
+func (v *ViewportService) KeyUp(name string) error { return wrap(v.d.Session.KeyUp(name)) }
 
 // Paint adds a brush stroke on the selected object at a viewport cell.
 // Particles drives a particle system from the particle editor.
@@ -249,7 +265,7 @@ func (a *AssetService) Thumb(ref string, size int) (string, error) {
 func (a *AssetService) ApplyMaterial(id uint64, ref string) error {
 	return wrap(a.d.Session.ApplyMaterial(id, ref))
 }
-func (a *AssetService) MaterialAt(ref string, col, row int) (uint64, error) {
+func (a *AssetService) MaterialAt(ref string, col, row int) (session.MaterialDrop, error) {
 	return wrap1(a.d.Session.MaterialAt(ref, col, row))
 }
 

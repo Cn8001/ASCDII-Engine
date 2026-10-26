@@ -1,6 +1,6 @@
 import { Assets, Scene, Viewport } from './api'
 import { ask } from './dialog'
-import { call, findNode, refresh, select, store, toast } from './store'
+import { adopt, call, findNode, multi, refresh, select, store, toast } from './store'
 import type { MenuItem } from './menu'
 
 export function kindIcon(kind: string): string {
@@ -31,14 +31,30 @@ export async function add(parent: number, kind: string) {
   }
 }
 
+// remove deletes id, or the whole selection when id is part of a selection
+// of several objects.
 export async function remove(id: number) {
   if (!id) return
-  await call(() => Scene.Remove(id))
-  if (store.selected === id) store.selected = 0
+  if (multi() && store.frame.selection.includes(id)) {
+    await call(() => Scene.RemoveSelection())
+    store.selected = 0
+  } else {
+    await call(() => Scene.Remove(id))
+    if (store.selected === id) store.selected = 0
+  }
   await refresh()
 }
 
+// duplicate copies id, or every selected object when id is one of several.
 export async function duplicate(id: number) {
+  if (multi() && store.frame.selection.includes(id)) {
+    const copies = await call(() => Scene.DuplicateSelection())
+    if (copies?.length) {
+      await refresh()
+      await adopt(copies[0])
+    }
+    return
+  }
   const c = await call(() => Scene.Duplicate(id))
   if (c !== undefined) {
     await refresh()

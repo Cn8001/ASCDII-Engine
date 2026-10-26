@@ -20,6 +20,7 @@ import (
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/assets/mesh"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/prop"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/render/texture"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/world/components"
 )
 
 var ErrNoSettings = errors.New("asset has no settings")
@@ -254,16 +255,39 @@ func (s *Session) ApplyMaterial(id uint64, ref string) error {
 	return s.SetProp(id, name, ref)
 }
 
+// MaterialDrop is where a dropped material went: the object, and the model
+// part whose slot it filled, "" when it went to the whole object.
+type MaterialDrop struct {
+	ID   uint64 `json:"id"`
+	Part string `json:"part"`
+}
+
 // MaterialAt applies a material to whatever is drawn at a viewport cell, the
-// drag and drop way of texturing an object.
-func (s *Session) MaterialAt(ref string, col, row int) (uint64, error) {
+// drag and drop way of texturing an object. On a model it fills the slot of
+// the part under the pointer, so each part can get its own material.
+func (s *Session) MaterialAt(ref string, col, row int) (MaterialDrop, error) {
 	s.mu.Lock()
-	id := uint64(s.frame.Buf.Pick(col, row))
+	tag, part := s.frame.Buf.PickPart(col, row)
+	id := uint64(tag)
+	slot, name := "", ""
+	if o, err := s.current().ByID(id); err == nil && part >= 0 {
+		for _, c := range o.Components {
+			if m, ok := c.(*components.Mesh); ok {
+				if n, ok := m.PartName(part); ok {
+					slot, name = o.Key(c)+"."+components.PartProp+n, n
+				}
+				break
+			}
+		}
+	}
 	s.mu.Unlock()
 	if id == 0 {
-		return 0, fmt.Errorf("nothing under the pointer: %w", ErrNotReference)
+		return MaterialDrop{}, fmt.Errorf("nothing under the pointer: %w", ErrNotReference)
 	}
-	return id, s.ApplyMaterial(id, ref)
+	if slot != "" {
+		return MaterialDrop{ID: id, Part: name}, s.SetProp(id, slot, ref)
+	}
+	return MaterialDrop{ID: id}, s.ApplyMaterial(id, ref)
 }
 
 // CreateController writes a one state animator controller.
