@@ -1,4 +1,4 @@
-// Package term is the terminal backend: raw mode, size and an ANSI presenter
+// Package terminal is the terminal backend: raw mode, size and an ANSI presenter
 // that only rewrites changed cells.
 package terminal
 
@@ -145,5 +145,3 @@ func WritePreview(ctx context.Context, w io.Writer, g *cell.Grid, plain bool) er
 	}
 	return nil
 }
-
-// Keys reads raw input until r fails or ctx ends. Keys are dropped rather than

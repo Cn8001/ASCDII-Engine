@@ -53,7 +53,7 @@ func (s *Session) stop() {
 		a.emit(AudioEvent{Op: "stopall"})
 		clear(a.live)
 	}
-	s.play, s.mode, s.keys = nil, Edit, nil
+	s.play, s.mode, s.keys, s.step = nil, Edit, nil, 0
 	s.touch()
 }
 

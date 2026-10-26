@@ -238,9 +238,7 @@ func (s *Session) object(kind string) (*scene.GameObject, error) {
 	case kind == "empty":
 		return scene.NewGameObject("GameObject"), nil
 	case strings.HasPrefix(kind, "prefab:"):
-		e := scene.NewGameObject("")
-		e.Prefab = s.lib.Ref(strings.TrimPrefix(kind, "prefab:"))
-		return e, nil
+		return s.current().Instance(s.lib.Ref(strings.TrimPrefix(kind, "prefab:")))
 	case strings.HasPrefix(kind, "sprite:"):
 		ref := strings.TrimPrefix(kind, "sprite:")
 		if _, err := s.lib.Sprite(ref); err != nil {

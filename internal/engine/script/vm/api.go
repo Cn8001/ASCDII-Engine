@@ -22,6 +22,21 @@ func (v *VM) install() {
 	v.installGlobals()
 	v.installEngine()
 	v.installMods()
+	// The standard print would write over the game's frame; scripts replace
+	// this one with their own log, so it serves code outside them, such as
+	// the mod API script.
+	v.L.SetGlobal("print", v.L.NewFunction(func(L *lua.LState) int {
+		v.ctx.Logf("info", "lua", "%s", joinArgs(L))
+		return 0
+	}))
+}
+
+func joinArgs(L *lua.LState) string {
+	parts := make([]string, L.GetTop())
+	for i := range parts {
+		parts[i] = L.ToStringMeta(L.Get(i + 1)).String()
+	}
+	return strings.Join(parts, " ")
 }
 
 // selfTable is a script's self: the owner's handle, plus the script's own
@@ -70,14 +85,12 @@ func (v *VM) selfTable(s *Script) *lua.LTable {
 
 // bind adds the globals that need to know which script calls them.
 func (v *VM) bind(s *Script) {
-	s.env.RawSetString("log", v.L.NewFunction(func(L *lua.LState) int {
-		parts := make([]string, L.GetTop())
-		for i := range parts {
-			parts[i] = L.ToStringMeta(L.Get(i + 1)).String()
-		}
-		s.log("info", "%s", strings.Join(parts, " "))
+	logf := v.L.NewFunction(func(L *lua.LState) int {
+		s.log("info", "%s", joinArgs(L))
 		return 0
-	}))
+	})
+	s.env.RawSetString("log", logf)
+	s.env.RawSetString("print", logf)
 	s.env.RawSetString("say", v.L.NewFunction(func(L *lua.LState) int {
 		if _, ok := L.Get(1).(lua.LString); ok {
 			L.Insert(s.self, 1) // say("text") talks over the script's own object

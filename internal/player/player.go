@@ -75,6 +75,10 @@ func (g Game) Play(ctx context.Context, args []string) error {
 		l := newFileLog(g.Mods)
 		defer l.Close()
 		o.Log = l.Log
+	} else {
+		l := &heldLog{}
+		defer l.Flush(os.Stderr)
+		o.Log = l.Log
 	}
 	e, err := app.Open(ctx, g.FS, o)
 	if err != nil {

@@ -1,6 +1,7 @@
 package anim
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"sort"
@@ -83,25 +84,28 @@ func (c Clip) Local(t float64) float64 {
 }
 
 // Apply samples every track at scene time t and writes the values into target.
+// A track that fails is reported and skipped; the others still apply.
 func (c Clip) Apply(t float64, target prop.Editable) error {
 	lt := c.Local(t)
+	var errs []error
 	for _, tr := range c.Tracks {
-		p, ok := prop.Get(target, tr.Prop)
-		if !ok {
-			return fmt.Errorf("clip %s: %w: %s", c.Name, prop.ErrUnknownProp, tr.Prop)
-		}
-		v, err := tr.Sample(lt, p.Type)
-		if err != nil {
-			return fmt.Errorf("clip %s: %w", c.Name, err)
-		}
-		if v == nil {
-			continue
-		}
-		if err := target.Set(tr.Prop, v); err != nil {
-			return fmt.Errorf("clip %s: %w", c.Name, err)
+		if err := tr.apply(lt, target); err != nil {
+			errs = append(errs, fmt.Errorf("clip %s: %w", c.Name, err))
 		}
 	}
-	return nil
+	return errors.Join(errs...)
+}
+
+func (tr Track) apply(t float64, target prop.Editable) error {
+	p, ok := prop.Get(target, tr.Prop)
+	if !ok {
+		return fmt.Errorf("%w: %s", prop.ErrUnknownProp, tr.Prop)
+	}
+	v, err := tr.Sample(t, p.Type)
+	if err != nil || v == nil {
+		return err
+	}
+	return target.Set(tr.Prop, v)
 }
 
 func (tr Track) Sample(t float64, typ prop.Type) (any, error) {

@@ -15,7 +15,7 @@ section = {f: s for s, ps in nav for f, _ in ps}
 titles = dict(order)
 
 def aside(cur):
-    out = ['<aside class="side">','<a class="brand" href="index.html"><img src="img/logo.svg" alt=""><span>ASCDII Engine<small>0.0.1 docs</small></span></a>']
+    out = ['<aside class="side">','<a class="brand" href="index.html"><img src="img/logo.svg" alt=""><span>ASCDII Engine<small>0.0.2 docs</small></span></a>']
     for s, ps in nav:
         out.append(f'<h4>{s}</h4>')
         for f, t in ps:
