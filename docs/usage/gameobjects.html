@@ -101,7 +101,7 @@
 <p>Prefab instances cannot receive new components; edit the prefab, or unpack the instance first.</p>
 
 <h2 id="property-names">Property names</h2>
-<p>A component's properties are named after its kind: <code>light.radius</code>, <code>box.size</code>. A second component of the same kind on one object is numbered: the second light is <code>light#2</code> and its radius <code>light#2.radius</code>. Animation tracks, prefab overrides and Lua use these names. A short name such as <code>radius</code> is accepted when only one component of the object has that property.</p>
+<p>A component's properties are named after its kind: <code>light.radius</code>, <code>box.size</code>. A second component of the same kind on one object is numbered: the second light is <code>light#2</code> and its radius <code>light#2.radius</code>. Animation tracks, prefab overrides, references and Lua use these names. A component keeps its name for good: removing or reordering the first light leaves the second one <code>light#2</code>, so everything that points at it still does. A short name such as <code>radius</code> is accepted when only one component of the object has that property.</p>
 
 <h2 id="references">References</h2>
 <figure><img src="img/editor-references.png" alt="Reference slot filled by dragging the hero"><figcaption>Dragging the hero from the Hierarchy onto a script's object field.</figcaption></figure>

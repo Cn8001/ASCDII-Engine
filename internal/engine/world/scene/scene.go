@@ -277,6 +277,7 @@ func (s *Scene) instantiate(top *GameObject) error {
 			continue
 		}
 		e.Components, e.Children, e.off, e.srcFID = src.Components, nil, src.off, src.FID
+		e.slots, e.high = src.slots, src.high
 		if e.Name == "" {
 			e.Name = src.Name
 		}

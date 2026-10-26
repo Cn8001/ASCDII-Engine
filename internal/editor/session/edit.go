@@ -330,16 +330,11 @@ func (s *Session) ResetComponent(id uint64, index int) error {
 		if index < 0 || index >= len(e.Components) {
 			return fmt.Errorf("reset component %d: %w", index, scene.ErrUnknownKind)
 		}
-		old := e.Components[index]
-		c, err := s.reg.New(old.Kind())
+		c, err := s.reg.New(e.Components[index].Kind())
 		if err != nil {
 			return err
 		}
-		on := e.Enabled(old)
-		e.SetEnabled(old, true)
-		e.Components[index] = c
-		e.SetEnabled(c, on)
-		return nil
+		return e.ReplaceComponent(index, c)
 	})
 }
 

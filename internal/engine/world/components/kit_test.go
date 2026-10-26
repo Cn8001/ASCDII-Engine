@@ -425,3 +425,47 @@ func aim(s *scene.Scene, target geom.Vec3, span float64) {
 	c.Span = span
 	s.Add("camera", c).Local.Pos = target
 }
+
+func TestUnit_RigidbodyUnderTurnedParentMovesInWorldSpace(t *testing.T) {
+	// Arrange
+	s := scene.New("t")
+	c := &scene.Ctx{Scene: s}
+	wall := NewBoxCollider()
+	wall.Size = geom.V3(2, 10, 3)
+	s.Add("wall", wall).At(5, 0, 0)
+	rig := s.Add("rig").At(2, -3, 1)
+	rig.Local.Rot = geom.V3(0, 0, 90)
+	ball := rig.Add("ball", NewCircleCollider(), NewRigidbody())
+	ball.SetWorld(scene.Transform{Pos: geom.V3(0, 0, 4), Scale: geom.V3(1, 1, 1)})
+	rb := ball.Component("rigidbody").(*Rigidbody)
+	rb.Velocity = geom.V3(3, 0, 0)
+	rb.Drag = 0
+
+	// Act
+	step(s, c, 3)
+
+	// Assert
+	p := ball.World().Pos
+	if math.Abs(p.Z) > 1e-9 || p.X > 3.01 || p.X < 1 || math.Abs(p.Y) > 1e-9 {
+		t.Fatalf("world pos %+v", p)
+	}
+}
+
+func TestUnit_PlayerUnderTurnedParentWalksInWorldSpace(t *testing.T) {
+	// Arrange
+	s := scene.New("t")
+	rig := s.Add("rig").At(-1, 2, 0)
+	rig.Local.Rot = geom.V3(0, 0, 90)
+	hero := rig.Add("hero", NewBlob(.5, color.RGB(200, 180, 120))).With(NewPlayer())
+	hero.SetWorld(scene.Transform{Scale: geom.V3(1, 1, 1)})
+	s.Add("wall", NewBox(geom.V3(1, 10, 2), color.RGB(90, 90, 90))).At(3, 0, 0).Blocking()
+
+	// Act
+	play(s, []input.Key{'d'}, .5)
+
+	// Assert
+	w := hero.World()
+	if w.Pos.X <= .5 || w.Pos.X > 2.5-.6+1e-9 || math.Abs(w.Pos.Y) > 1e-9 || w.Flip {
+		t.Fatalf("world %+v", w)
+	}
+}

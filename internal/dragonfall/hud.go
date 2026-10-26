@@ -39,7 +39,7 @@ func (h *HUD) Tick(c *scene.Ctx, _ *scene.GameObject, _ float64) {
 	}
 	c.Scene.Walk(func(e *scene.GameObject, _ bool) bool {
 		if e.Component("player") != nil {
-			h.player = e.Local.Pos
+			h.player = e.World().Pos
 		}
 		return true
 	})

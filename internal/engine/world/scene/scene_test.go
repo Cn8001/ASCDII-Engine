@@ -746,3 +746,81 @@ func TestUnit_NewObjectsGetRandomFileIDs(t *testing.T) {
 		t.Fatalf("fids %d %d", x.FID, y.FID)
 	}
 }
+
+func TestUnit_KeysSurviveRemovingAndMovingComponents(t *testing.T) {
+	// Arrange
+	s := New("level")
+	a, b, c := newCrate(), newCrate(), newCrate()
+	o := s.Add("stack", a, b, c)
+
+	// Act
+	errRemove := o.RemoveComponent(0)
+	errMove := o.MoveComponent(1, 0)
+
+	// Assert
+	if errRemove != nil || errMove != nil || o.Key(b) != "crate#2" || o.Key(c) != "crate#3" || o.ComponentByKey("crate#2") != b || o.ComponentByKey("crate") != nil {
+		t.Fatalf("keys %q %q", o.Key(b), o.Key(c))
+	}
+}
+
+func TestUnit_KeysSurviveSaveAndLoad(t *testing.T) {
+	// Arrange
+	s := New("level")
+	o := s.Add("stack", newCrate(), newCrate())
+	_ = o.RemoveComponent(0)
+	s.Add("plain", newCrate(), newCrate())
+	from := s.Add("from", &link{})
+	if err := from.Set("link.box", CompRefOf(from, o, o.Components[0])); err != nil {
+		t.Fatal(err)
+	}
+	var buf bytes.Buffer
+	if err := Encode(&buf, s); err != nil {
+		t.Fatal(err)
+	}
+
+	// Act
+	back, err := Decode(bytes.NewReader(buf.Bytes()), registry(), nil)
+
+	// Assert
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, bf := back.Find("stack"), back.Find("from")
+	_, c := back.LookupComponent(bf, bf.Component("link").(*link).Box, "crate")
+	if got.Key(got.Components[0]) != "crate#2" || c != got.Components[0] || strings.Count(buf.String(), `"slot"`) != 1 || back.Find("plain").Key(back.Find("plain").Components[1]) != "crate#2" {
+		t.Fatalf("key %q, ref resolves %v, file %s", got.Key(got.Components[0]), c != nil, buf.String())
+	}
+}
+
+func TestUnit_ReplaceComponentKeepsKeyAndState(t *testing.T) {
+	// Arrange
+	s := New("level")
+	o := s.Add("stack", newCrate(), newCrate())
+	o.SetEnabled(o.Components[1], false)
+	fresh := newCrate()
+
+	// Act
+	err := o.ReplaceComponent(1, fresh)
+
+	// Assert
+	if err != nil || o.Key(fresh) != "crate#2" || o.Enabled(fresh) {
+		t.Fatalf("err %v key %q enabled %v", err, o.Key(fresh), o.Enabled(fresh))
+	}
+}
+
+func TestUnit_MoveWorldIgnoresParentTransform(t *testing.T) {
+	// Arrange
+	s := New("level")
+	parent := s.Add("parent").At(5, 5, 0)
+	parent.Local.Rot, parent.Local.Scale = geom.V3(0, 0, 90), geom.V3(2, 2, 2)
+	child := parent.Add("child").At(1, 0, 0)
+	before := child.World().Pos
+
+	// Act
+	child.MoveWorld(geom.V3(1, 2, 3))
+
+	// Assert
+	if d := child.World().Pos.Sub(before); math.Abs(d.X-1) > 1e-9 || math.Abs(d.Y-2) > 1e-9 || math.Abs(d.Z-3) > 1e-9 {
+		t.Fatalf("moved %+v", d)
+	}
+}

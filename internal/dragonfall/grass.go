@@ -37,12 +37,12 @@ func (g *Grass) Tick(c *scene.Ctx, _ *scene.GameObject, dt float64) {
 	g.field.Step(dt)
 	c.Scene.Walk(func(e *scene.GameObject, _ bool) bool {
 		p, ok := e.Component("player").(*components.Player)
-		if ok && p.Moving() && e.Local.Pos.Z < .3 {
+		if w := e.World(); ok && p.Moving() && w.Pos.Z < .3 {
 			dx := 1.0
-			if e.Local.Flip {
+			if w.Flip {
 				dx = -1
 			}
-			g.field.Disturb(int(e.Local.Pos.X), int(e.Local.Pos.Y), dx*dt*20)
+			g.field.Disturb(int(w.Pos.X), int(w.Pos.Y), dx*dt*20)
 		}
 		return true
 	})

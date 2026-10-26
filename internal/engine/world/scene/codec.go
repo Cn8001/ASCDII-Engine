@@ -17,6 +17,7 @@ const Version = 2
 
 type compDoc struct {
 	Kind  string         `json:"kind"`
+	Slot  int            `json:"slot,omitempty"` // the n of "light#n" when it is not the next free one
 	Off   bool           `json:"off,omitempty"`
 	Props map[string]any `json:"props,omitempty"`
 }
@@ -99,8 +100,15 @@ func docOf(e *GameObject, expand bool) entityDoc {
 		return d
 	}
 	d.Prefab = ""
+	e.number()
+	high := map[string]int{}
 	for _, c := range e.Components {
-		d.Components = append(d.Components, compDoc{Kind: c.Kind(), Off: !e.Enabled(c), Props: props(c)})
+		cd := compDoc{Kind: c.Kind(), Off: !e.Enabled(c), Props: props(c)}
+		if n := e.slots[c]; n != high[c.Kind()]+1 {
+			cd.Slot = n // only gaps and reorders are written, so most files keep their shape
+		}
+		high[c.Kind()] = max(high[c.Kind()], e.slots[c])
+		d.Components = append(d.Components, cd)
 	}
 	for _, c := range e.Children {
 		if expand || !c.inherited {
@@ -178,6 +186,11 @@ func (s *Scene) build(d entityDoc, reg *Registry) (*GameObject, error) {
 			return nil, fmt.Errorf("object %s: %w", d.Name, err)
 		}
 		e.Components = append(e.Components, c)
+		n := cd.Slot
+		if n <= 0 {
+			n = e.high[c.Kind()] + 1
+		}
+		e.setSlot(c, n)
 		if cd.Off {
 			e.SetEnabled(c, false)
 		}
