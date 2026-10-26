@@ -46,7 +46,7 @@
 <p class="lead">ASCDII Engine consists of three programs, each with its own icon.</p>
 <table>
 <tr><th>Program</th><th>Function</th></tr>
-<tr><td><code>ascdii</code></td><td>The command line tools; <code>ascdii run</code> opens the editor. Without arguments it prints the list of commands. See <a href="cli.html">CLI reference</a>.</td></tr>
+<tr><td><code>ascdii</code></td><td>Opens the editor when started without arguments, for example with a double click, and provides the command line tools otherwise. See <a href="cli.html">CLI reference</a>.</td></tr>
 <tr><td><code>ascdii-editor</code></td><td>The desktop editor. It is opened through <code>ascdii</code>.</td></tr>
 <tr><td><code>ascdii-player</code></td><td>Runs games in the terminal. Every build starts from a copy of it, see <a href="building.html">Build</a>.</td></tr>
 </table>
@@ -74,11 +74,10 @@
 <h2 id="starting">Starting the engine</h2>
 <figure><img src="img/editor-start.png" alt="Start screen"><figcaption>The start screen: templates for a new project on the left, recent projects on the right.</figcaption></figure>
 <ol class="steps">
-<li>Run <code>ascdii run</code> in a terminal. The editor opens at its start screen. <code>ascdii run &lt;project&gt;</code> opens it with a project, given as its folder or its <code>.ascdiiproj</code> file.</li>
-<li>To start the editor with a double click on Windows, create a shortcut to <code>ascdii.exe</code> and append <code>run</code> to its target. The console window of the shortcut closes as soon as the editor starts.</li>
+<li>Run <code>ascdii</code>, for example with a double click. The editor opens at its start screen. On Windows, the console window that opens with <code>ascdii.exe</code> closes as soon as the editor starts. In a terminal, <code>ascdii run &lt;project&gt;</code> opens the editor with a project, given as its folder or its <code>.ascdiiproj</code> file.</li>
 <li>To create a project, select a template, enter a name, choose the location with <b>Location</b> and press <b>Create</b>. To continue, select a recent project, or press <b>Open</b> to choose a <code>.ascdiiproj</code> file.</li>
 </ol>
-<p>The start screen returns when a project is closed. Starting <code>ascdii-editor</code> directly also works: it restarts itself through <code>ascdii run</code>. A double click on <code>ascdii.exe</code> itself shows the list of commands and waits for <kbd>Enter</kbd>.</p>
+<p>The start screen returns when a project is closed. Starting <code>ascdii-editor</code> directly also works: it restarts itself through <code>ascdii run</code>.</p>
 
 <h2>Terminal requirements</h2>
 <figure><img src="img/terminal.png" alt="Dragonfall in a terminal"><figcaption>Dragonfall rendered by a terminal emulator. Each cell holds one Braille character with a foreground and a background color.</figcaption></figure>
