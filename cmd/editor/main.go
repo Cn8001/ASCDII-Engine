@@ -22,10 +22,12 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 	"github.com/wailsapp/wails/v2/pkg/options/linux"
+	"github.com/wailsapp/wails/v2/pkg/options/windows"
 	wruntime "github.com/wailsapp/wails/v2/pkg/runtime"
 
 	"github.com/Cn8001/ASCDII-Engine/frontend"
 	"github.com/Cn8001/ASCDII-Engine/internal/dragonfall"
+	"github.com/Cn8001/ASCDII-Engine/internal/editor/appdir"
 	"github.com/Cn8001/ASCDII-Engine/internal/editor/brand"
 	"github.com/Cn8001/ASCDII-Engine/internal/editor/launch"
 	"github.com/Cn8001/ASCDII-Engine/internal/editor/players"
@@ -44,29 +46,21 @@ func main() {
 	}
 }
 
-// packageDir is where .ascdiipack files the user collects are listed from.
-func packageDir() string {
-	dir, err := os.UserConfigDir()
-	if err != nil {
-		return ""
-	}
-	return filepath.Join(dir, "ascdii", "packages")
-}
-
 func run() error {
 	if !openDirectly && !launch.FromLauncher() {
 		return handOver()
 	}
-	store, err := recent.Default()
+	dir, err := appdir.Default(context.Background())
 	if err != nil {
 		return err
 	}
+	store := recent.Store{Path: filepath.Join(dir, appdir.Recent)}
 	appCtx := &service.Context{}
 	sess := session.New(session.Deps{
 		Modules:    []project.Module{dragonfall.Module()},
 		Templates:  []session.Template{{Name: "empty"}, {Name: "dragonfall", FS: dragonfall.Template()}},
 		Packages:   []pack.Source{dragonfall.Package()},
-		PackageDir: packageDir(),
+		PackageDir: filepath.Join(dir, appdir.Packages),
 		Players:    players.Default(),
 		Binary:     true,
 		Emit:       emitter{},
@@ -100,6 +94,8 @@ func run() error {
 		// Webview drops stay on, so drags inside the editor keep working.
 		DragAndDrop: &options.DragAndDrop{EnableFileDrop: true},
 		Linux:       &linux.Options{Icon: icon.Bytes(), ProgramName: "ascdii-editor"},
+		// WebView2 would otherwise keep its data in a folder of its own named after the executable.
+		Windows: &windows.Options{WebviewUserDataPath: filepath.Join(dir, appdir.Webview)},
 	})
 }
 

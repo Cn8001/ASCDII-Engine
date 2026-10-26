@@ -21,6 +21,7 @@ endif
 
 test:
 	go vet ./...
+	go vet -tags window ./internal/player ./cmd/player
 	go test -race ./...
 
 bench:
@@ -32,7 +33,7 @@ template:
 # The engine version is set only in internal/engine/runtime/version/version.go.
 # This copies it to what cannot read Go: wails.json and the Windows resources
 # (brand), the template manifest and the docs. The frontend reads it itself.
-version: brand
+version: brand template
 	python3 docs/nav.py
 	@if [ -f docs/internals/build.py ]; then python3 docs/internals/build.py; fi
 
@@ -42,21 +43,27 @@ brand:
 # bin/linux and bin/windows are each a complete install holding only that
 # platform's programs: copied to a machine of the platform they run as they
 # are. ascdii opens the editor (and is the CLI), ascdii-editor is the editor,
-# ascdii-player runs games and is what builds start from.
+# ascdii-player runs games and is what builds start from. ascdii-player-window
+# is the player built with the window display (Ebitengine), which games shown
+# in a window start from; the terminal programs do not link it. On Windows it
+# is a GUI program, so it opens no console.
 LINUX   := $(BIN)/linux
 WINDOWS := $(BIN)/windows
 GOREL   := go build -trimpath -ldflags "-s -w $(LDKEY)"
+GOWIN   := go build -trimpath -tags window
 
 all: version cli editor-linux editor-windows
 
 # brand also writes the Windows icon resources go build links in.
 # Build lines stay quiet: printed, they would put the key into logs.
 cli: brand
-	@echo "build $(LINUX)/ascdii $(LINUX)/ascdii-player $(WINDOWS)/ascdii.exe $(WINDOWS)/ascdii-player.exe"
+	@echo "build $(LINUX)/ascdii $(LINUX)/ascdii-player $(LINUX)/ascdii-player-window $(WINDOWS)/ascdii.exe $(WINDOWS)/ascdii-player.exe $(WINDOWS)/ascdii-player-window.exe"
 	@GOOS=linux GOARCH=amd64 $(GOREL) -o $(LINUX)/ascdii ./cmd/ascdii
 	@GOOS=linux GOARCH=amd64 $(GOREL) -o $(LINUX)/ascdii-player ./cmd/player
+	@GOOS=linux GOARCH=amd64 $(GOWIN) -ldflags "-s -w $(LDKEY)" -o $(LINUX)/ascdii-player-window ./cmd/player
 	@GOOS=windows GOARCH=amd64 $(GOREL) -o $(WINDOWS)/ascdii.exe ./cmd/ascdii
 	@GOOS=windows GOARCH=amd64 $(GOREL) -o $(WINDOWS)/ascdii-player.exe ./cmd/player
+	@GOOS=windows GOARCH=amd64 $(GOWIN) -ldflags "-s -w -H windowsgui $(LDKEY)" -o $(WINDOWS)/ascdii-player-window.exe ./cmd/player
 
 hello:
 	go run ./cmd/hello

@@ -61,6 +61,32 @@ async function save() {
       </div>
 
       <div class="mt-5 border-t border-ink-800 pt-4">
+        <div class="grid grid-cols-[96px_1fr] items-center gap-x-3 gap-y-2.5 text-[12px]">
+          <span class="text-ink-400">Display</span>
+          <select v-model="s.display" class="field" title="Where the built game shows: in the terminal as Braille, or in a desktop window with one color per dot">
+            <option value="terminal">Terminal</option>
+            <option value="window">Window</option>
+          </select>
+          <template v-if="s.display === 'window'">
+            <span class="text-ink-400">Window size</span>
+            <div class="flex items-center gap-2" title="Size of the window when the game starts, in pixels; 0 opens 1280 by 720. Players can resize it.">
+              <input v-model.number="s.width" type="number" min="0" class="field w-20 font-mono" />
+              <span class="text-ink-500">x</span>
+              <input v-model.number="s.height" type="number" min="0" class="field w-20 font-mono" />
+            </div>
+            <span class="text-ink-400">Pixel scale</span>
+            <input v-model.number="s.scale" type="number" min="0" max="16" class="field w-20 font-mono" title="Screen pixels per dot; 0 picks the scale that shows about 480 dots across" />
+            <span class="text-ink-400">Fullscreen</span>
+            <label class="flex items-center gap-2 text-ink-200" title="Start in fullscreen; F11 or Alt+Enter switches while playing">
+              <input v-model="s.fullscreen" type="checkbox" class="accent-[var(--color-amber-glow)]" />
+              <span class="text-ink-500">{{ s.fullscreen ? 'starts fullscreen' : 'starts in a window' }}</span>
+            </label>
+          </template>
+        </div>
+        <p v-if="s.display === 'window'" class="mt-2.5 text-[11px] leading-snug text-ink-500">Builds start from <span class="font-mono">ascdii-player-window</span>. Play mode in the editor still shows Braille cells.</p>
+      </div>
+
+      <div class="mt-5 border-t border-ink-800 pt-4">
         <label class="flex items-center gap-2 text-[12px] text-ink-200" title="Load the mods players put in the mods folder next to the game">
           <input v-model="s.mods" type="checkbox" class="accent-[var(--color-amber-glow)]" />
           Mods

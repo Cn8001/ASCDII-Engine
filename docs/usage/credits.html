@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Credits | ASCDII Engine</title>
+<link rel="icon" href="img/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+<script src="zoom.js" defer></script>
+</head>
+<body>
+<div class="layout">
+<aside class="side">
+<a class="brand" href="index.html"><img src="img/logo.svg" alt=""><span>ASCDII Engine<small>0.0.3 docs</small></span></a>
+<h4>Start</h4>
+<a href="index.html">Welcome</a>
+<a href="install.html">Install</a>
+<a href="first-game.html">Your first game</a>
+<h4>Guides</h4>
+<a href="editor.html">The editor</a>
+<a href="gameobjects.html">GameObjects and components</a>
+<a href="scenes.html">Scenes and prefabs</a>
+<a href="assets.html">Assets and import</a>
+<a href="packages.html">Packages</a>
+<a href="textures.html">Textures, materials, sprites</a>
+<a href="models.html">Models</a>
+<a href="animation.html">Animation</a>
+<a href="particles.html">Particles</a>
+<a href="audio.html">Audio</a>
+<a href="physics.html">Physics</a>
+<a href="scripting.html">Lua scripting</a>
+<a href="rendering.html">Rendering</a>
+<a href="building.html">Build</a>
+<a href="modding.html">Mods</a>
+<h4>Reference</h4>
+<a href="components.html">Component reference</a>
+<a href="dragonfall.html">Dragonfall module</a>
+<a href="lua-api.html">Lua API</a>
+<a href="cli.html">CLI reference</a>
+<a href="go-api.html">Go API</a>
+<a href="architecture.html">Architecture</a>
+<a href="credits.html" class="on">Credits</a>
+</aside>
+<main>
+<div class="kicker">Reference</div>
+<h1>Credits</h1>
+<p class="lead">The libraries ASCDII Engine is built with, and their licenses.</p>
+
+<h2>Ebitengine</h2>
+<p>The window display, which shows games in a desktop window, is built on <a href="https://ebitengine.org">Ebitengine</a> by Hajime Hoshi and the Ebitengine contributors, released under the <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a>. Ebitengine opens the window, uploads the frame to the graphics card, scales it, draws the text of overlays and reports the keyboard. It is part of <code>ascdii-player-window</code> and of games built from it; the terminal programs do not include it. See <a href="rendering.html#window-output">Window output</a>.</p>
+
+<h2>Other libraries</h2>
+<table>
+<tr><th>Library</th><th>Used for</th><th>License</th></tr>
+<tr><td><a href="https://github.com/yuin/gopher-lua">gopher-lua</a></td><td>The Lua virtual machine of scripts and mods</td><td>MIT</td></tr>
+<tr><td><a href="https://github.com/ebitengine/oto">oto</a></td><td>Sound output of the players</td><td>Apache License 2.0</td></tr>
+<tr><td><a href="https://github.com/hajimehoshi/go-mp3">go-mp3</a></td><td>MP3 decoding</td><td>Apache License 2.0</td></tr>
+<tr><td><a href="https://wails.io">Wails</a></td><td>The editor's desktop window</td><td>MIT</td></tr>
+<tr><td><a href="https://github.com/tc-hib/winres">winres</a></td><td>Icons and file properties of Windows builds</td><td>0BSD</td></tr>
+<tr><td><a href="https://vuejs.org">Vue</a>, <a href="https://tailwindcss.com">Tailwind CSS</a></td><td>The editor interface</td><td>MIT</td></tr>
+<tr><td><a href="https://go.dev/blog/go-fonts">Go Mono</a></td><td>The font of text in a window</td><td>BSD 3-Clause</td></tr>
+</table>
+<nav class="pager"><a class="prev" href="architecture.html"><small>Previous</small>Architecture</a><span></span></nav>
+</main>
+</div>
+</body>
+</html>

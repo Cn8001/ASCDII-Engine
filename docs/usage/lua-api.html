@@ -11,7 +11,7 @@
 <body>
 <div class="layout">
 <aside class="side">
-<a class="brand" href="index.html"><img src="img/logo.svg" alt=""><span>ASCDII Engine<small>0.0.2 docs</small></span></a>
+<a class="brand" href="index.html"><img src="img/logo.svg" alt=""><span>ASCDII Engine<small>0.0.3 docs</small></span></a>
 <h4>Start</h4>
 <a href="index.html">Welcome</a>
 <a href="install.html">Install</a>
@@ -39,6 +39,7 @@
 <a href="cli.html">CLI reference</a>
 <a href="go-api.html">Go API</a>
 <a href="architecture.html">Architecture</a>
+<a href="credits.html">Credits</a>
 </aside>
 <main>
 <div class="kicker">Reference</div>
@@ -174,7 +175,7 @@ log(a:len(), a:dist(b), a:dot(b), a:cross(b), a:lerp(b, 0.5))</code></pre>
 <tr><td><code>play_sound(sound, volume)</code></td><td>Plays a sound asset once, by path or from a field.</td></tr>
 <tr><td><code>quit()</code></td><td>Ends the game.</td></tr>
 </table>
-<p>Key releases are exact in the editor and in terminals that report them: Windows Terminal (win32 input mode) and terminals with the kitty keyboard protocol, such as kitty, WezTerm and foot. The game enables both when it starts, so several keys can be held at once, for example <kbd>W</kbd> and <kbd>D</kbd> to move diagonally. Other terminals report only presses; there a key counts as held for a short time after each press, extended by key repeat, and only the most recently pressed key repeats.</p>
+<p>Key releases are exact in the editor, in a <a href="rendering.html#window-output">window</a>, and in terminals that report them: Windows Terminal (win32 input mode) and terminals with the kitty keyboard protocol, such as kitty, WezTerm and foot. The game enables both when it starts, so several keys can be held at once, for example <kbd>W</kbd> and <kbd>D</kbd> to move diagonally. Other terminals report only presses; there a key counts as held for a short time after each press, extended by key repeat, and only the most recently pressed key repeats.</p>
 
 <h2 id="camera">Camera</h2>
 <p>The global <code>camera</code> controls the game camera, the scene's camera object. In a scene without a camera its fields read as nil and setting them raises an error. See <a href="gameobjects.html#cameras">Cameras</a>.</p>

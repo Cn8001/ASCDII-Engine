@@ -110,3 +110,41 @@ func TestUnit_StandardChainLightsAndResolves(t *testing.T) {
 		t.Fatal("not resolved")
 	}
 }
+
+func TestUnit_PixelsLeavesTransparentCellsUnderOverlay(t *testing.T) {
+	// Arrange
+	p := New(time.Now, Standard()...)
+	p.Add(Func("hud", Overlay, func(f *Frame) { f.Cells.Text(0, 0, "a", color.RGB(255, 255, 255), color.RGB(1, 2, 3)) }))
+	f := NewFrame(3, 2)
+	f.Begin(view.Default(), 0, light.Env{})
+
+	// Act
+	err := UsePixels(p)
+	p.Render(f)
+
+	// Assert
+	if err != nil || enabled(p, "braille") || !enabled(p, "pixels") {
+		t.Fatalf("braille still on: %v %v", err, names(p))
+	}
+	for i, c := range f.Cells.Cells() {
+		want := rune(0)
+		if i == 0 {
+			want = 'a'
+		}
+		if c.Rune != want {
+			t.Fatalf("cell %d rune %q", i, c.Rune)
+		}
+	}
+	if c, _ := f.Cells.At(1, 1); c.BG != f.Buf.CellAverage(1, 1) {
+		t.Fatalf("cell colors %+v, average %+v", c, f.Buf.CellAverage(1, 1))
+	}
+}
+
+func enabled(p *Pipeline, name string) bool {
+	for _, i := range p.Infos() {
+		if i.Name == name {
+			return i.Enabled
+		}
+	}
+	return false
+}

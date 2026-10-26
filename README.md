@@ -59,7 +59,7 @@ the command line tool:
 | `ascdii` | The editor, at its start screen |
 | `ascdii run [project]` | The editor, with a project open, given as its folder or `.ascdiiproj` |
 | `ascdii new <dir> [-name N] [-template dragonfall]` | Create a project |
-| `ascdii play <dir> [--blocks]` | Play a project in the terminal; `--blocks` uses half blocks instead of Braille |
+| `ascdii play <dir> [--blocks] [--window \| --terminal]` | Play a project on the display its settings choose; `--blocks` uses half blocks instead of Braille, `--window` and `--terminal` override the display |
 | `ascdii preview <dir> [-size 160x50] [-time 2] [-hour 22] [-plain] [-blocks]` | Print one frame after simulating `-time` seconds |
 | `ascdii build <dir> [-out path] [-player path] [-single]` | Build a game folder: player, `data/game.pak`, `SHA256SUMS`; `-single` builds one executable |
 | `ascdii pack list <dir>` | List installed and built in packages |
@@ -80,7 +80,9 @@ ascdii build MyGame
 
 A build is the `ascdii-player` binary, renamed, next to `data/game.pak`, the
 project compiled into one encrypted file, plus checksums. The build is the
-release.
+release. A game whose display is set to Window starts from
+`ascdii-player-window` instead: the same player built with the window display,
+which the terminal programs do not link.
 
 ## Editor
 
@@ -115,6 +117,9 @@ Ctrl+D duplicate, Del delete, F focus, Ctrl+B build.
 - Passes: clear, scene, shadows, lighting, water, fog, outline, grade,
   braille, cells. Add your own with `ascdii.Func(name, stage, fn)`.
 - Collision reads the same bounds that drawing uses.
+- Two displays: the terminal, where every 2x4 dots become one Braille cell
+  with two colors, and a desktop window, where the `pixels` pass leaves every
+  dot its own color and the window scales the dots up with text on top.
 
 ## Documentation
 
@@ -130,3 +135,12 @@ sample content in `internal/dragonfall`, the editor backend in
 `internal/editor`, the UI in `frontend/`, programs in `cmd/` (the editor
 is started by `cmd/ascdii`, games run on `cmd/player`). `docs/usage/architecture.html` explains the modules
 and the display backend contract. See `CLAUDE.md` for rules.
+
+## Credits
+
+The window display is built on [Ebitengine](https://ebitengine.org) by Hajime
+Hoshi and the Ebitengine contributors, under the Apache License 2.0.
+ASCDII Engine also uses [gopher-lua](https://github.com/yuin/gopher-lua) (MIT)
+for Lua scripting, [oto](https://github.com/ebitengine/oto) and
+[go-mp3](https://github.com/hajimehoshi/go-mp3) (Apache License 2.0) for sound,
+and [Wails](https://wails.io) (MIT) for the editor.

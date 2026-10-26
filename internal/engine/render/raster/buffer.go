@@ -196,3 +196,19 @@ func (b *Buffer) CellDepth(col, row int) float64 {
 	}
 	return best
 }
+
+func (b *Buffer) CellAverage(col int, row int) color.Color {
+	var r, g, bl, n int
+
+	for dy := 0; dy < SubH; dy++ {
+		for dx := 0; dx < SubW; dx++ {
+			if d := b.At(col*SubW+dx, row*SubH+dy); d != nil {
+				r, g, bl, n = r+int(d.Color.R), g+int(d.Color.G), bl+int(d.Color.B), n+1
+			}
+		}
+	}
+	if n == 0 {
+		return color.Color{}
+	}
+	return color.RGB(uint8(r/n), uint8(g/n), uint8(bl/n))
+}

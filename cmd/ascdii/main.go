@@ -16,6 +16,7 @@ import (
 
 	"github.com/Cn8001/ASCDII-Engine/internal/dragonfall"
 	"github.com/Cn8001/ASCDII-Engine/internal/editor/launch"
+	"github.com/Cn8001/ASCDII-Engine/internal/editor/players"
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/guid"
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/bundle"
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/project"
@@ -177,7 +178,7 @@ func cmdBuild(ctx context.Context, self string, args []string) error {
 	}
 	ext := ""
 	if *bin == "" {
-		p, err := launch.Find(self, launch.Player)
+		p, err := launch.Find(self, players.For(p.Manifest.Display))
 		if err != nil {
 			return err
 		}

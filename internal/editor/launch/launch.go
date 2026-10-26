@@ -17,6 +17,7 @@ const (
 	Env    = "ASCDII_LAUNCHER" // set by ascdii on the editor it starts, to its own path
 	Editor = "ascdii-editor"
 	Player = "ascdii-player"
+	Window = "ascdii-player-window" // the player built with the window display
 	CLI    = "ascdii"
 )
 

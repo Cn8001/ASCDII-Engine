@@ -2,10 +2,12 @@ package project
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 	"testing"
 	"testing/fstest"
 
@@ -170,5 +172,29 @@ func TestUnit_RenameSpritesKeepsMetaAndSkipsOtherJSON(t *testing.T) {
 	_, errOther := os.Stat(filepath.Join(dir, "settings.json"))
 	if err != nil || len(got) != 1 || got[0] != "art/tree.sprite.json" || errMeta != nil || errOther != nil {
 		t.Fatalf("err %v got %v meta %v other %v", err, got, errMeta, errOther)
+	}
+}
+
+func TestUnit_ManifestDisplayRoundTrips(t *testing.T) {
+	// Arrange
+	fsys := fstest.MapFS{
+		"new.ascdiiproj": {Data: []byte(`{"format":1,"name":"a","display":{"mode":"window","scale":3,"fullscreen":true}}`)},
+		"old.ascdiiproj": {Data: []byte(`{"format":1,"name":"b"}`)},
+	}
+
+	// Act
+	m, err := ReadManifest(fsys, "new.ascdiiproj")
+	old, errOld := ReadManifest(fsys, "old.ascdiiproj")
+	b, errJSON := json.Marshal(old)
+
+	// Assert
+	if err != nil || errOld != nil || errJSON != nil {
+		t.Fatal(err, errOld, errJSON)
+	}
+	if !m.Display.Window() || m.Display.Scale != 3 || !m.Display.Fullscreen {
+		t.Fatalf("display %+v", m.Display)
+	}
+	if old.Display.Window() || strings.Contains(string(b), "display") {
+		t.Fatalf("an old project must stay a terminal game without a display section: %s", b)
 	}
 }

@@ -11,7 +11,7 @@
 <body>
 <div class="layout">
 <aside class="side">
-<a class="brand" href="index.html"><img src="img/logo.svg" alt=""><span>ASCDII Engine<small>0.0.2 docs</small></span></a>
+<a class="brand" href="index.html"><img src="img/logo.svg" alt=""><span>ASCDII Engine<small>0.0.3 docs</small></span></a>
 <h4>Start</h4>
 <a href="index.html">Welcome</a>
 <a href="install.html">Install</a>
@@ -39,6 +39,7 @@
 <a href="cli.html">CLI reference</a>
 <a href="go-api.html">Go API</a>
 <a href="architecture.html" class="on">Architecture</a>
+<a href="credits.html">Credits</a>
 </aside>
 <main>
 <div class="kicker">Reference</div>
@@ -55,12 +56,13 @@
   assets/    asset (catalog, .meta, library, sprites), mesh (OBJ), material, animator
   audio/     sound decoding (WAV, MP3) and the mixer
   script/    vm (Lua: VM, scripts, fields, API)
-  platform/  the backend contract, terminal, headless, speaker (sound output)
+  platform/  the backend contract, terminal, headless, speaker (sound output),
+             pixels (frames as dot images), window (the Ebitengine window)
   runtime/   app, loop, bundle, project (manifest, modules), pack (packages), version
 internal/editor/   session, service (the Wails boundary), launch (how ascdii starts the editor),
                    players (finds the ascdii-player binaries builds start from), recent,
                    brand (the program icons)
-internal/player/   plays a game in the terminal, for ascdii-player and ascdii play
+internal/player/   plays a game in the terminal or a window, for ascdii-player and ascdii play
 internal/dragonfall/  the sample: a code module and a package
 cmd/      ascdii (CLI; starts the editor), editor (Wails), player (ascdii-player),
           snapshot (PNG renders), docref (component reference for the docs),
@@ -73,8 +75,8 @@ docs/     usage (these pages), nav.py (rewrites their navigation)</code></pre>
 <li><b>Update.</b> Key handlers, updaters and tickers of every enabled component run; Lua scripts run in one VM per game run, each in its own environment. Animation clips are applied, and the main camera object determines the view.</li>
 <li><b>Geometry.</b> Each renderer component draws into the dot buffer through <code>draw.Context</code>: positions in world units, depth and normals derived, textures sampled per dot.</li>
 <li><b>Lighting and post.</b> Shadows, lights, water, fog, outline and grading run over the dots.</li>
-<li><b>Resolve.</b> Every 2x4 dot block becomes one Braille cell with a foreground and a background color; cell drawers such as sprites and HUDs write on top.</li>
-<li><b>Present.</b> The backend shows the cells.</li>
+<li><b>Resolve.</b> Every 2x4 dot block becomes one Braille cell with a foreground and a background color; cell drawers such as sprites and HUDs write on top. For a window the <code>pixels</code> pass resolves instead, leaving every cell transparent so the dots show.</li>
+<li><b>Present.</b> The backend shows the cells, or the dots with the written cells on top.</li>
 </ol>
 
 <h2>The platform contract</h2>
@@ -93,14 +95,15 @@ docs/     usage (these pages), nav.py (rewrites their navigation)</code></pre>
 }
 
 <span class="k">type</span> Input <span class="k">interface</span> {
-  Events(ctx context.Context) &lt;-<span class="k">chan</span> input.Event  <span class="c">// Event{Key, Down}</span>
+  Events(ctx context.Context) &lt;-<span class="k">chan</span> input.Event  <span class="c">// Event{Key, Down, Exact}</span>
 }</code></pre>
 <ul>
 <li><code>platform/terminal</code> is the raw mode terminal: it diffs cells into ANSI escapes and reads keys. Terminals report no key releases, so <code>input.State</code> treats a press as held for a short window that key repeat extends.</li>
 <li><code>platform/headless</code> renders to plain text, ANSI or PNG, for tests and the snapshot tool.</li>
+<li><code>platform/window</code> is a desktop window built on Ebitengine. <code>platform/pixels</code> turns a frame into an image with one pixel per dot plus the characters overlays wrote; the window scales the image up on the graphics card and draws the characters at screen resolution. Windows report key releases. Only programs built with the <code>window</code> build tag link it, so the terminal programs carry no window library.</li>
 <li><code>runtime/app</code> runs any pair with <code>Engine.RunOn(ctx, display, input)</code>.</li>
 </ul>
-<div class="tip"><b>Adding SDL</b>A window backend would live in <code>platform/sdl</code>: open a window in <code>Open</code>, draw <code>Frame.Dots</code> as pixels or <code>Frame.Cells</code> with a font in <code>Present</code>, and turn window key down and key up events into <code>input.Event</code>s. Nothing else in the engine changes.</div>
+<div class="tip"><b>Adding a backend</b>Another display, for example a web canvas, implements <code>Display</code> and <code>Input</code>, calls <code>pipeline.UsePixels</code> when it draws dots itself, and reuses <code>pixels.Compose</code>. Nothing else in the engine changes.</div>
 
 <h2>Sound</h2>
 <p>The scene context carries an <code>AudioOut</code>: play a sound asset, stop it, change its volume. The terminal player's is the <code>audio</code> mixer read by <code>platform/speaker</code>, injected into <code>runtime/app</code> so that only the player links the sound device. The editor's sends play and stop events to its web view, which plays the files itself.</p>
@@ -114,7 +117,7 @@ docs/     usage (these pages), nav.py (rewrites their navigation)</code></pre>
 <h2>The editor</h2>
 <p><code>editor/session</code> owns the open project, the edited scene, a cloned scene during play, the undo history and the render loop. <code>editor/service</code> is the boundary to the Vue interface: Wails binds its methods, and every error leaves it with a stable code such as <code>not_found:</code> or <code>prefab_locked:</code>. Frames reach the interface as raw bytes from a small HTTP handler rather than as JSON, so a 220 by 60 view remains cheap at 60 frames per second.</p>
 <p>The editor is always started by <code>ascdii</code> (<code>editor/launch</code>): <code>ascdii</code> sets <code>ASCDII_LAUNCHER</code> to its own path when it starts the editor, which also tells the editor where to find the players for builds. An editor started without it starts <code>ascdii</code>, which starts the editor again, and exits. Editors built for <code>wails dev</code> skip the check.</p>
-<nav class="pager"><a class="prev" href="go-api.html"><small>Previous</small>Go API</a><span></span></nav>
+<nav class="pager"><a class="prev" href="go-api.html"><small>Previous</small>Go API</a><a class="next" href="credits.html"><small>Next</small>Credits</a></nav>
 </main>
 </div>
 </body>

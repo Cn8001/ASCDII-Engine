@@ -16,7 +16,7 @@ import (
 )
 
 const usage = `usage:
-  ascdii-player <project folder> [--blocks]
+  ascdii-player <project folder> [--blocks] [--window | --terminal]
   ascdii-player <project folder> --preview [-size 160x50] [-time 2] [-blocks]
 A built game runs without arguments.`
 

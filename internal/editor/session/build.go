@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/Cn8001/ASCDII-Engine/internal/editor/players"
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/bundle"
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/project"
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/winbrand"
@@ -71,7 +72,7 @@ func (s *Session) Build(ctx context.Context, goos string, o BuildOptions) (Build
 		return BuildResult{}, err
 	}
 	defer os.RemoveAll(tmp)
-	player, err := s.d.Players.Extract(ctx, goos, "amd64", tmp)
+	player, err := s.d.Players.Extract(ctx, players.For(m.Display), goos, "amd64", tmp)
 	if err != nil {
 		return BuildResult{}, err
 	}
