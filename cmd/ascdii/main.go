@@ -1,5 +1,6 @@
-// Command ascdii is the developer CLI: ascdii run opens the editor, the other
-// commands handle projects, builds and packages. Games run on ascdii-player.
+// Command ascdii opens the editor at its start screen when started without
+// arguments, as from a double click, and is the developer CLI otherwise:
+// projects, builds and packages. Games run on ascdii-player.
 package main
 
 import (
@@ -24,7 +25,8 @@ import (
 )
 
 const usage = `usage:
-  ascdii run [project]        the editor, at its start screen or with a project open
+  ascdii                      the editor, at its start screen
+  ascdii run [project]        the editor, with a project open when one is given
   ascdii new <dir> [-name N] [-template dragonfall]
   ascdii play <dir> [--blocks]
   ascdii preview <dir> [-size 160x50] [-time 2] [-hour 22] [-plain] [-blocks]
@@ -50,22 +52,11 @@ func run(ctx context.Context, args []string) error {
 		return fmt.Errorf("locate executable: %w", err)
 	}
 	if len(args) == 0 {
-		fmt.Println(usage)
-		if ownConsole() {
-			// A double click opened this window; it would close before the help is read.
-			fmt.Print("\nPress Enter to close.")
-			_, _ = fmt.Scanln()
-		}
-		return nil
+		return openEditor(ctx, self, nil)
 	}
 	switch args[0] {
 	case "run":
-		hideConsole()
-		if err := edit(ctx, self, args[1:]); err != nil {
-			report(fmt.Sprintf("ASCDII could not start the editor.\n\n%v", err))
-			return err
-		}
-		return nil
+		return openEditor(ctx, self, args[1:])
 	case "help", "-h", "--help":
 		fmt.Println(usage)
 		return nil
@@ -90,6 +81,17 @@ func run(ctx context.Context, args []string) error {
 		return nil
 	}
 	return errors.New(usage)
+}
+
+// openEditor starts the editor and closes a console window of its own, as a
+// double click opens one on Windows; failures then show in a message box.
+func openEditor(ctx context.Context, self string, args []string) error {
+	hideConsole()
+	if err := edit(ctx, self, args); err != nil {
+		report(fmt.Sprintf("ASCDII could not start the editor.\n\n%v", err))
+		return err
+	}
+	return nil
 }
 
 // edit starts the editor: at its start screen, or with the project given as

@@ -12,7 +12,7 @@ make test                       # go vet + go test -race
 make hello                      # smallest program, see cmd/hello
 make dragonfall                 # the sample game in the terminal
 make all                        # bin/linux and bin/windows: ascdii, editor, player
-bin/linux/ascdii run            # opens the editor at its start screen
+bin/linux/ascdii                # opens the editor at its start screen
 make editor-dev                 # editor with hot reload
 ```
 
@@ -48,18 +48,35 @@ MyGame/
 
 Only the manifest has a fixed place; folders are the project's own.
 
-CLI (`ascdii run` opens the editor):
+## CLI
+
+`ascdii` without arguments opens the editor at its start screen, so a double
+click on `ascdii.exe` starts it like any desktop program. With arguments it is
+the command line tool:
+
+| Command | Function |
+|---|---|
+| `ascdii` | The editor, at its start screen |
+| `ascdii run [project]` | The editor, with a project open, given as its folder or `.ascdiiproj` |
+| `ascdii new <dir> [-name N] [-template dragonfall]` | Create a project |
+| `ascdii play <dir> [--blocks]` | Play a project in the terminal; `--blocks` uses half blocks instead of Braille |
+| `ascdii preview <dir> [-size 160x50] [-time 2] [-hour 22] [-plain] [-blocks]` | Print one frame after simulating `-time` seconds |
+| `ascdii build <dir> [-out path] [-player path] [-single]` | Build a game folder: player, `data/game.pak`, `SHA256SUMS`; `-single` builds one executable |
+| `ascdii pack list <dir>` | List installed and built in packages |
+| `ascdii pack install <dir> <file.ascdiipack \| dragonfall>` | Install a package |
+| `ascdii pack remove <dir> <name>` | Remove a package |
+| `ascdii pack export <folder> -name N [-version V] [-description D] [-out file]` | Share a folder as a `.ascdiipack` |
+| `ascdii version` | Print the engine version |
+| `ascdii help` | Print the list of commands |
 
 ```bash
 ascdii new MyGame -template dragonfall
-ascdii play MyGame                           # in the terminal
-ascdii preview MyGame -size 160x50 -time 2
-ascdii build MyGame                          # folder: player, data/game.pak, SHA256SUMS
-ascdii build MyGame -single                  # one executable instead
-ascdii pack install MyGame dragonfall        # the sample as a package
-ascdii pack export MyGame/props -name props  # share a folder as a .ascdiipack
-ascdii version
+ascdii play MyGame
+ascdii build MyGame
 ```
+
+`ascdii-player <dir>` also plays a project folder; a built game is a renamed
+`ascdii-player` and starts without arguments.
 
 A build is the `ascdii-player` binary, renamed, next to `data/game.pak`, the
 project compiled into one encrypted file, plus checksums. The build is the
@@ -68,8 +85,9 @@ release.
 ## Editor
 
 `make editor-linux` and `make editor-windows` put the editor next to
-`bin/linux/ascdii` and `bin/windows/ascdii.exe`, which start it at its start screen;
-started directly, the editor restarts itself through `ascdii`.
+`bin/linux/ascdii` and `bin/windows/ascdii.exe`, which start it at its start
+screen when run without arguments; started directly, the editor restarts
+itself through `ascdii run`.
 The editor has a GameObject menu, a Hierarchy (drag to reparent, right click to
 create, duplicate, save as prefab), a live 2.5D viewport with move, rotate and
 scale tools, an Inspector with component cards and reference slots, a Project
