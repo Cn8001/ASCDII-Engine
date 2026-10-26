@@ -36,6 +36,34 @@ func TestUnit_ProjectSettingsSaveToTheManifest(t *testing.T) {
 	}
 }
 
+func TestUnit_ProjectSettingsSaveTheWindowDisplay(t *testing.T) {
+	// Arrange
+	s, _, dir := newSession(t, "empty")
+	ctx := context.Background()
+	p, _ := s.ProjectSettings()
+	terminal := p.Display
+	p.Display, p.Scale, p.Width, p.Height, p.Fullscreen = "window", 3, 1600, 900, true
+	bad := p
+	bad.Width = 0
+
+	// Act
+	err := s.SetProjectSettings(ctx, p)
+	errBad := s.SetProjectSettings(ctx, bad)
+	got, _ := s.ProjectSettings()
+	raw, _ := os.ReadFile(filepath.Join(dir, s.proj.File))
+
+	// Assert
+	if terminal != "terminal" {
+		t.Fatalf("a new project shows %q, want terminal", terminal)
+	}
+	if err != nil || got != p || !s.proj.Manifest.Display.Window() || !strings.Contains(string(raw), `"mode": "window"`) {
+		t.Fatalf("err %v got %+v manifest %s", err, got, raw)
+	}
+	if !errors.Is(errBad, ErrBadSettings) {
+		t.Fatalf("a width without a height must be refused: %v", errBad)
+	}
+}
+
 func TestUnit_ProjectSettingsRejectModsWithoutAPI(t *testing.T) {
 	// Arrange
 	s, _, _ := newSession(t, "empty")

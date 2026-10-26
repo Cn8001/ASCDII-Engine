@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/editor/players"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/bundle"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/project"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/winbrand"
@@ -71,7 +72,7 @@ func (s *Session) Build(ctx context.Context, goos string, o BuildOptions) (Build
 		return BuildResult{}, err
 	}
 	defer os.RemoveAll(tmp)
-	player, err := s.d.Players.Extract(ctx, goos, "amd64", tmp)
+	player, err := s.d.Players.Extract(ctx, players.For(m.Display), goos, "amd64", tmp)
 	if err != nil {
 		return BuildResult{}, err
 	}

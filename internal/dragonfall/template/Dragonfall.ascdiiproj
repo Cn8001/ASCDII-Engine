@@ -2,7 +2,7 @@
   "format": 1,
   "name": "Dragonfall",
   "version": "0.1.0",
-  "engine": "0.0.2",
+  "engine": "0.0.3",
   "start": "scenes/dragonfall.scene.json",
   "cols": 160,
   "rows": 50,

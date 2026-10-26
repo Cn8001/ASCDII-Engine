@@ -42,6 +42,7 @@ type Manifest struct {
 	Legacy  []string    `json:"packs,omitempty"`   // the name modules had before packages existed
 	Icon    string      `json:"icon,omitempty"`    // image of the Windows executable, a guid or a path
 	Mods    ModSettings `json:"mods,omitzero"`
+	Display Display     `json:"display,omitzero"`
 }
 
 // ModSettings decide whether players' mods load, and the script that defines
@@ -50,6 +51,24 @@ type ModSettings struct {
 	Enabled bool   `json:"enabled"`
 	API     string `json:"api,omitempty"`
 }
+
+// Display is where the player shows the game: the terminal, or a desktop
+// window that draws every dot as a square of Scale screen pixels.
+type Display struct {
+	Mode       string `json:"mode,omitempty"`  // terminal (default) or window
+	Scale      int    `json:"scale,omitempty"` // screen pixels per dot; 0 fits about 480 dots across
+	Width      int    `json:"width,omitempty"` // first window size in pixels; 0 is 1280x720
+	Height     int    `json:"height,omitempty"`
+	Fullscreen bool   `json:"fullscreen,omitempty"`
+}
+
+const (
+	DisplayTerminal = "terminal"
+	DisplayWindow   = "window"
+)
+
+// Window reports whether the game opens in a desktop window.
+func (d Display) Window() bool { return d.Mode == DisplayWindow }
 
 // Module is compiled content, component kinds written in Go, that a project
 // can require; the editor and player list the modules they were built with.

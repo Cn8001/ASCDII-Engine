@@ -11,7 +11,7 @@
 <body>
 <div class="layout">
 <aside class="side">
-<a class="brand" href="index.html"><img src="img/logo.svg" alt=""><span>ASCDII Engine<small>0.0.2 docs</small></span></a>
+<a class="brand" href="index.html"><img src="img/logo.svg" alt=""><span>ASCDII Engine<small>0.0.3 docs</small></span></a>
 <h4>Start</h4>
 <a href="index.html">Welcome</a>
 <a href="install.html">Install</a>
@@ -39,6 +39,7 @@
 <a href="cli.html">CLI reference</a>
 <a href="go-api.html">Go API</a>
 <a href="architecture.html">Architecture</a>
+<a href="credits.html">Credits</a>
 </aside>
 <main>
 <div class="kicker">Guides</div>
@@ -47,7 +48,7 @@
 <figure><img src="img/editor-main.png" alt="Editor layout"><figcaption>Hierarchy on the left, the Scene view in the center, Inspector and Pipeline on the right, Project, Console and Animation below.</figcaption></figure>
 
 <h2>Window title</h2>
-<p>The title shows the open scene, the project and the engine version, for example <code>dragonfall.scene.json - Dragonfall - ASCDII Engine <span class="version">0.0.2</span></code>. A leading <code>*</code> indicates that the scene has unsaved changes; it disappears when the scene is saved.</p>
+<p>The title shows the open scene, the project and the engine version, for example <code>dragonfall.scene.json - Dragonfall - ASCDII Engine <span class="version">0.0.3</span></code>. A leading <code>*</code> indicates that the scene has unsaved changes; it disappears when the scene is saved.</p>
 
 <h2>Toolbar</h2>
 <table>
@@ -132,8 +133,26 @@
 <li><b>Animator</b>: the state graph of an animator controller, in a floating window. See <a href="animation.html#animator">Animator</a>.</li>
 <li><b>Particle Editor</b>: presets, a preview and all settings of the selected particle system, opened from the sparkle button on its card. See <a href="particles.html">Particles</a>.</li>
 <li><b>Package Manager</b>: installs and removes packages. See <a href="packages.html">Packages</a>.</li>
-<li><b>Project Settings</b>: the name, version, start scene, terminal size and frame rate of the game, and mod support with the mod API script. See <a href="modding.html#enabling">Enabling mods</a>.</li>
+<li><b>Project Settings</b>: the name, version, start scene, size, frame rate and display of the game, and mod support. See <a href="#project-settings">Project Settings</a>.</li>
 </ul>
+
+<h2 id="project-settings">Project Settings</h2>
+<p>The sliders button of the top bar opens the settings stored in the project's manifest. <b>Save</b> writes them; <b>Cancel</b> discards the changes.</p>
+<table>
+<tr><th>Setting</th><th>Function</th></tr>
+<tr><td><b>Name</b></td><td>The name of the game; builds name the executable after it.</td></tr>
+<tr><td><b>Version</b></td><td>The version of the game, also set by the build dialog.</td></tr>
+<tr><td><b>Start scene</b></td><td>The scene a built game starts with.</td></tr>
+<tr><td><b>Terminal size</b></td><td>The columns and rows the game asks for in a terminal; 0 uses 120 by 40. Players resize with their terminal.</td></tr>
+<tr><td><b>Frame rate</b></td><td>Frames per second, at most 240; 0 uses 30.</td></tr>
+<tr><td><b>Display</b></td><td><b>Terminal</b> plays the game in the terminal as Braille characters. <b>Window</b> plays it in a desktop window with one color per dot, see <a href="rendering.html#window-output">Window output</a>; builds of such a game start from <code>ascdii-player-window</code>, see <a href="building.html#players">Players</a>.</td></tr>
+<tr><td><b>Window size</b></td><td>Window only. The size of the window when the game starts, in pixels; 0 opens 1280 by 720. Players can resize the window.</td></tr>
+<tr><td><b>Pixel scale</b></td><td>Window only. Screen pixels per dot, up to 16; 0 picks the scale that shows about 480 dots across.</td></tr>
+<tr><td><b>Fullscreen</b></td><td>Window only. Starts the game fullscreen; <kbd>F11</kbd> or <kbd>Alt</kbd>+<kbd>Enter</kbd> switches while playing.</td></tr>
+<tr><td><b>Mods</b></td><td>Loads the mods players place in the <code>mods/</code> folder next to the game.</td></tr>
+<tr><td><b>API script</b></td><td>With mods on, the script that declares what mods can call, read and handle. See <a href="modding.html#enabling">Enabling mods</a>.</td></tr>
+</table>
+<p>Play mode in the editor shows Braille cells for both displays; a window game is seen in its window when it is played with <code>ascdii play</code> or built.</p>
 
 <h2>Shortcuts</h2>
 <table>

@@ -742,6 +742,11 @@ export namespace session {
 	    mods: boolean;
 	    modApi: string;
 	    icon: string;
+	    display: string;
+	    scale: number;
+	    width: number;
+	    height: number;
+	    fullscreen: boolean;
 	
 	    static createFrom(source: any = {}) {
 	        return new ProjectSettings(source);
@@ -758,6 +763,11 @@ export namespace session {
 	        this.mods = source["mods"];
 	        this.modApi = source["modApi"];
 	        this.icon = source["icon"];
+	        this.display = source["display"];
+	        this.scale = source["scale"];
+	        this.width = source["width"];
+	        this.height = source["height"];
+	        this.fullscreen = source["fullscreen"];
 	    }
 	}
 

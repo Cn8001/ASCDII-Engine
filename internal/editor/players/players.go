@@ -1,6 +1,7 @@
 // Package players finds the binaries a build starts from: the ascdii-player
 // next to the editor serves its own platform, and an
-// ascdii-player-<os>-<arch> beside it serves another one.
+// ascdii-player-<os>-<arch> beside it serves another one. Games shown in a
+// window start from ascdii-player-window, found the same way.
 package players
 
 import (
@@ -13,13 +14,23 @@ import (
 	"runtime"
 
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/editor/launch"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/project"
 )
 
 var ErrNoPlayer = errors.New("no player for this platform; place its ascdii-player next to the editor")
 
+// For is the player a game starts from: the window player for a game shown
+// in a window, which only it links the window library for.
+func For(d project.Display) string {
+	if d.Window() {
+		return launch.Window
+	}
+	return launch.Player
+}
+
 // Name is the file name of another platform's player.
-func Name(goos, arch string) string {
-	n := launch.Player + "-" + goos + "-" + arch
+func Name(player, goos, arch string) string {
+	n := player + "-" + goos + "-" + arch
 	if goos == "windows" {
 		n += ".exe"
 	}
@@ -53,42 +64,43 @@ func Default() Source {
 
 // names are the files that can be the player for a target. <os>/ is the
 // layout of bin/ in the source tree, which ASCDII_PLAYERS points wails dev at.
-func names(goos, arch string) []string {
-	own := launch.Player
+func names(player, goos, arch string) []string {
+	own := player
 	if goos == "windows" {
 		own += ".exe"
 	}
-	out := []string{Name(goos, arch), goos + "/" + own}
+	out := []string{Name(player, goos, arch), goos + "/" + own}
 	if goos == runtime.GOOS && arch == runtime.GOARCH {
 		out = append(out, own)
 	}
 	return out
 }
 
-func (s Source) read(goos, arch string) ([]byte, error) {
+func (s Source) read(player, goos, arch string) ([]byte, error) {
 	for _, d := range s.Dirs {
-		for _, n := range names(goos, arch) {
+		for _, n := range names(player, goos, arch) {
 			if b, err := fs.ReadFile(d, n); err == nil {
 				return b, nil
 			}
 		}
 	}
-	return nil, fmt.Errorf("%w: %s", ErrNoPlayer, Name(goos, arch))
+	return nil, fmt.Errorf("%w: %s", ErrNoPlayer, Name(player, goos, arch))
 }
 
-// Extract writes the player for a target into dir and returns its path.
-func (s Source) Extract(ctx context.Context, goos, arch, dir string) (string, error) {
+// Extract writes player, launch.Player or launch.Window, for a target into
+// dir and returns its path.
+func (s Source) Extract(ctx context.Context, player, goos, arch, dir string) (string, error) {
 	if err := ctx.Err(); err != nil {
 		return "", err
 	}
-	b, err := s.read(goos, arch)
+	b, err := s.read(player, goos, arch)
 	if err != nil {
 		return "", err
 	}
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return "", fmt.Errorf("extract player: %w", err)
 	}
-	path := filepath.Join(dir, Name(goos, arch))
+	path := filepath.Join(dir, Name(player, goos, arch))
 	if err := os.WriteFile(path, b, 0o755); err != nil {
 		return "", fmt.Errorf("extract player: %w", err)
 	}
@@ -100,7 +112,7 @@ func (s Source) Available() []string {
 	for _, t := range [][2]string{{"linux", "amd64"}, {"windows", "amd64"}} {
 		for _, d := range s.Dirs {
 			found := false
-			for _, n := range names(t[0], t[1]) {
+			for _, n := range names(launch.Player, t[0], t[1]) {
 				if _, err := fs.Stat(d, n); err == nil {
 					found = true
 					break

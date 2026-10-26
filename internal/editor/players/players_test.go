@@ -7,6 +7,9 @@ import (
 	"os"
 	"testing"
 	"testing/fstest"
+
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/editor/launch"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/project"
 )
 
 func TestUnit_ExtractWritesExecutable(t *testing.T) {
@@ -15,7 +18,7 @@ func TestUnit_ExtractWritesExecutable(t *testing.T) {
 	dir := t.TempDir()
 
 	// Act
-	path, err := s.Extract(context.Background(), "linux", "amd64", dir)
+	path, err := s.Extract(context.Background(), launch.Player, "linux", "amd64", dir)
 
 	// Assert
 	info, statErr := os.Stat(path)
@@ -32,7 +35,7 @@ func TestUnit_ExtractMissingReportsNoPlayer(t *testing.T) {
 	s := Source{Dirs: []fs.FS{fstest.MapFS{}}}
 
 	// Act
-	_, err := s.Extract(context.Background(), "windows", "amd64", t.TempDir())
+	_, err := s.Extract(context.Background(), launch.Player, "windows", "amd64", t.TempDir())
 
 	// Assert
 	if !errors.Is(err, ErrNoPlayer) {
@@ -53,5 +56,23 @@ func TestUnit_SourceTreeLayoutServesBothPlatforms(t *testing.T) {
 	// Assert
 	if len(got) != 2 {
 		t.Fatalf("available %v", got)
+	}
+}
+
+func TestUnit_WindowGamesStartFromWindowPlayer(t *testing.T) {
+	// Arrange
+	s := Source{Dirs: []fs.FS{fstest.MapFS{
+		"linux/ascdii-player":        {Data: []byte("terminal")},
+		"linux/ascdii-player-window": {Data: []byte("window")},
+	}}}
+	dir := t.TempDir()
+
+	// Act
+	path, err := s.Extract(context.Background(), For(project.Display{Mode: project.DisplayWindow}), "linux", "amd64", dir)
+	b, errRead := os.ReadFile(path)
+
+	// Assert
+	if err != nil || errRead != nil || string(b) != "window" || For(project.Display{}) != launch.Player {
+		t.Fatalf("got %q %v %v", b, err, errRead)
 	}
 }

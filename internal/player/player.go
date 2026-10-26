@@ -1,5 +1,6 @@
-// Package player plays a game in the terminal. ascdii-player runs it for
-// built games and project folders; ascdii run and preview share it.
+// Package player plays a game in the terminal or in a desktop window.
+// ascdii-player runs it for built games and project folders; ascdii run and
+// preview share it.
 package player
 
 import (
@@ -23,19 +24,24 @@ import (
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/project"
 )
 
-var ErrNoGame = errors.New("no game data in or next to the player")
+var (
+	ErrNoGame   = errors.New("no game data in or next to the player")
+	ErrNoWindow = errors.New("this player has no window display")
+)
 
 // Game is what to play: the game's files, the folder mods are read from and
-// the code modules the player was built with.
+// the code modules the player was built with. Dir is the project folder a
+// game was started from, empty for a build.
 type Game struct {
 	FS      fs.FS
+	Dir     string
 	Mods    string
 	Modules []project.Module
 }
 
 // Project plays a project folder, with its own mods folder.
 func Project(dir string, modules []project.Module) Game {
-	return Game{FS: os.DirFS(dir), Mods: filepath.Join(dir, project.ModsDir), Modules: modules}
+	return Game{FS: os.DirFS(dir), Dir: dir, Mods: filepath.Join(dir, project.ModsDir), Modules: modules}
 }
 
 // Bundled finds the game a build carries: appended to exe, or in data/ next
@@ -84,12 +90,26 @@ func (g Game) Play(ctx context.Context, args []string) error {
 	if err != nil {
 		return err
 	}
+	if windowed(args, e.Project().Manifest.Display) {
+		return g.playWindow(ctx, e, args)
+	}
 	if slices.Contains(args, "--blocks") || os.Getenv("ASCDII_BLOCKS") != "" {
 		if err := blocks(e); err != nil {
 			return err
 		}
 	}
 	return e.Run(ctx, os.Stdin, os.Stdout)
+}
+
+// windowed picks the display: --window or --terminal, else the project's.
+func windowed(args []string, d project.Display) bool {
+	switch {
+	case slices.Contains(args, "--terminal"):
+		return false
+	case slices.Contains(args, "--window"):
+		return true
+	}
+	return d.Window()
 }
 
 // Preview simulates a moment of the game and prints the frame.

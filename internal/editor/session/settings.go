@@ -16,17 +16,22 @@ import (
 var ErrBadSettings = errors.New("invalid project settings")
 
 // ProjectSettings are the manifest fields the developer edits. Cols, Rows and
-// FPS of 0 keep the engine defaults.
+// FPS of 0 keep the engine defaults, as do Scale, Width and Height of 0.
 type ProjectSettings struct {
-	Name    string `json:"name"`
-	Version string `json:"version"`
-	Start   string `json:"start"`
-	Cols    int    `json:"cols"`
-	Rows    int    `json:"rows"`
-	FPS     int    `json:"fps"`
-	Mods    bool   `json:"mods"`
-	ModAPI  string `json:"modApi"` // script reference, a guid or a path
-	Icon    string `json:"icon"`   // chosen in the build dialog, kept as it is here
+	Name       string `json:"name"`
+	Version    string `json:"version"`
+	Start      string `json:"start"`
+	Cols       int    `json:"cols"`
+	Rows       int    `json:"rows"`
+	FPS        int    `json:"fps"`
+	Mods       bool   `json:"mods"`
+	ModAPI     string `json:"modApi"`  // script reference, a guid or a path
+	Icon       string `json:"icon"`    // chosen in the build dialog, kept as it is here
+	Display    string `json:"display"` // terminal or window
+	Scale      int    `json:"scale"`
+	Width      int    `json:"width"`
+	Height     int    `json:"height"`
+	Fullscreen bool   `json:"fullscreen"`
 }
 
 func (s *Session) ProjectSettings() (ProjectSettings, error) {
@@ -36,7 +41,15 @@ func (s *Session) ProjectSettings() (ProjectSettings, error) {
 		return ProjectSettings{}, err
 	}
 	m := s.proj.Manifest
-	return ProjectSettings{Name: m.Name, Version: m.Version, Start: m.Start, Cols: m.Cols, Rows: m.Rows, FPS: m.FPS, Mods: m.Mods.Enabled, ModAPI: m.Mods.API, Icon: m.Icon}, nil
+	d := m.Display
+	mode := project.DisplayTerminal
+	if d.Window() {
+		mode = project.DisplayWindow
+	}
+	return ProjectSettings{
+		Name: m.Name, Version: m.Version, Start: m.Start, Cols: m.Cols, Rows: m.Rows, FPS: m.FPS, Mods: m.Mods.Enabled, ModAPI: m.Mods.API, Icon: m.Icon,
+		Display: mode, Scale: d.Scale, Width: d.Width, Height: d.Height, Fullscreen: d.Fullscreen,
+	}, nil
 }
 
 func (s *Session) SetProjectSettings(ctx context.Context, p ProjectSettings) error {
@@ -53,6 +66,10 @@ func (s *Session) SetProjectSettings(ctx context.Context, p ProjectSettings) err
 	m.Cols, m.Rows, m.FPS = p.Cols, p.Rows, p.FPS
 	m.Mods = project.ModSettings{Enabled: p.Mods, API: p.ModAPI}
 	m.Icon = p.Icon
+	m.Display = project.Display{Scale: p.Scale, Width: p.Width, Height: p.Height, Fullscreen: p.Fullscreen}
+	if p.Display == project.DisplayWindow {
+		m.Display.Mode = project.DisplayWindow // terminal is the default and stays out of the file
+	}
 	if err := project.SaveManifest(ctx, filepath.Join(s.dir, s.proj.File), m); err != nil {
 		return err
 	}
@@ -68,6 +85,10 @@ func (s *Session) checkSettings(p ProjectSettings) error {
 		return fmt.Errorf("%w: size and fps", ErrBadSettings)
 	case p.Mods && p.ModAPI == "":
 		return fmt.Errorf("%w: mods need an api script", ErrBadSettings)
+	case p.Display != "" && p.Display != project.DisplayTerminal && p.Display != project.DisplayWindow:
+		return fmt.Errorf("%w: display %q", ErrBadSettings, p.Display)
+	case p.Scale < 0 || p.Scale > 16 || p.Width < 0 || p.Height < 0 || (p.Width == 0) != (p.Height == 0):
+		return fmt.Errorf("%w: window size and scale", ErrBadSettings)
 	}
 	if _, err := fs.Stat(os.DirFS(s.dir), p.Start); err != nil || !strings.HasSuffix(p.Start, asset.SceneExt) {
 		return fmt.Errorf("%w: no start scene %s", ErrBadSettings, p.Start)

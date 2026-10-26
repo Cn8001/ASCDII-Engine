@@ -11,7 +11,7 @@
 <body>
 <div class="layout">
 <aside class="side">
-<a class="brand" href="index.html"><img src="img/logo.svg" alt=""><span>ASCDII Engine<small>0.0.2 docs</small></span></a>
+<a class="brand" href="index.html"><img src="img/logo.svg" alt=""><span>ASCDII Engine<small>0.0.3 docs</small></span></a>
 <h4>Start</h4>
 <a href="index.html">Welcome</a>
 <a href="install.html" class="on">Install</a>
@@ -39,6 +39,7 @@
 <a href="cli.html">CLI reference</a>
 <a href="go-api.html">Go API</a>
 <a href="architecture.html">Architecture</a>
+<a href="credits.html">Credits</a>
 </aside>
 <main>
 <div class="kicker">Start</div>
@@ -56,15 +57,16 @@
 <tr><th>Component</th><th>Windows</th><th>Linux</th></tr>
 <tr><td>Operating system</td><td>Windows 10 or 11, 64 bit</td><td>A 64 bit distribution; WSL 2 is supported</td></tr>
 <tr><td>Editor window</td><td>WebView2, included in Windows 10 and 11</td><td>WebKitGTK 4.1: <code>sudo apt install libwebkit2gtk-4.1-0</code></td></tr>
-<tr><td>Sound</td><td>No additional software</td><td>ALSA (<code>libasound2</code>)</td></tr>
+<tr><td>Sound</td><td>No additional software</td><td>PulseAudio or PipeWire, included in desktop distributions, or ALSA (<code>libasound2</code>)</td></tr>
 <tr><td>Terminal</td><td>Windows Terminal</td><td>Any terminal with 24 bit color</td></tr>
+<tr><td>Window games</td><td>No additional software</td><td>A desktop session with X11 or XWayland and OpenGL drivers</td></tr>
 </table>
 
 <h2>Installation</h2>
 <table>
 <tr><th>Platform</th><th>Archive</th><th>Contents</th></tr>
-<tr><td>Windows</td><td><code>ascdii-<span class="version">0.0.2</span>-windows-amd64.zip</code></td><td><code>ascdii.exe</code>, <code>ascdii-editor.exe</code> and <code>ascdii-player.exe</code></td></tr>
-<tr><td>Linux</td><td><code>ascdii-<span class="version">0.0.2</span>-linux-amd64.tar.gz</code></td><td><code>ascdii</code>, <code>ascdii-editor</code> and <code>ascdii-player</code></td></tr>
+<tr><td>Windows</td><td><code>ascdii-<span class="version">0.0.3</span>-windows-amd64.zip</code></td><td><code>ascdii.exe</code>, <code>ascdii-editor.exe</code>, <code>ascdii-player.exe</code> and <code>ascdii-player-window.exe</code></td></tr>
+<tr><td>Linux</td><td><code>ascdii-<span class="version">0.0.3</span>-linux-amd64.tar.gz</code></td><td><code>ascdii</code>, <code>ascdii-editor</code>, <code>ascdii-player</code> and <code>ascdii-player-window</code></td></tr>
 </table>
 <ol class="steps">
 <li>Extract the archive for the platform into any folder, for example <code>C:\Tools\ascdii</code> or <code>~/tools/ascdii</code>. The files must remain in the same folder.</li>
@@ -78,6 +80,7 @@
 <li>To create a project, select a template, enter a name, choose the location with <b>Location</b> and press <b>Create</b>. To continue, select a recent project, or press <b>Open</b> to choose a <code>.ascdiiproj</code> file.</li>
 </ol>
 <p>The start screen returns when a project is closed. Starting <code>ascdii-editor</code> directly also works: it restarts itself through <code>ascdii run</code>.</p>
+<p>The editor keeps its own files in one folder, <code>%AppData%\ASCDIIEngine</code> on Windows and <code>~/.config/ASCDIIEngine</code> on Linux: the list of recent projects (<code>recent.json</code>), collected packages (<code>packages</code>, see <a href="packages.html">Packages</a>) and, on Windows, the data of the editor window (<code>webview</code>). Deleting the folder resets these and nothing else. Editors up to version 0.0.2 used the folders <code>ascdii</code> and <code>ascdii-editor.exe</code> there instead; they are no longer read and can be deleted.</p>
 
 <h2>Terminal requirements</h2>
 <figure><img src="img/terminal.png" alt="Dragonfall in a terminal"><figcaption>Dragonfall rendered by a terminal emulator. Each cell holds one Braille character with a foreground and a background color.</figcaption></figure>
@@ -88,7 +91,7 @@ ascdii play ~/games/demo</code></pre>
 <pre><code>ascdii play ~/games/demo --blocks
 Quest\Quest.exe --blocks</code></pre>
 <div class="tip"><b>Windows</b>Use Windows Terminal; the legacy Windows console host does not support 24 bit color.</div>
-<div class="note"><b>Distributing games</b>Built games run on their own and require only a terminal. See <a href="building.html">Build</a>.</div>
+<div class="note"><b>Distributing games</b>Built games run on their own and require only a terminal, or a desktop for games shown in a window. See <a href="building.html">Build</a>.</div>
 
 <h2 id="building-from-source">Building from source</h2>
 <p>Required only for development of the engine and the editor. All programs build from one Go module.</p>

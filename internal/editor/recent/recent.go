@@ -14,15 +14,9 @@ import (
 
 const limit = 12
 
+// Store is the JSON file the list lives in; the editor keeps it in its app
+// folder (appdir.Recent).
 type Store struct{ Path string }
-
-func Default() (Store, error) {
-	dir, err := os.UserConfigDir()
-	if err != nil {
-		return Store{}, fmt.Errorf("config dir: %w", err)
-	}
-	return Store{Path: filepath.Join(dir, "ascdii", "recent.json")}, nil
-}
 
 func (s Store) Load(ctx context.Context) ([]string, error) {
 	if err := ctx.Err(); err != nil {

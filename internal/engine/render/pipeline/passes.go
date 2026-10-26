@@ -279,3 +279,36 @@ func (b *Braille) Run(f *Frame) {
 	}
 	braille.Resolve(f.Buf, f.Cells, int(b.Calm))
 }
+
+// Pixels takes the place of Braille for pixel displays, which draw the dots
+// themselves. Every cell gets rune 0, which overlay writes never produce
+// (Grid.Set turns it into a space), so a cell still holding it shows the dots
+// under it; its colors are the cell average, what an overlay reading the cell
+// beneath expects.
+type Pixels struct{}
+
+func (*Pixels) Name() string { return "pixels" }
+func (*Pixels) Stage() Stage { return Resolve }
+func (*Pixels) Run(f *Frame) {
+	f.Cells.Resize(f.Buf.Cols, f.Buf.Rows)
+	cells := f.Cells.Cells()
+	par.Rows(f.Buf.Rows, func(lo, hi int) {
+		for cy := lo; cy < hi; cy++ {
+			for cx := 0; cx < f.Buf.Cols; cx++ {
+				avg := f.Buf.CellAverage(cx, cy)
+				cells[cy*f.Cells.W+cx] = cell.Cell{FG: avg, BG: avg}
+			}
+		}
+	})
+}
+
+// UsePixels switches a pipeline from Braille cells to the Pixels pass.
+func UsePixels(p *Pipeline) error {
+	if err := p.SetEnabled("braille", false); err != nil {
+		return err
+	}
+	if _, err := p.Pass("pixels"); err != nil {
+		p.Add(&Pixels{})
+	}
+	return nil
+}

@@ -12,7 +12,7 @@ One Go module.
   `core` (color, geom, prop, input, ...), `render` (raster, texture, draw,
   pipeline, ...), `world` (scene: GameObjects, components, references;
   components; anim; fx), `assets` (asset, mesh, material), `script/vm` (Lua),
-  `platform` (backend contract, terminal, headless), `runtime` (app, project,
+  `platform` (backend contract, terminal, headless, pixels, window), `runtime` (app, project,
   pack, bundle, ...).
 - `internal/dragonfall/...` example game content built on the engine.
 - `internal/editor/...` editor backend (session, services, Wails adapters).
@@ -90,8 +90,11 @@ at the feet) scaled by `Sprite.Scale` world units per pixel.
   at build time. Never write the version anywhere else; in docs/usage pages wrap
   it in `<span class="version">`, which `docs/nav.py` fills in.
 - `make hello`, `make dragonfall` run the terminal examples.
+- The window display (`platform/window`, Ebitengine) is linked only with the
+  `window` build tag, into `ascdii-player-window`; never import it from code
+  the terminal programs or the editor link.
 - `make all` builds `bin/linux` and `bin/windows`, each a complete install
-  of that platform only (ascdii, ascdii-editor, ascdii-player) that runs
-  where it is copied. Only these three are shipped; the other commands are
+  of that platform only (ascdii, ascdii-editor, ascdii-player,
+  ascdii-player-window) that runs where it is copied. Only these four are shipped; the other commands are
   run with `go run`. Parts: `make cli`, `make editor-linux`, `make editor-windows`;
   `make editor-dev` for hot reload.

@@ -16,6 +16,7 @@ import (
 
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/dragonfall"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/editor/launch"
+	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/editor/players"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/core/guid"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/bundle"
 	"gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/project"
@@ -177,7 +178,7 @@ func cmdBuild(ctx context.Context, self string, args []string) error {
 	}
 	ext := ""
 	if *bin == "" {
-		p, err := launch.Find(self, launch.Player)
+		p, err := launch.Find(self, players.For(p.Manifest.Display))
 		if err != nil {
 			return err
 		}
