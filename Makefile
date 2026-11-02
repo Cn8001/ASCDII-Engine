@@ -17,7 +17,46 @@ else
 LDKEY := -X gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/bundle.pakSecret=$(ASCDII_PAK_SECRET)
 endif
 
-.PHONY: all version test bench template brand cli hello dragonfall editor-dev editor-linux editor-windows dist clean doctor tools
+.PHONY: start build deps help all version test bench template brand cli hello dragonfall editor-dev editor-linux editor-windows dist clean doctor tools
+
+ifeq ($(OS),Windows_NT)
+HOST := windows
+else
+HOST := $(if $(filter Darwin,$(shell uname -s)),darwin,linux)
+endif
+
+# Plain make is the way in for someone new: it checks this machine, and
+# either builds what the machine can build or stops with numbered steps
+# (make deps, make tools, ...) that get it there.
+.DEFAULT_GOAL := start
+start:
+	@sh scripts/doctor.sh guide
+	@$(MAKE) --no-print-directory build
+	@echo
+	@echo "Built into $(BIN)/. Run the editor with: $(BIN)/$(HOST)/ascdii"
+
+# build is what this machine can build: everything on Linux, the Windows
+# editor elsewhere (the CLI and players use cgo for Linux).
+ifeq ($(HOST),linux)
+build: cli editor-linux
+else
+build: editor-windows
+endif
+
+# deps installs the system packages for this distribution (with sudo), Go
+# and Node where the package manager has new enough ones, and wails.
+deps:
+	@sh scripts/doctor.sh deps
+
+help:
+	@echo "make              check this machine, then build what it can"
+	@echo "make deps         install what is missing (system packages, wails)"
+	@echo "make tools        install wails at the version go.mod uses"
+	@echo "make doctor       list every requirement and what is missing"
+	@echo "make test         vet and run the tests"
+	@echo "make cli          CLI and players for Linux and Windows"
+	@echo "make editor-linux, make editor-windows, make editor-dev"
+	@echo "make all, make dist, make clean"
 
 WAILS_VERSION := $(shell sed -n 's|.*github.com/wailsapp/wails/v2 \(v[^ ]*\).*|\1|p' go.mod)
 
