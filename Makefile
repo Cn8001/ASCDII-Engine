@@ -17,7 +17,26 @@ else
 LDKEY := -X gitlab.com/rapsodoinc/rapsodo-studios/ascii-engine/internal/engine/runtime/bundle.pakSecret=$(ASCDII_PAK_SECRET)
 endif
 
-.PHONY: all version test bench template brand cli hello dragonfall editor-dev editor-linux editor-windows dist clean
+.PHONY: all version test bench template brand cli hello dragonfall editor-dev editor-linux editor-windows dist clean doctor tools
+
+WAILS_VERSION := $(shell sed -n 's|.*github.com/wailsapp/wails/v2 \(v[^ ]*\).*|\1|p' go.mod)
+
+# Each build first checks what it needs (scripts/doctor.sh). It is silent when
+# all is there; otherwise it names what is missing with the command that
+# installs it, and stops before the build starts.
+doctor-%:
+	@out=$$(sh scripts/doctor.sh $* 2>&1) || { printf '%s\n' "$$out"; exit 1; }
+
+# doctor reports every target's requirements and what running games need.
+doctor:
+	-@sh scripts/doctor.sh all
+	@echo
+	@sh scripts/doctor.sh runtime
+
+# tools installs the wails CLI at the version go.mod uses.
+tools:
+	go install github.com/wailsapp/wails/v2/cmd/wails@$(WAILS_VERSION)
+	@echo "wails is in $$(go env GOPATH)/bin; that folder must be on PATH."
 
 test:
 	go vet ./...
@@ -33,7 +52,7 @@ template:
 # The engine version is set only in internal/engine/runtime/version/version.go.
 # This copies it to what cannot read Go: wails.json and the Windows resources
 # (brand), the template manifest and the docs. The frontend reads it itself.
-version: brand template
+version: doctor-version brand template
 	python3 docs/nav.py
 	@if [ -f docs/internals/build.py ]; then python3 docs/internals/build.py; fi
 
@@ -52,11 +71,11 @@ WINDOWS := $(BIN)/windows
 GOREL   := go build -trimpath -ldflags "-s -w $(LDKEY)"
 GOWIN   := go build -trimpath -tags window
 
-all: version cli editor-linux editor-windows
+all: doctor-all version cli editor-linux editor-windows
 
 # brand also writes the Windows icon resources go build links in.
 # Build lines stay quiet: printed, they would put the key into logs.
-cli: brand
+cli: doctor-cli brand
 	@echo "build $(LINUX)/ascdii $(LINUX)/ascdii-player $(LINUX)/ascdii-player-window $(WINDOWS)/ascdii.exe $(WINDOWS)/ascdii-player.exe $(WINDOWS)/ascdii-player-window.exe"
 	@GOOS=linux GOARCH=amd64 $(GOREL) -o $(LINUX)/ascdii ./cmd/ascdii
 	@GOOS=linux GOARCH=amd64 $(GOREL) -o $(LINUX)/ascdii-player ./cmd/player
@@ -71,23 +90,23 @@ hello:
 dragonfall:
 	go run ./cmd/ascdii play internal/dragonfall/template
 
-editor-dev: cli
+editor-dev: doctor-editor-dev cli
 	@cd $(EDITOR) && ASCDII_PLAYERS=$(CURDIR)/$(BIN) WAILS_DEV_ALLOWED_HOSTS=wails.localhost $(WAILS) dev -tags $(LINUXTAG) -ldflags "$(LDKEY)" 2>&1 | $(MASK)
 
 # Wails always writes build/bin; the editor moves next to its ascdii, where
 # the launcher looks for it. -trimpath keeps -ldflags, and so the key, out of
 # the editor's build info.
-editor-linux: brand
+editor-linux: doctor-editor-linux brand
 	@cd $(EDITOR) && $(WAILS) build -trimpath -tags $(LINUXTAG) -ldflags "$(LDKEY)" > build.log 2>&1; s=$$?; $(MASK) build.log; rm -f build.log; exit $$s
 	mkdir -p $(LINUX) && mv $(EDITOR)/build/bin/ascdii-editor $(LINUX)/
 
-editor-windows: brand
+editor-windows: doctor-editor-windows brand
 	@cd $(EDITOR) && $(WAILS) build -trimpath -platform windows/amd64 -ldflags "$(LDKEY)" > build.log 2>&1; s=$$?; $(MASK) build.log; rm -f build.log; exit $$s
 	mkdir -p $(WINDOWS) && mv $(EDITOR)/build/bin/ascdii-editor.exe $(WINDOWS)/
 
 VERSION = $(shell go run ./cmd/ascdii version | cut -d' ' -f3)
 # dist archives the two folders as they are.
-dist: all
+dist: doctor-dist all
 	rm -rf $(BIN)/dist && mkdir -p $(BIN)/dist
 	cp -r $(LINUX) $(BIN)/dist/ascdii-$(VERSION)-linux-amd64
 	cp -r $(WINDOWS) $(BIN)/dist/ascdii-$(VERSION)-windows-amd64
