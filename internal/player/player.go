@@ -22,6 +22,7 @@ import (
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/app"
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/bundle"
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/project"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/save"
 )
 
 var (
@@ -89,6 +90,12 @@ func (g Game) Play(ctx context.Context, args []string) error {
 	e, err := app.Open(ctx, g.FS, o)
 	if err != nil {
 		return err
+	}
+	// Without a config folder the game still runs; it just cannot save.
+	if dir, err := save.ForGame(e.Project().Manifest.Name); err == nil {
+		e.UseStore(dir)
+	} else {
+		o.Log("warn", "save", err.Error())
 	}
 	if windowed(args, e.Project().Manifest.Display) {
 		return g.playWindow(ctx, e, args)

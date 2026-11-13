@@ -4,6 +4,7 @@
 package scene
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strconv"
@@ -177,6 +178,13 @@ type AudioOut interface {
 	Playing(voice uint64) bool
 }
 
+// Store keeps a game's save data between runs, one blob per slot name. The
+// player keeps it in the user's config folder, the editor in the project.
+type Store interface {
+	Load(ctx context.Context, slot string) ([]byte, error) // fs.ErrNotExist for an empty slot
+	Save(ctx context.Context, slot string, data []byte) error
+}
+
 // ClipDriver is a component that plays its object's clips itself, so the
 // scene does not also play them.
 type ClipDriver interface {
@@ -194,6 +202,7 @@ type Ctx struct {
 	Input    *input.State                    // nil outside play
 	Pipeline *pipeline.Pipeline              // what scripts tune; nil in tests
 	Audio    AudioOut                        // nil plays nothing
+	Store    Store                           // nil keeps nothing
 	Shared   map[any]any                     // per run state of modules such as the Lua VM, keyed like context values
 	scale    float64
 	scaled   bool

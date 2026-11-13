@@ -23,6 +23,7 @@ import (
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/app"
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/pack"
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/project"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/save"
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/version"
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/world/scene"
 )
@@ -122,6 +123,10 @@ func (s *Session) resetCtx() {
 		old.emit(AudioEvent{Op: "stopall"})
 	}
 	s.sctx = scene.Ctx{Pipeline: s.pipe, Input: input.NewState(), Audio: &editorAudio{s: s, live: map[uint64]bool{}}, Log: func(level, source, msg string) { s.Log(s.appCtx, level, source, msg) }}
+	// Play mode saves into the project, apart from the saves of built games.
+	if s.dir != "" {
+		s.sctx.Store = save.Dir{Path: filepath.Join(s.dir, "saves")}
+	}
 }
 
 func (s *Session) current() *scene.Scene {

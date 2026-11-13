@@ -1,6 +1,7 @@
 package vm
 
 import (
+	"maps"
 	"math"
 	"strings"
 
@@ -238,6 +239,7 @@ func (v *VM) installGlobals() {
 			return 0
 		},
 	}
+	maps.Copy(globals, v.storeGlobals())
 	for k, fn := range globals {
 		L.SetGlobal(k, L.NewFunction(fn))
 	}

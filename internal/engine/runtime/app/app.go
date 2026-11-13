@@ -33,6 +33,7 @@ type Options struct {
 	Speaker func(r io.Reader) (io.Closer, error)
 	Mods    fs.FS                           // the folder holding mod folders; nil loads none
 	Log     func(level, source, msg string) // engine and script messages; nil drops them
+	Store   scene.Store                     // save data for save() and load(); nil keeps nothing
 }
 
 func (o Options) withDefaults() Options {
@@ -82,6 +83,7 @@ func build(o Options, reg *scene.Registry, lib *asset.Library, s *scene.Scene) *
 	e.pipe = NewPipeline(e.Scene, o.Now)
 	e.ctx.Pipeline = e.pipe
 	e.ctx.Log = o.Log
+	e.ctx.Store = o.Store
 	e.frame = pipeline.NewFrame(o.Cols, o.Rows)
 	return e
 }
@@ -137,6 +139,10 @@ func (e *Engine) loadSound(ref string) (audio.Sound, error) {
 	defer f.Close()
 	return audio.Decode(f, p)
 }
+
+// UseStore sets where save() and load() keep data, for callers that only
+// know the game's name after Open.
+func (e *Engine) UseStore(s scene.Store) { e.ctx.Store = s }
 
 func (e *Engine) Scene() *scene.Scene          { return e.scn }
 func (e *Engine) SetScene(s *scene.Scene)      { e.scn = s }
