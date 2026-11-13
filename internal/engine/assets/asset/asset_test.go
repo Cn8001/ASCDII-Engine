@@ -114,6 +114,18 @@ func TestUnit_ListClassifiesAndSkips(t *testing.T) {
 	}
 }
 
+func TestUnit_ClassifyKnowsBothModelFormats(t *testing.T) {
+	for _, p := range []string{"props/barrel.obj", "props/Barrel.FBX", "props/tree.fbx"} {
+		// Act
+		k, ok := Classify(p)
+
+		// Assert
+		if !ok || k != Model {
+			t.Fatalf("%s: kind %q ok %v", p, k, ok)
+		}
+	}
+}
+
 func TestUnit_LibraryServesArtAndPrefabs(t *testing.T) {
 	// Arrange
 	fsys := fstest.MapFS{

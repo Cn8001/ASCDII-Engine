@@ -1,5 +1,5 @@
-// Package mesh reads Wavefront OBJ models and their MTL materials into
-// triangles in engine space (Z up, world units).
+// Package mesh reads Wavefront OBJ models with their MTL materials, and FBX
+// models, into triangles in engine space (Z up, world units).
 package mesh
 
 import (
@@ -16,7 +16,8 @@ type Tri struct {
 // HasUV reports whether every corner of t has texture coordinates.
 func (t Tri) HasUV() bool { return t.T[0] >= 0 && t.T[1] >= 0 && t.T[2] >= 0 }
 
-// Part is a run of triangles sharing one material, an OBJ "usemtl".
+// Part is a run of triangles sharing one material, an OBJ "usemtl" or an
+// FBX Material.
 type Part struct {
 	Material string      `json:"material"`
 	Color    color.Color `json:"color"`             // Kd, times the texture's average when textured
@@ -33,7 +34,7 @@ type Mesh struct {
 }
 
 type Options struct {
-	UpZ   bool    `json:"upZ"`   // the file is already Z up, as some CAD exports are
+	UpZ   bool    `json:"upZ"`   // the OBJ is already Z up, as some CAD exports are; FBX files name their axes
 	Scale float64 `json:"scale"` // world units per file unit, 0 means 1
 }
 

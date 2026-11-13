@@ -13,7 +13,7 @@ export function assetKind(p: string): string {
   if (l.endsWith('.prefab.json')) return 'prefab'
   if (l.endsWith('.scene.json')) return 'scene'
   if (l.endsWith('.lua')) return 'script'
-  if (l.endsWith('.obj')) return 'model'
+  if (l.endsWith('.obj') || l.endsWith('.fbx')) return 'model'
   if (l.endsWith('.material.json')) return 'material'
   if (/\.(png|jpe?g|gif)$/.test(l)) return 'texture'
   if (l.endsWith('.sprite.json') || l.endsWith('.xp')) return 'sprite'

@@ -183,12 +183,16 @@ func ParseMTL(r io.Reader) (map[string]Material, error) {
 	return out, nil
 }
 
-// Load reads a model and its materials from fsys. A textured material takes
-// the texture's average color until textures are sampled per dot.
+// Load reads an OBJ or FBX model and its materials from fsys. A textured
+// material takes the texture's average color until textures are sampled
+// per dot.
 func Load(ctx context.Context, fsys fs.FS, p string, o Options) (*Mesh, error) {
 	b, err := fs.ReadFile(fsys, p)
 	if err != nil {
 		return nil, fmt.Errorf("load %s: %w", p, err)
+	}
+	if isFBX(p) {
+		return loadFBX(ctx, fsys, p, b, o)
 	}
 	m, libs, err := ParseOBJ(bytes.NewReader(b), o)
 	if err != nil {
@@ -228,8 +232,11 @@ func Load(ctx context.Context, fsys fs.FS, p string, o Options) (*Mesh, error) {
 }
 
 // Files lists what a model needs next to it: its .mtl files and their
-// textures, relative to the model's folder.
+// textures, or an FBX's textures, relative to the model's folder.
 func Files(fsys fs.FS, p string) ([]string, error) {
+	if isFBX(p) {
+		return fbxFiles(fsys, p)
+	}
 	f, err := fsys.Open(p)
 	if err != nil {
 		return nil, fmt.Errorf("model files %s: %w", p, err)

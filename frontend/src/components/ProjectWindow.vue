@@ -83,7 +83,7 @@ watch(
 )
 
 function name(p: string) {
-  return base(p).replace(/\.(prefab|scene|material|animator|sprite)\.json$/, '').replace(/\.(json|xp|lua|obj|png|jpe?g|gif|wav|mp3)$/i, '')
+  return base(p).replace(/\.(prefab|scene|material|animator|sprite)\.json$/, '').replace(/\.(json|xp|lua|obj|fbx|png|jpe?g|gif|wav|mp3)$/i, '')
 }
 
 function icon(k: string) {

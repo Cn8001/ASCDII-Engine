@@ -12,7 +12,7 @@ import TexThumb from './TexThumb.vue'
 const props = ref<prop.Prop[]>([])
 const entry = computed(() => store.assets.find((a) => a.path === store.asset))
 const kind = computed(() => entry.value?.kind ?? '')
-const title = computed(() => store.asset.split('/').pop()?.replace(/\.(material\.json|png|jpe?g|gif|obj)$/i, '') ?? '')
+const title = computed(() => store.asset.split('/').pop()?.replace(/\.(material\.json|png|jpe?g|gif|obj|fbx)$/i, '') ?? '')
 const pkg = computed(() => (store.asset.startsWith('packages/') ? store.asset.split('/')[1] : ''))
 const heading = computed(() => ({ material: 'Material', texture: 'Import Settings', model: 'Import Settings' })[kind.value] ?? '')
 

@@ -106,7 +106,11 @@ func (s *Session) settingsOf(ref string) (settings, error) {
 		if o.Scale == 0 {
 			o.Scale = 1
 		}
-		b := prop.Bind().Bool("upZ", &o.UpZ).Float("scale", &o.Scale, .001, 1000)
+		b := prop.Bind()
+		if !strings.EqualFold(path.Ext(p), asset.FBXExt) {
+			b = b.Bool("upZ", &o.UpZ) // an FBX names its own axes
+		}
+		b = b.Float("scale", &o.Scale, .001, 1000)
 		return settings{kind: k, props: b.Props(), set: b.Set, save: func(ctx context.Context) error {
 			if err := asset.WriteImport(ctx, s.dir, p, o); err != nil {
 				return err

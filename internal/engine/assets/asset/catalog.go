@@ -37,6 +37,7 @@ const (
 	SceneExt  = ".scene.json"
 	ScriptExt = ".lua"
 	ModelExt  = ".obj"
+	FBXExt    = ".fbx"
 	SpriteExt = ".sprite.json"
 )
 
@@ -58,7 +59,7 @@ func Classify(p string) (Kind, bool) {
 		return Scene, true
 	case strings.HasSuffix(l, ScriptExt):
 		return Script, true
-	case strings.HasSuffix(l, ModelExt):
+	case strings.HasSuffix(l, ModelExt), strings.HasSuffix(l, FBXExt):
 		return Model, true
 	case strings.HasSuffix(l, material.Ext):
 		return Material, true

@@ -110,7 +110,7 @@ export function addMenu(parent: number): MenuItem[] {
     const children = groups.get(c)
     if (children) items.push({ label: categoryLabel(c), icon: categories[c]?.icon ?? 'package', children })
   }
-  const models = (store.kinds.models ?? []).map((p) => ({ label: p.split('/').pop()!.replace(/\.obj$/i, ''), icon: 'box', run: () => add(parent, 'model:' + p) }))
+  const models = (store.kinds.models ?? []).map((p) => ({ label: p.split('/').pop()!.replace(/\.(obj|fbx)$/i, ''), icon: 'box', run: () => add(parent, 'model:' + p) }))
   const prefabs = store.kinds.prefabs.map((p) => ({ label: p.replace(/^prefabs\//, '').replace('.prefab.json', ''), icon: 'package', run: () => add(parent, 'prefab:' + p) }))
   items.push({ label: '-' }, { label: 'Model', icon: 'box', disabled: !models.length, children: models })
   items.push({ label: 'Prefab', icon: 'package', disabled: !prefabs.length, children: prefabs })
