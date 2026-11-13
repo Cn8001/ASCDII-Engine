@@ -240,6 +240,7 @@ func (v *VM) installGlobals() {
 		},
 	}
 	maps.Copy(globals, v.storeGlobals())
+	globals["mouse"] = v.mouseGlobal
 	for k, fn := range globals {
 		L.SetGlobal(k, L.NewFunction(fn))
 	}

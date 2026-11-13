@@ -195,10 +195,11 @@ func (e *Engine) Step(dt float64, events []input.Event) (bool, error) {
 	var keys []input.Key
 	for _, ev := range events {
 		e.input.Apply(ev, e.scn.Time)
-		if ev.Down {
+		if ev.Down && !ev.Mouse {
 			keys = append(keys, ev.Key)
 		}
 	}
+	e.input.SetScreen(e.frame.Cells.W, e.frame.Cells.H)
 	e.ctx.Input = e.input
 	quit, err := e.Update(dt, keys)
 	e.input.EndFrame()

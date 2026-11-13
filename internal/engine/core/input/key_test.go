@@ -64,9 +64,9 @@ func TestUnit_ParseEventsReadsReleases(t *testing.T) {
 	k, w, p := ParseEvents(kitty), ParseEvents(win), ParseEvents(plain)
 
 	// Assert
-	wantK := []Event{{'w', true, true}, {'d', true, true}, {'w', false, true}, {Up, false, true}}
-	wantW := []Event{{'w', true, true}, {'w', false, true}, {CtrlC, true, true}}
-	wantP := []Event{{'w', true, false}, {'d', true, false}, {Up, true, false}}
+	wantK := []Event{{Key: 'w', Down: true, Exact: true}, {Key: 'd', Down: true, Exact: true}, {Key: 'w', Down: false, Exact: true}, {Key: Up, Down: false, Exact: true}}
+	wantW := []Event{{Key: 'w', Down: true, Exact: true}, {Key: 'w', Down: false, Exact: true}, {Key: CtrlC, Down: true, Exact: true}}
+	wantP := []Event{{Key: 'w', Down: true, Exact: false}, {Key: 'd', Down: true, Exact: false}, {Key: Up, Down: true, Exact: false}}
 	for i, c := range []struct{ got, want []Event }{{k, wantK}, {w, wantW}, {p, wantP}} {
 		if fmt.Sprint(c.got) != fmt.Sprint(c.want) {
 			t.Fatalf("case %d: got %v want %v", i, c.got, c.want)

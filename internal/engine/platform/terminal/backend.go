@@ -42,9 +42,10 @@ func (t *Terminal) Open(ctx context.Context) error {
 // Terminals report key releases only when asked: the kitty keyboard
 // protocol (all keys as escape codes, with event types) and Windows
 // Terminal's win32 input mode. Terminals that know neither ignore both.
+// Mouse reports (any motion, SGR encoding) are asked for the same way.
 const (
-	releasesOn  = "\x1b[>11u\x1b[?9001h"
-	releasesOff = "\x1b[<u\x1b[?9001l"
+	releasesOn  = "\x1b[>11u\x1b[?9001h\x1b[?1003h\x1b[?1006h"
+	releasesOff = "\x1b[<u\x1b[?9001l\x1b[?1003l\x1b[?1006l"
 )
 
 func (t *Terminal) Size() (int, int, error) { return Size(t.fd) }

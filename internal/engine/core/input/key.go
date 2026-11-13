@@ -113,7 +113,7 @@ func ParseEvents(b []byte) []Event {
 			}
 			if end < len(b) {
 				if e, ok := csiEvent(string(b[2:end]), b[end]); ok {
-					if e.Key != 0 {
+					if e.Key != 0 || e.Mouse {
 						out = append(out, e)
 					}
 					b = b[end+1:]
@@ -152,6 +152,8 @@ func csiEvent(params string, final byte) (Event, bool) {
 		return n
 	}
 	switch {
+	case (final == 'M' || final == 'm') && strings.HasPrefix(params, "<"):
+		return mouseEvent(strings.Split(params[1:], ";"), final == 'M')
 	case final == 'u' && params != "" && params[0] != '?' && params[0] != '>':
 		code, mods, ev := num(0, 0), num(1, 0), num(1, 1)
 		k := kittyKey(code, mods)
@@ -163,6 +165,35 @@ func csiEvent(params string, final byte) (Event, bool) {
 		return Event{Key: k, Down: num(1, 1) != 3, Exact: true}, true
 	}
 	return Event{}, false
+}
+
+// mouseEvent reads an SGR mouse report, ESC [ < b ; x ; y M (press or move)
+// or m (release). In b, 64 marks the wheel, 32 a move, the low bits the
+// button; x and y count cells from 1.
+func mouseEvent(fields []string, down bool) (Event, bool) {
+	if len(fields) != 3 {
+		return Event{}, false
+	}
+	var n [3]int
+	for i, f := range fields {
+		v, err := strconv.Atoi(f)
+		if err != nil {
+			return Event{}, false
+		}
+		n[i] = v
+	}
+	e := Event{Mouse: true, X: n[1] - 1, Y: n[2] - 1, Down: down}
+	switch code := n[0]; {
+	case code&64 != 0 && code&1 == 0:
+		e.Button = WheelUp
+	case code&64 != 0:
+		e.Button = WheelDown
+	case code&32 != 0 || code&3 == 3:
+		e.Button = ButtonNone
+	default:
+		e.Button = [3]Button{ButtonLeft, ButtonMiddle, ButtonRight}[code&3]
+	}
+	return e, true
 }
 
 // kittyKey maps a kitty protocol key code; modifiers count only for Ctrl+C.

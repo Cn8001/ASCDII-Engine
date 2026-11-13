@@ -67,6 +67,17 @@ type Window struct {
 	font      *sfnt.Font
 	glyphOf   sfnt.Buffer
 	has       map[rune]bool // whether the font draws a rune, filled as runes appear
+
+	originX, originY float64 // where Draw put the frame, for pointer cells
+	cellW, cellH     float64
+	pointer          pointer
+}
+
+// pointer is the last mouse state sent, so only changes become events.
+type pointer struct {
+	col, row int
+	seen     bool
+	down     [4]bool
 }
 
 func New(o Options) *Window {
@@ -182,7 +193,48 @@ func (w *Window) Update() error {
 			}
 		}
 	}
+	w.mouse()
 	return nil
+}
+
+func (w *Window) send(e input.Event) {
+	select {
+	case w.events <- e:
+	default:
+	}
+}
+
+// mouse turns the cursor into cell reports: moves, button changes and
+// wheel steps, the same events a terminal's mouse mode gives.
+func (w *Window) mouse() {
+	w.mu.Lock()
+	ox, oy, cw, ch := w.originX, w.originY, w.cellW, w.cellH
+	w.mu.Unlock()
+	if cw <= 0 || ch <= 0 {
+		return
+	}
+	x, y := ebiten.CursorPosition()
+	col, row := int((float64(x)-ox)/cw), int((float64(y)-oy)/ch)
+	p := &w.pointer
+	if !p.seen || col != p.col || row != p.row {
+		p.col, p.row, p.seen = col, row, true
+		w.send(input.Event{Mouse: true, X: col, Y: row, Down: true})
+	}
+	buttons := map[input.Button]ebiten.MouseButton{input.ButtonLeft: ebiten.MouseButtonLeft,
+		input.ButtonMiddle: ebiten.MouseButtonMiddle, input.ButtonRight: ebiten.MouseButtonRight}
+	for b, eb := range buttons {
+		if down := ebiten.IsMouseButtonPressed(eb); down != p.down[b] {
+			p.down[b] = down
+			w.send(input.Event{Mouse: true, X: col, Y: row, Button: b, Down: down})
+		}
+	}
+	if _, dy := ebiten.Wheel(); dy != 0 {
+		b := input.WheelUp
+		if dy < 0 {
+			b = input.WheelDown
+		}
+		w.send(input.Event{Mouse: true, X: col, Y: row, Button: b, Down: true})
+	}
 }
 
 func (w *Window) Draw(screen *ebiten.Image) {
@@ -207,6 +259,10 @@ func (w *Window) Draw(screen *ebiten.Image) {
 	sw, sh := screen.Bounds().Dx(), screen.Bounds().Dy()
 	iw, ih := w.img.Bounds().Dx()*s, w.img.Bounds().Dy()*s
 	ox, oy := float64((sw-iw)/2), float64((sh-ih)/2)
+	w.mu.Lock()
+	w.originX, w.originY = ox, oy
+	w.cellW, w.cellH = float64(raster.SubW*s), float64(raster.SubH*s)
+	w.mu.Unlock()
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Scale(float64(s), float64(s))
 	op.GeoM.Translate(ox, oy)
