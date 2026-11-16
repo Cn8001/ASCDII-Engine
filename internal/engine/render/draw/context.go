@@ -20,6 +20,8 @@ type Material struct {
 	Texture  raster.Sampler `json:"-"`      // multiplied by Albedo
 	Tiling   geom.Vec2      `json:"tiling"` // repeats per UV unit, 0 means 1
 	Offset   geom.Vec2      `json:"offset"`
+	grain    float64
+	seed     uint32
 }
 
 // uv applies tiling and offset.
@@ -59,6 +61,13 @@ func (m Material) Tint(k float64) Material {
 	return m
 }
 
+// Grained jitters brightness per half world unit square, the pattern
+// Terrain grain draws, applied per dot so a face needs no splitting.
+func (m Material) Grained(amount float64, seed uint32) Material {
+	m.grain, m.seed = amount, seed
+	return m
+}
+
 // Caster is a soft contact shadow resolved later against whatever ground was drawn.
 type Caster struct {
 	At       geom.Vec3
@@ -83,7 +92,7 @@ func (c *Context) Shadow(at geom.Vec3, rx, ry, strength float64) {
 }
 
 func (c *Context) frag(m Material, n geom.Vec3) raster.Frag {
-	f := raster.Frag{Albedo: m.Albedo, Normal: raster.PackNormal(n), Tex: m.Texture}
+	f := raster.Frag{Albedo: m.Albedo, Normal: raster.PackNormal(n), Tex: m.Texture, Grain: m.grain, Seed: m.seed}
 	if m.Emissive > 0 {
 		f.Emissive = uint8(geom.Clamp(m.Emissive, 0, 1) * 255)
 	}

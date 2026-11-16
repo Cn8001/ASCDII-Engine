@@ -5,7 +5,6 @@ import (
 
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/color"
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/geom"
-	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/noise"
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/render/raster"
 )
 
@@ -101,16 +100,47 @@ func (c *Context) tileTop(h Heightmap, x, y int, t Tile, o TerrainOptions) {
 		c.FaceShaded([]geom.Vec3{geom.V3(fx, fy, z), geom.V3(fx+1, fy, z), geom.V3(fx+1, fy+1, z), geom.V3(fx, fy+1, z)}, cols, up(), t.Top)
 		return
 	}
-	if o.Grain <= 0 {
-		c.Face([]geom.Vec3{geom.V3(fx, fy, z), geom.V3(fx+1, fy, z), geom.V3(fx+1, fy+1, z), geom.V3(fx, fy+1, z)}, up(), t.Top)
+	top := t.Top
+	if o.Grain > 0 {
+		top = top.Grained(o.Grain, o.Seed)
+	}
+	c.Face([]geom.Vec3{geom.V3(fx, fy, z), geom.V3(fx+1, fy, z), geom.V3(fx+1, fy+1, z), geom.V3(fx, fy+1, z)}, up(), top)
+}
+
+// Slab draws tiles x0..x1 by y0..y1 that all share t, as Terrain would draw
+// them alone, but as one top face and one face per side, cut to the screen.
+// Flat ground then costs a few triangles instead of several per tile.
+func (c *Context) Slab(x0, y0, x1, y1 int, t Tile, o TerrainOptions) {
+	if x0 > x1 || y0 > y1 {
 		return
 	}
-	for j := 0; j < 2; j++ {
-		for i := 0; i < 2; i++ {
-			jit := (noise.Unit(noise.Hash(x*2+i, y*2+j, o.Seed)) - .5) * 2 * o.Grain
-			sx, sy := fx+float64(i)*.5, fy+float64(j)*.5
-			c.Face([]geom.Vec3{geom.V3(sx, sy, z), geom.V3(sx+.5, sy, z), geom.V3(sx+.5, sy+.5, z), geom.V3(sx, sy+.5, z)}, up(), t.Top.Tint(1+jit))
-		}
+	lo, hi := c.View.GroundRect(2 + math.Abs(t.Height)*1.5)
+	ax, ay := math.Max(float64(x0), math.Floor(lo.X)), math.Max(float64(y0), math.Floor(lo.Y))
+	bx, by := math.Min(float64(x1+1), math.Ceil(hi.X)), math.Min(float64(y1+1), math.Ceil(hi.Y))
+	if ax >= bx || ay >= by {
+		return
+	}
+	z := t.Height
+	top := t.Top
+	if o.Grain > 0 {
+		top = top.Grained(o.Grain, o.Seed)
+	}
+	c.Face([]geom.Vec3{geom.V3(ax, ay, z), geom.V3(bx, ay, z), geom.V3(bx, by, z), geom.V3(ax, by, z)}, up(), top)
+	bottom := math.Min(0, z) - 1
+	side := func(a, b geom.Vec2, n geom.Vec3) {
+		c.Face([]geom.Vec3{geom.V3(a.X, a.Y, bottom), geom.V3(b.X, b.Y, bottom), geom.V3(b.X, b.Y, z), geom.V3(a.X, a.Y, z)}, n, t.Side)
+	}
+	if by == float64(y1+1) {
+		side(geom.V2(ax, by), geom.V2(bx, by), south())
+	}
+	if ay == float64(y0) {
+		side(geom.V2(ax, ay), geom.V2(bx, ay), north())
+	}
+	if ax == float64(x0) {
+		side(geom.V2(ax, ay), geom.V2(ax, by), west())
+	}
+	if bx == float64(x1+1) {
+		side(geom.V2(bx, ay), geom.V2(bx, by), east())
 	}
 }
 

@@ -376,12 +376,20 @@ func (r rect) Tile(x, y int) draw.Tile {
 	return r.tile
 }
 
+// slab draws r as Terrain would, as one flat slab of the tiles whose
+// centers lie inside it.
+func (r rect) slab(c *draw.Context, o draw.TerrainOptions) {
+	x0, y0 := int(math.Ceil(r.b.Min.X-.5)), int(math.Ceil(r.b.Min.Y-.5))
+	x1, y1 := int(math.Ceil(r.b.Max.X-.5))-1, int(math.Ceil(r.b.Max.Y-.5))-1
+	c.Slab(x0, y0, x1, y1, r.tile, o)
+}
+
 func (g *Ground) Draw(c *draw.Context, t scene.Transform) {
 	m := draw.M(g.Color)
 	if mm, ok := materialOf(g.lib, g.Material); ok {
 		m = mm
 	}
-	c.Terrain(rect{g.Bounds(t), draw.Tile{Height: t.Pos.Z, Top: m, Side: m.Tint(.7)}}, draw.TerrainOptions{Grain: g.Grain, Seed: uint32(g.Seed)})
+	rect{g.Bounds(t), draw.Tile{Height: t.Pos.Z, Top: m, Side: m.Tint(.7)}}.slab(c, draw.TerrainOptions{Grain: g.Grain, Seed: uint32(g.Seed)})
 }
 
 type Water struct {
@@ -409,7 +417,7 @@ func (w *Water) Draw(c *draw.Context, t scene.Transform) {
 		m = mm
 		m.Water = true
 	}
-	c.Terrain(rect{w.Bounds(t), draw.Tile{Height: t.Pos.Z, Top: m, Side: m.Tint(.6)}}, draw.TerrainOptions{})
+	rect{w.Bounds(t), draw.Tile{Height: t.Pos.Z, Top: m, Side: m.Tint(.6)}}.slab(c, draw.TerrainOptions{})
 }
 
 type Light struct {

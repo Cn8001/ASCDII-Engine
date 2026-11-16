@@ -4,6 +4,7 @@ import (
 	"math"
 
 	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/color"
+	"github.com/Cn8001/ASCDII-Engine/internal/engine/core/noise"
 )
 
 type Point struct{ X, Y int }
@@ -262,13 +263,17 @@ func (b *Buffer) triangle(t *tri, lo, hi int) {
 				if shaded {
 					f.Albedo = color.Color{R: channel(r), G: channel(g), B: channel(bl)}
 				}
+				base := tint
+				if shaded {
+					base = f.Albedo
+				}
+				if f.Grain > 0 {
+					base = grain(base, ex, ey, f.Grain, f.Seed)
+					f.Albedo = base
+				}
 				if tex == nil {
 					b.plot(x, y, f, t.tag, t.part)
 				} else if c, solid := tex.Sample(lod, u, v); solid {
-					base := tint
-					if shaded {
-						base = f.Albedo
-					}
 					f.Albedo = color.Mul(c, base)
 					b.plot(x, y, f, t.tag, t.part)
 				}
@@ -283,6 +288,13 @@ func (b *Buffer) triangle(t *tri, lo, hi int) {
 			}
 		}
 	}
+}
+
+// grain scales c by a jitter fixed per half world unit square, so ground
+// reads as patchy without being cut into small quads.
+func grain(c color.Color, x, y, amount float64, seed uint32) color.Color {
+	h := noise.Hash(int(math.Floor(x*2)), int(math.Floor(y*2)), seed)
+	return color.Scale(c, 1+(noise.Unit(h)-.5)*2*amount)
 }
 
 // Sampler is a texture as the rasterizer needs it.

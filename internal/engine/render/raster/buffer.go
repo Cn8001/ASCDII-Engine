@@ -47,6 +47,8 @@ type Frag struct {
 	RowDepth float64 // lets flat 2D shapes stand as vertical planes
 	RowZ     float64
 	Tex      Sampler // multiplies Albedo per dot; triangles only
+	Grain    float64 // triangles only: brightness jitter 0..1 per half world unit square
+	Seed     uint32  // of the grain
 }
 
 type Dot struct {

@@ -223,3 +223,37 @@ func TestUnit_RoundSolidsWrapTextures(t *testing.T) {
 		}
 	}
 }
+
+type block struct {
+	x0, y0, x1, y1 int
+	tile           Tile
+}
+
+func (b block) Tile(x, y int) Tile {
+	if x < b.x0 || y < b.y0 || x > b.x1 || y > b.y1 {
+		return Tile{Skip: true}
+	}
+	return b.tile
+}
+
+func TestUnit_SlabDrawsWhatTerrainDraws(t *testing.T) {
+	for _, b := range []block{
+		{-3, -2, 2, 3, Tile{Height: 1.5, Top: M(color.RGB(180, 150, 90)), Side: M(color.RGB(120, 100, 60))}},
+		{-200, -150, 180, 220, Tile{Height: -.5, Top: M(color.RGB(40, 90, 130)), Side: M(color.RGB(20, 60, 90))}},
+	} {
+		// Arrange
+		want, got := newContext(40, 20), newContext(40, 20)
+		o := TerrainOptions{Grain: .2, Seed: 7}
+
+		// Act
+		want.Terrain(b, o)
+		got.Slab(b.x0, b.y0, b.x1, b.y1, b.tile, o)
+
+		// Assert
+		for i, w := range want.Buf.Dots() {
+			if g := got.Buf.Dots()[i]; g.Color != w.Color || g.Normal != w.Normal || math.Abs(float64(g.Depth-w.Depth)) > 1e-3 {
+				t.Fatalf("slab %v: dot %d is %+v, terrain drew %+v", b, i, g, w)
+			}
+		}
+	}
+}
