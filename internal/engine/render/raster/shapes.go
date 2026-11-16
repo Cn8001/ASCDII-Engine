@@ -152,11 +152,43 @@ func (b *Buffer) QuadBezier(a, c, e Point, segments, width int, f Frag) {
 
 // Triangle samples dot centers with edge functions and interpolates depth and
 // world position, so faces of 3D solids occlude each other per dot.
-func (b *Buffer) Triangle(v0, v1, v2 Vertex, f Frag) { b.triangle(v0, v1, v2, f, false) }
+func (b *Buffer) Triangle(v0, v1, v2 Vertex, f Frag) { b.draw(tri{v0: v0, v1: v1, v2: v2, f: f}) }
 
 // TriangleShaded also blends the vertex colors, for smooth ground without
 // visible tile edges.
-func (b *Buffer) TriangleShaded(v0, v1, v2 Vertex, f Frag) { b.triangle(v0, v1, v2, f, true) }
+func (b *Buffer) TriangleShaded(v0, v1, v2 Vertex, f Frag) {
+	b.draw(tri{v0: v0, v1: v1, v2: v2, f: f, shaded: true})
+}
+
+// tri is one triangle with the tag it was drawn under and its clipped dot
+// bounds, so it can be rasterized later, one row band at a time.
+type tri struct {
+	v0, v1, v2     Vertex
+	f              Frag
+	shaded         bool
+	tag            uint32
+	part           uint16
+	x0, x1, y0, y1 int
+}
+
+func (b *Buffer) draw(t tri) {
+	if math.Abs(edge(t.v0, t.v1, t.v2.X, t.v2.Y)) < 1e-9 {
+		return
+	}
+	t.x0 = max(0, int(math.Floor(min(t.v0.X, t.v1.X, t.v2.X))))
+	t.x1 = min(b.W-1, int(math.Ceil(max(t.v0.X, t.v1.X, t.v2.X))))
+	t.y0 = max(0, int(math.Floor(min(t.v0.Y, t.v1.Y, t.v2.Y))))
+	t.y1 = min(b.H-1, int(math.Ceil(max(t.v0.Y, t.v1.Y, t.v2.Y))))
+	if t.x0 > t.x1 || t.y0 > t.y1 {
+		return
+	}
+	t.tag, t.part = b.tag, b.part
+	if b.q.on {
+		b.q.tri(t)
+		return
+	}
+	b.triangle(&t, 0, b.H)
+}
 
 // plane holds an attribute as a linear function of dot position, so the
 // inner loop only adds a step per dot instead of solving barycentrics.
@@ -186,19 +218,14 @@ func channel(v float64) uint8 {
 	return uint8(v)
 }
 
-func (b *Buffer) triangle(v0, v1, v2 Vertex, f Frag, shaded bool) {
-	area := edge(v0, v1, v2.X, v2.Y)
-	if math.Abs(area) < 1e-9 {
+// triangle fills the rows of t within [lo, hi).
+func (b *Buffer) triangle(t *tri, lo, hi int) {
+	v0, v1, v2, f, shaded := t.v0, t.v1, t.v2, t.f, t.shaded
+	x0, x1, y0, y1 := t.x0, t.x1, max(t.y0, lo), min(t.y1, hi-1)
+	if y0 > y1 {
 		return
 	}
-	x0 := max(0, int(math.Floor(min(v0.X, v1.X, v2.X))))
-	x1 := min(b.W-1, int(math.Ceil(max(v0.X, v1.X, v2.X))))
-	y0 := max(0, int(math.Floor(min(v0.Y, v1.Y, v2.Y))))
-	y1 := min(b.H-1, int(math.Ceil(max(v0.Y, v1.Y, v2.Y))))
-	if x0 > x1 || y0 > y1 {
-		return
-	}
-	inv := 1 / area
+	inv := 1 / edge(v0, v1, v2.X, v2.Y)
 	depth := newPlane(v0, v1, v2, v0.Depth, v1.Depth, v2.Depth, inv)
 	wx := newPlane(v0, v1, v2, v0.WX, v1.WX, v2.WX, inv)
 	wy := newPlane(v0, v1, v2, v0.WY, v1.WY, v2.WY, inv)
@@ -236,14 +263,14 @@ func (b *Buffer) triangle(v0, v1, v2 Vertex, f Frag, shaded bool) {
 					f.Albedo = color.Color{R: channel(r), G: channel(g), B: channel(bl)}
 				}
 				if tex == nil {
-					b.Plot(x, y, f)
+					b.plot(x, y, f, t.tag, t.part)
 				} else if c, solid := tex.Sample(lod, u, v); solid {
 					base := tint
 					if shaded {
 						base = f.Albedo
 					}
 					f.Albedo = color.Mul(c, base)
-					b.Plot(x, y, f)
+					b.plot(x, y, f, t.tag, t.part)
 				}
 			}
 			w0, w1 = w0+s0, w1+s1

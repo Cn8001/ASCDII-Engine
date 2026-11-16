@@ -70,6 +70,7 @@ type Buffer struct {
 	dots       []Dot
 	tag        uint32
 	part       uint16
+	q          queue
 }
 
 func New(cols, rows int) *Buffer {
@@ -83,6 +84,7 @@ func (b *Buffer) Resize(cols, rows int) bool {
 	if cols == b.Cols && rows == b.Rows && b.dots != nil {
 		return false
 	}
+	b.q.reset() // queued writes were placed for the old size
 	b.Cols, b.Rows = cols, rows
 	b.W, b.H = cols*SubW, rows*SubH
 	b.dots = make([]Dot, b.W*b.H)
@@ -90,6 +92,7 @@ func (b *Buffer) Resize(cols, rows int) bool {
 }
 
 func (b *Buffer) Clear(bg color.Color) {
+	b.q.reset() // the clear overwrites every queued write
 	empty := Dot{Color: bg, Albedo: bg, Flags: FlagEmpty | FlagUnlit, Depth: float32(math.Inf(-1))}
 	if len(b.dots) > 0 {
 		// Doubling copies fill the slice far faster than assigning one dot at a time.
@@ -112,6 +115,7 @@ func (b *Buffer) Grow(w, h int) {
 
 // ClearRect empties the dots in [x0,x1) by [y0,y1).
 func (b *Buffer) ClearRect(x0, y0, x1, y1 int) {
+	b.sync()
 	empty := Dot{Flags: FlagEmpty | FlagUnlit, Depth: float32(math.Inf(-1))}
 	for y := max(0, y0); y < min(b.H, y1); y++ {
 		row := b.dots[y*b.W : (y+1)*b.W]
@@ -134,16 +138,28 @@ func (b *Buffer) At(x, y int) *Dot {
 	if !b.Inside(x, y) {
 		return nil
 	}
+	b.sync()
 	return &b.dots[y*b.W+x]
 }
 
-func (b *Buffer) Dots() []Dot { return b.dots }
+func (b *Buffer) Dots() []Dot {
+	b.sync()
+	return b.dots
+}
 
 // Plot keeps the later write on equal depth so layered sprite parts stack in call order.
 func (b *Buffer) Plot(x, y int, f Frag) {
 	if !b.Inside(x, y) {
 		return
 	}
+	if b.q.on {
+		b.q.plot(x, y, f, b.tag, b.part)
+		return
+	}
+	b.plot(x, y, f, b.tag, b.part)
+}
+
+func (b *Buffer) plot(x, y int, f Frag, tag uint32, part uint16) {
 	d := &b.dots[y*b.W+x]
 	depth, z := f.Depth, f.World.Z
 	if f.RowDepth != 0 || f.RowZ != 0 {
@@ -156,7 +172,7 @@ func (b *Buffer) Plot(x, y int, f Frag) {
 	}
 	*d = Dot{
 		Color: f.Albedo, Albedo: f.Albedo, Emissive: f.Emissive, Flags: f.Flags, Normal: f.Normal,
-		Depth: float32(depth), X: float32(f.World.X), Y: float32(f.World.Y), Z: float32(z), Tag: b.tag, Part: b.part,
+		Depth: float32(depth), X: float32(f.World.X), Y: float32(f.World.Y), Z: float32(z), Tag: tag, Part: part,
 	}
 }
 

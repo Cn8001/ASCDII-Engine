@@ -194,7 +194,15 @@ func (p *Pipeline) Render(f *Frame) {
 			continue
 		}
 		t := p.now()
-		it.pass.Run(f)
+		if it.pass.Stage() == Geometry {
+			// Geometry is recorded and rasterized on every core when the pass
+			// ends, so its timing includes the rasterization.
+			f.Buf.Defer()
+			it.pass.Run(f)
+			f.Buf.Flush()
+		} else {
+			it.pass.Run(f)
+		}
 		it.last = p.now().Sub(t)
 	}
 	p.total = p.now().Sub(start)
