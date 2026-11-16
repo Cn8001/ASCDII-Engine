@@ -243,6 +243,9 @@ func (b *Buffer) triangle(t *tri, lo, hi int) {
 		pv = newPlane(v0, v1, v2, v0.V, v1.V, v2.V, inv)
 		lod = level(tex, pu, pv)
 	}
+	// Plot would reject a dot behind the stored one anyway; testing first
+	// skips its texture lookup. Row slopes change depth per row, so they opt out.
+	early := f.RowDepth == 0 && f.RowZ == 0
 	// Edge functions grow linearly in x; their per dot steps are constant.
 	s0, s1 := -(v2.Y-v1.Y)*inv, -(v0.Y-v2.Y)*inv
 	for y := y0; y <= y1; y++ {
@@ -258,7 +261,7 @@ func (b *Buffer) triangle(t *tri, lo, hi int) {
 			u, v = pu.row(v0, px, py), pv.row(v0, px, py)
 		}
 		for x := x0; x <= x1; x++ {
-			if w0 >= -1e-6 && w1 >= -1e-6 && 1-w0-w1 >= -1e-6 {
+			if w0 >= -1e-6 && w1 >= -1e-6 && 1-w0-w1 >= -1e-6 && (!early || float32(d) >= b.dots[y*b.W+x].Depth) {
 				f.Depth, f.World.X, f.World.Y, f.World.Z = d, ex, ey, ez
 				if shaded {
 					f.Albedo = color.Color{R: channel(r), G: channel(g), B: channel(bl)}

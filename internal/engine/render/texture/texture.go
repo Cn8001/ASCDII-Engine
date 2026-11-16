@@ -121,30 +121,43 @@ func (t *Texture) Levels() int { return len(t.levels) }
 // Sample reads the texture at u, v (repeating outside 0..1) from the mip
 // level lod; false means a hole under the alpha cutoff.
 func (t *Texture) Sample(lod, u, v float64) (color.Color, bool) {
-	l := t.levels[min(len(t.levels)-1, max(0, int(math.Round(lod))))]
+	l := t.levels[max(0, min(len(t.levels)-1, int(lod+.5)))] // rounds as math.Round for lod >= 0
 	u, v = u-math.Floor(u), v-math.Floor(v)
 	x, y := u*float64(l.w), (1-v)*float64(l.h) // v grows upward, as in OBJ files
 	if t.filter == Nearest || (l.w == 1 && l.h == 1) {
-		r, g, b, a := l.at(int(x), int(y))
-		return color.Color{R: r, G: g, B: b}, a >= t.cutoff
+		i := l.index(wrap(int(x), l.w), wrap(int(y), l.h))
+		return color.Color{R: l.pix[i], G: l.pix[i+1], B: l.pix[i+2]}, l.pix[i+3] >= t.cutoff
 	}
 	x, y = x-.5, y-.5
 	x0, y0 := math.Floor(x), math.Floor(y)
 	fx, fy := x-x0, y-y0
-	var acc [4]float64
-	for _, c := range [4][3]float64{{0, 0, (1 - fx) * (1 - fy)}, {1, 0, fx * (1 - fy)}, {0, 1, (1 - fx) * fy}, {1, 1, fx * fy}} {
-		r, g, b, a := l.at(int(x0+c[0]), int(y0+c[1]))
-		acc[0], acc[1], acc[2], acc[3] = acc[0]+float64(r)*c[2], acc[1]+float64(g)*c[2], acc[2]+float64(b)*c[2], acc[3]+float64(a)*c[2]
+	// Wrapping once per sample, not per texel, is most of what sampling costs.
+	cx0, cy0 := wrap(int(x0), l.w), wrap(int(y0), l.h)
+	cx1, cy1 := cx0+1, cy0+1
+	if cx1 == l.w {
+		cx1 = 0
 	}
-	return color.Color{R: uint8(acc[0] + .5), G: uint8(acc[1] + .5), B: uint8(acc[2] + .5)}, acc[3] >= float64(t.cutoff)
+	if cy1 == l.h {
+		cy1 = 0
+	}
+	a, b, c, d := l.index(cx0, cy0), l.index(cx1, cy0), l.index(cx0, cy1), l.index(cx1, cy1)
+	ka, kb, kc, kd := (1-fx)*(1-fy), fx*(1-fy), (1-fx)*fy, fx*fy
+	p := l.pix
+	mix := func(o int) float64 {
+		return float64(p[a+o])*ka + float64(p[b+o])*kb + float64(p[c+o])*kc + float64(p[d+o])*kd
+	}
+	return color.Color{R: uint8(mix(0) + .5), G: uint8(mix(1) + .5), B: uint8(mix(2) + .5)}, mix(3) >= float64(t.cutoff)
 }
 
-// at wraps coordinates so textures tile.
-func (l level) at(x, y int) (uint8, uint8, uint8, uint8) {
-	x, y = ((x%l.w)+l.w)%l.w, ((y%l.h)+l.h)%l.h
-	i := (y*l.w + x) * 4
-	return l.pix[i], l.pix[i+1], l.pix[i+2], l.pix[i+3]
+func wrap(i, n int) int {
+	i %= n
+	if i < 0 {
+		i += n
+	}
+	return i
 }
+
+func (l level) index(x, y int) int { return (y*l.w + x) * 4 }
 
 // Average is the mean opaque color of the smallest mip level, for places
 // that need one color, such as a model without UVs.
