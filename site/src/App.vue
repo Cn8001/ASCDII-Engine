@@ -4,11 +4,10 @@ import { route } from './router'
 import SiteHeader from './components/SiteHeader.vue'
 import SiteFooter from './components/SiteFooter.vue'
 import HomePage from './pages/HomePage.vue'
-import FeaturesPage from './pages/FeaturesPage.vue'
 import StartPage from './pages/StartPage.vue'
 
-const pages = { home: HomePage, features: FeaturesPage, start: StartPage }
-const titles = { home: 'ASCDII Engine', features: 'Features', start: 'Get started' }
+const pages = { home: HomePage, start: StartPage }
+const titles = { home: 'ASCDII Engine', start: 'Get started' }
 const current = computed(() => pages[route.value.page])
 
 watchEffect(() => {

@@ -4,7 +4,6 @@ import { repo } from '../content'
 
 const links: { page: Page; label: string }[] = [
   { page: 'home', label: 'Home' },
-  { page: 'features', label: 'Features' },
   { page: 'start', label: 'Get started' },
 ]
 </script>

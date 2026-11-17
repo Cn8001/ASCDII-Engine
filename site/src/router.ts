@@ -1,8 +1,8 @@
 import { ref } from "vue";
 
-// GitHub Pages has no rewrites, so pages live in the hash: #/features/animation.
-export type Page = "home" | "features" | "start";
-const pages: Page[] = ["home", "features", "start"];
+// GitHub Pages has no rewrites, so pages live in the hash: #/start/cli.
+export type Page = "home" | "start";
+const pages: Page[] = ["home", "start"];
 
 export interface Route {
   page: Page;
