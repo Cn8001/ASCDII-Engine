@@ -13,3 +13,7 @@ docs/internals
 
 # Added by bmeditor: its editor state (open tabs), which is yours alone
 /.bmeditor
+
+# Added by bmeditor: folders its search skips
+node_modules/
+/site/node_modules/

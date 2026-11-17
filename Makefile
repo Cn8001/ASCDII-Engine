@@ -17,7 +17,7 @@ else
 LDKEY := -X github.com/Cn8001/ASCDII-Engine/internal/engine/runtime/bundle.pakSecret=$(ASCDII_PAK_SECRET)
 endif
 
-.PHONY: start build deps help all version test bench template brand cli hello dragonfall editor-dev editor-linux editor-windows dist clean doctor tools
+.PHONY: start build deps help all version test bench template brand cli hello dragonfall editor-dev editor-linux editor-windows dist clean doctor tools site
 
 ifeq ($(OS),Windows_NT)
 HOST := windows
@@ -57,6 +57,7 @@ help:
 	@echo "make cli          CLI and players for Linux and Windows"
 	@echo "make editor-linux, make editor-windows, make editor-dev"
 	@echo "make all, make dist, make clean"
+	@echo "make site         the website GitHub Pages serves from docs/"
 
 WAILS_VERSION := $(shell sed -n 's|.*github.com/wailsapp/wails/v2 \(v[^ ]*\).*|\1|p' go.mod)
 
@@ -154,6 +155,13 @@ dist: doctor-dist all
 
 clean:
 	rm -rf $(BIN)/* $(EDITOR)/build/bin
+
+# GitHub Pages serves docs/ from master: the site's index and assets next to
+# the tutorial in docs/usage, which the site links to and leaves alone.
+site:
+	@[ -d site/node_modules ] || (cd site && npm ci)
+	rm -rf docs/assets
+	cd site && npm run build
 
 # make reads .env above and runs this first when it is missing.
 .env:
